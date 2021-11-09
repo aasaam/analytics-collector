@@ -7,6 +7,7 @@ import (
 	"github.com/ua-parser/uap-go/uaparser"
 )
 
+// ineffassign: ignore
 //go:embed embed/build/user_agents.yaml
 var userAgents []byte
 

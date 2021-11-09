@@ -7,6 +7,7 @@ import (
 	"sync"
 )
 
+// Projects is project manager public/private keys and domain map
 type Projects struct {
 	sync.RWMutex
 	publicHash        map[string]bool

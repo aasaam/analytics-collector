@@ -92,7 +92,7 @@ func NewGeoIPParser(
 	return &geoIPParser
 }
 
-// Parse parsing geo data from ip
+// ParseIP parsing geo data from ip
 func (geoParser *GeoParser) ParseIP(ipString string) *GeoIPResult {
 	result := GeoIPResult{}
 
@@ -123,7 +123,7 @@ func (geoParser *GeoParser) ParseIP(ipString string) *GeoIPResult {
 	return &result
 }
 
-// Parse parsing geo data from ip
+// LookupLocation is lookup location information base on geo location properties
 func (geoParser *GeoParser) LookupLocation(
 	clientGeoLatitude float64,
 	clientGeoLongitude float64,
@@ -155,7 +155,7 @@ func (geoParser *GeoParser) LookupLocation(
 	return &result
 }
 
-// NewGeoResult
+// NewGeoResult will create new result for data store
 func NewGeoResult(
 	geoIPResult *GeoIPResult,
 ) *GeoResult {
@@ -176,6 +176,7 @@ func NewGeoResult(
 	return &result
 }
 
+// AddLocation append geo location data to result
 func (geoResult *GeoResult) AddLocation(geoLocationResult *GeoLocationResult) {
 	// AdministratorArea
 	geoResult.AdministratorArea = geoLocationResult.ClientAdministratorArea

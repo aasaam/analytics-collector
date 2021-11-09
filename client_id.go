@@ -11,10 +11,14 @@ import (
 )
 
 const (
+	// ClientTypeOther other types
 	ClientTypeOther uint8 = 0
-	ClientTypeStd   uint8 = 1
-	ClientTypeAmp   uint8 = 2
-	ClientTypeImg   uint8 = 3
+	// ClientTypeStd standard js client algorithm
+	ClientTypeStd uint8 = 1
+	// ClientTypeAmp for amp client
+	ClientTypeAmp uint8 = 2
+	// ClientTypeImg for none script and image request
+	ClientTypeImg uint8 = 3
 )
 
 const minimumTime = 1577824200 // 2020-01-01 00:00:00
