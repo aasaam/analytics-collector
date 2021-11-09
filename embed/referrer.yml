@@ -1,0 +1,75 @@
+search_engine:
+  Baidu:
+    - www.baidu.com
+  Google:
+    - www.google.de
+    - www.google.com
+    - www.google.us
+    - www.google.com.hk
+    - www.google.cn
+    - com.google.android.googlequicksearchbox
+  Bing:
+    - global.bing.com
+    - www.bing.com
+    - bing.com
+  Yahoo:
+    - search.yahoo.com
+  Yandex:
+    - yandex.com
+
+social_media:
+  Twitter:
+    - twitter.com
+    - t.co
+  Telegram:
+    - org.telegram.messenger
+    - telegram.org
+  Pinterest:
+    - pinterest.com
+    - pinterest.ca
+    - pinterest.ch
+    - pinterest.co.uk
+    - pinterest.de
+    - pinterest.dk
+    - pinterest.es
+    - pinterest.fr
+    - pinterest.ie
+    - pinterest.jp
+    - pinterest.nz
+    - pinterest.pt
+    - pinterest.se
+  reddit:
+    - reddit.com
+    - np.reddit.com
+    - pay.reddit.com
+  StackOverflow:
+    - stackoverflow.com
+  Facebook:
+    - facebook.com
+    - fb.me
+    - m.facebook.com
+    - l.facebook.com
+  Instagram:
+    - instagram.com
+    - l.instagram.com
+  LinkedIn:
+    - linkedin.com
+    - lnkd.in
+    - linkedin.android
+  GitHub:
+    - github.com
+
+mail_provider:
+  Outlook.com:
+    - mail.live.com
+    - outlook.live.com
+  Yahoo! Mail:
+    - mail.yahoo.net
+    - mail.yahoo.com
+    - mail.yahoo.co.uk
+    - mail.yahoo.co.jp
+  Gmail:
+    - mail.google.com
+    - com.google.android.gm
+  Zoho:
+    - mail.zoho.com

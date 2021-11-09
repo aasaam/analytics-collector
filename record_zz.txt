@@ -1,0 +1,198 @@
+package main
+
+import (
+	"crypto/sha1"
+	"encoding/hex"
+	"fmt"
+	"net/url"
+	"regexp"
+	"strconv"
+	"time"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+// type ModeOfRequest = 'jse' | 'jsp' | 'il' | 'ins' | 'ia' | 'amp' | 'sw' | 'api';
+
+// All Records type lower than 10 is for page view
+
+const (
+	RecordTypeEventPageViewJS            uint8 = 0
+	RecordTypeEventPageViewLegacyImage   uint8 = 1
+	RecordTypeEventPageViewNoScriptImage uint8 = 2
+	RecordTypeEventPageViewAMP           uint8 = 3
+	RecordTypeEventPageViewAMPNoScript   uint8 = 4
+	RecordTypeEventPageViewMobile        uint8 = 5
+	RecordTypeEventEventJS               uint8 = 10
+	RecordTypeEventEventServiceWorker    uint8 = 11
+	RecordTypeEventEventAPI              uint8 = 12
+)
+
+var RecordTypeMap map[string]uint8
+
+// RecordDataEvent is single event data
+type RecordDataEvent struct {
+	Category string `json:"ec"`
+	Action   string `json:"ea"`
+	Label    string `json:"el,omitempty"`
+	Value    int    `json:"ev,omitempty"`
+}
+
+// RecordDataPage is page view data
+type RecordDataPage struct {
+	URL               string                    `json:"u"`
+	IFrame            bool                      `json:"if"`
+	Referer           string                    `json:"r,omitempty"`
+	User              string                    `json:"usr,omitempty"`
+	Canonical         string                    `json:"cn,omitempty"`
+	Screen            string                    `json:"s,omitempty"`
+	Viewport          string                    `json:"v,omitempty"`
+	EntityID          string                    `json:"ent,omitempty"`
+	PixelRatio        float64                   `json:"dpr,omitempty"`
+	ColorDepth        uint8                     `json:"cd,omitempty"`
+	ScreenOrientation string                    `json:"so,omitempty"`
+	Title             string                    `json:"t,omitempty"`
+	Keywords          []string                  `json:"k,omitempty"`
+	Performance       RecordDataPagePerformance `json:"prf,omitempty"`
+	ClientGeo         RecordDataPageGeo         `json:"geo,omitempty"`
+}
+
+// RecordDataPagePerformance is performance data
+type RecordDataPagePerformance struct {
+	Duration       uint16 `json:"d"`
+	TotalResources uint16 `json:"t"`
+}
+
+// RecordDataPageGeo is geo location of client
+type RecordDataPageGeo struct {
+	ClientLatitude       float64 `json:"lat"`
+	ClientLongitude      float64 `json:"lon"`
+	ClientAccuracyRadius float64 `json:"acc"`
+}
+
+// RecordData is whole data from client
+type RecordData struct {
+	APIClientIP         string            `json:"c_ip,omitempty"`
+	APIClientUserAgent  string            `json:"c_ua,omitempty"`
+	StdClientIdentifier string            `json:"c,omitempty"`
+	Page                RecordDataPage    `json:"p,omitempty"`
+	Events              []RecordDataEvent `json:"e,omitempty"`
+}
+
+type Record struct {
+	// one of: amp,img,pageview,event
+	Type      uint8
+	Time      time.Time
+	ProjectID string
+	Cursor    uint64
+
+	GeoIP            GeoIPResult
+	UserAgent        UserAgentResult
+	UTM              UTM
+	ClientIdentifier ClientIdentifier
+	ScreenInfo       ScreenInfo
+	RefererData      RefererData
+
+	Title     string
+	EntityID  string
+	User      string
+	Keywords  []string
+	Canonical string
+}
+
+var hexDecRegexReplace = regexp.MustCompile(`[^0-9]`)
+
+func init() {
+	RecordTypeMap = make(map[string]uint8)
+	RecordTypeMap["jsp"] = RecordTypeEventPageViewJS
+	RecordTypeMap["il"] = RecordTypeEventPageViewLegacyImage
+	RecordTypeMap["ins"] = RecordTypeEventPageViewNoScriptImage
+	RecordTypeMap["amp"] = RecordTypeEventPageViewAMP
+	RecordTypeMap["ia"] = RecordTypeEventPageViewAMPNoScript
+	RecordTypeMap["jse"] = RecordTypeEventEventJS
+	RecordTypeMap["sw"] = RecordTypeEventEventServiceWorker
+	RecordTypeMap["api"] = RecordTypeEventEventAPI
+}
+
+func isEventRecord(recordType uint8) bool {
+	if recordType >= 10 && recordType < 50 {
+		return true
+	}
+	return false
+}
+
+func isPageViewRecord(recordType uint8) bool {
+	if recordType < 10 {
+		return true
+	}
+	return false
+}
+
+func cursorProcess(projectId string) uint64 {
+	micro := strconv.FormatInt(time.Now().UnixMicro(), 10)
+
+	h := sha1.New()
+	h.Write([]byte(projectId))
+	hex := hex.EncodeToString(h.Sum(nil))
+	hexDec := hexDecRegexReplace.ReplaceAllString(hex, "")
+
+	n, e := strconv.ParseInt(micro+hexDec[0:3], 10, 64)
+	if e != nil {
+		panic(e)
+	}
+	return uint64(n)
+}
+
+func NewRecord(projectId string, recordType uint8) *Record {
+	r := Record{}
+	r.Type = recordType
+	r.ProjectID = projectId
+	r.Time = time.Now()
+	if isPageViewRecord(recordType) {
+		r.Cursor = cursorProcess(projectId)
+	}
+
+	return &r
+}
+
+func NewRecordsFromRequest(
+	projects *Projects,
+	c *fiber.Ctx,
+) error {
+	mode, modeExist := RecordTypeMap[c.Get("m", "")]
+	if !modeExist {
+		return c.Status(fiber.StatusBadRequest).SendString("invalid request mode")
+	}
+
+	url, err := url.Parse(c.Get("u", ""))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString("invalid url")
+		return err
+	}
+
+	referer, err := url.Parse(c.Get("u", ""))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).SendString("invalid url")
+		return err
+	}
+
+	if mode == RecordTypeEventEventAPI {
+
+	}
+
+	// service worker
+
+	fmt.Println(mode)
+	return nil
+	// validationResult =
+	// if mode == RecordTypeEventEventAPI {
+
+	// } else {
+
+	// }
+
+	// if (mode )
+	// projectPublicHash := c.Get("i", "")
+	// projects.Validate()
+	// return nil
+}

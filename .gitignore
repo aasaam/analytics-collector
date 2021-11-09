@@ -1,0 +1,5 @@
+embed/build/
+tmp/
+
+coverage.*
+go.sum

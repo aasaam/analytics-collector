@@ -1,0 +1,72 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"testing"
+	"time"
+)
+
+var postJsonSample1 = `
+{
+	"cid": "MjoxNjM0MzM1MzYzOjAydTEyMHA3dXQ0NWtxMG4=",
+	"p": {
+	  "usr": "user1@domain.tld",
+	  "u": "https://example.tld/",
+	  "cn": "https://example.tld/",
+	  "s": "1920x1080",
+	  "v": "1920x380",
+	  "dpr": 1,
+	  "cd": 24,
+	  "prf": {
+		"d": 1,
+		"t": 2
+	  },
+	  "ent": "content-1",
+	  "if": false,
+	  "r": "https://example.tld/page-2-%D8%A7%D8%B3%D8%AA%D8%A7%D8%AF-%D8%B5%D8%AF%D8%A7-%D8%B4%D9%87%DB%8C%D8%AF%DB%8C-%D9%81%D8%B1%DB%8C%D8%A7%D9%86-%D9%85%D9%87%D8%AF%DB%8C-%D9%BE%D9%88%D8%B1/?id=2&title=%D8%A7%D8%B3%D8%AA%D8%A7%D8%AF%20%D8%B5%D8%AF%D8%A7%20%D8%B4%D9%87%DB%8C%D8%AF%DB%8C%20%D9%81%D8%B1%DB%8C%D8%A7%D9%86%20%D9%85%D9%87%D8%AF%DB%8C%E2%80%8C%D9%BE%D9%88%D8%B1&locale=fa_IR&utm_source=UTM-SOURCE-6&utm_medium=UTM-MEDIUM-11&utm_campaign=UTM-NAME-30",
+	  "so": "l-p",
+	  "t": "خانم ملیحه قانعی فرشیدورد روزبه",
+	  "k": ["key1", "key2", "key2"],
+	  "prf": { "tr": 1 },
+	  "geo": { "lat": 35.727, "lon": 51.3336, "acc": 5000 }
+	}
+  }
+`
+
+func TestPostRecord(t *testing.T) {
+	var pageData RecordData
+	err := json.Unmarshal([]byte(postJsonSample1), &pageData)
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(pageData.Page.Performance.Duration)
+}
+
+func TestCursorProcess(t *testing.T) {
+	projectId := "0123456789ab"
+	fmt.Println("=== Test Data ===")
+	var maxUint64 uint64 = 18446744073709551615
+	fmt.Printf("max possible int: 	%d\n", maxUint64)
+	fmt.Printf("unixtime nano:		%d\n", time.Now().UnixNano())
+	fmt.Printf("unixtime micro:		%d\n", time.Now().UnixMicro())
+	fmt.Println("===")
+
+	fmt.Println("=== At same time ad same project test")
+	fmt.Printf("generate #1:		%d\n", cursorProcess(projectId))
+	fmt.Printf("generate #2:		%d\n", cursorProcess(projectId))
+	fmt.Printf("generate #3:		%d\n", cursorProcess(projectId))
+	fmt.Println("=== Delayed")
+	time.Sleep(time.Millisecond + 1)
+	fmt.Printf("generate #1:		%d\n", cursorProcess(projectId))
+	fmt.Printf("generate #2:		%d\n", cursorProcess(projectId))
+	fmt.Printf("generate #3:		%d\n", cursorProcess(projectId))
+}
+
+func BenchmarkRecordJSON(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		var pageData RecordData
+		json.Unmarshal([]byte(postJsonSample1), &pageData)
+	}
+}
