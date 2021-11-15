@@ -3,7 +3,7 @@ module github.com/aasaam/analytics-node
 go 1.17
 
 require (
-	github.com/gofiber/fiber/v2 v2.21.0
+	github.com/gofiber/fiber/v2 v2.22.0
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/ua-parser/uap-go v0.0.0-20210824134941-3b2ceb1c75a3
