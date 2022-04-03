@@ -1,4 +1,4 @@
-module github.com/aasaam/analytics-node
+module github.com/aasaam/analytics-collector
 
 go 1.17
 
