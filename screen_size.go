@@ -6,75 +6,94 @@ import (
 	"strconv"
 )
 
-var sizeRegex, _ = regexp.Compile("^([0-9]{2,5})x([0-9]{2,5})$")
+var sizeRegex = regexp.MustCompile(`^([0-9]{2,6})x([0-9]{2,6})$`)
 
-const (
-	ScreenOrientationUnknown            uint8 = 0
-	ScreenOrientationPortraitPrimary    uint8 = 1
-	ScreenOrientationPortraitSecondary  uint8 = 2
-	ScreenOrientationLandscapePrimary   uint8 = 3
-	ScreenOrientationLandscapeSecondary uint8 = 4
-)
-
-// ScreenInfo is processed screen,viewport and resolution sizes
-type ScreenInfo struct {
-	ScreenOrientation uint8
-	Screen            string
-	ScreenWidth       uint16
-	ScreenHeight      uint16
-	Viewport          string
-	ViewportWidth     uint16
-	ViewportHeight    uint16
-	Resoluton         string
-	ResolutonWidth    uint16
-	ResolutonHeight   uint16
-	PixelRatio        float64
-	ColorDepth        uint8
+type screenInfo struct {
+	ScrIsProcessed                  bool
+	ScrScreenOrientation            bool
+	ScrScreenOrientationIsPortrait  bool
+	ScrScreenOrientationIsSecondary bool
+	ScrScreen                       string
+	ScrScreenWidth                  uint16
+	ScrScreenHeight                 uint16
+	ScrViewport                     string
+	ScrViewportWidth                uint16
+	ScrViewportHeight               uint16
+	ScrResoluton                    string
+	ScrResolutonWidth               uint16
+	ScrResolutonHeight              uint16
+	ScrDevicePixelRatio             float64
+	ScrColorDepth                   uint8
 }
 
-// ParseScreenSize return *ScreenInfo
-func ParseScreenSize(screenOrientation string, screenSize string, viewportSize string, pixelRatio float64, colorDepth uint8) *ScreenInfo {
-	result := ScreenInfo{
-		ColorDepth:        colorDepth,
-		PixelRatio:        pixelRatio,
-		ScreenOrientation: ScreenOrientationUnknown,
+func parseScreenSize(
+	screenOrientation string,
+	screenSize string,
+	viewportSize string,
+	devicePixelRatio string,
+	colorDepth string,
+) screenInfo {
+	result := screenInfo{
+		ScrIsProcessed:       true,
+		ScrScreenOrientation: false,
+	}
+
+	if devicePixelRatioFloat, err := strconv.ParseFloat(devicePixelRatio, 64); err == nil {
+		result.ScrDevicePixelRatio = devicePixelRatioFloat
+	}
+
+	if colorDepthUInt8, err := strconv.ParseInt(colorDepth, 10, 16); err == nil {
+		result.ScrColorDepth = uint8(colorDepthUInt8)
 	}
 
 	switch screenOrientation {
 	case "p-p":
-		result.ScreenOrientation = ScreenOrientationPortraitPrimary
+		result.ScrScreenOrientation = true
+		result.ScrScreenOrientationIsPortrait = true
+		result.ScrScreenOrientationIsSecondary = false
 	case "p-s":
-		result.ScreenOrientation = ScreenOrientationPortraitSecondary
+		result.ScrScreenOrientation = true
+		result.ScrScreenOrientationIsPortrait = true
+		result.ScrScreenOrientationIsSecondary = true
 	case "l-p":
-		result.ScreenOrientation = ScreenOrientationLandscapePrimary
+		result.ScrScreenOrientation = true
+		result.ScrScreenOrientationIsPortrait = false
+		result.ScrScreenOrientationIsSecondary = false
 	case "l-s":
-		result.ScreenOrientation = ScreenOrientationLandscapeSecondary
+		result.ScrScreenOrientation = true
+		result.ScrScreenOrientationIsPortrait = false
+		result.ScrScreenOrientationIsSecondary = true
 	}
 
 	if sizeRegex.MatchString(viewportSize) {
 		matched := sizeRegex.FindStringSubmatch(viewportSize)
-		viewportWidth, _ := strconv.ParseUint(matched[1], 10, 16)
-		viewportHeight, _ := strconv.ParseUint(matched[2], 10, 16)
+		viewportWidth, viewportWidthErr := strconv.ParseUint(matched[1], 10, 16)
+		viewportHeight, viewportHeightErr := strconv.ParseUint(matched[2], 10, 16)
 
-		result.ViewportWidth = uint16(viewportWidth)
-		result.ViewportHeight = uint16(viewportHeight)
-		result.Viewport = fmt.Sprintf("%dx%d", result.ViewportWidth, result.ViewportHeight)
-
+		if viewportWidthErr == nil && viewportHeightErr == nil {
+			result.ScrViewportWidth = uint16(viewportWidth)
+			result.ScrViewportHeight = uint16(viewportHeight)
+			result.ScrViewport = fmt.Sprintf("%dx%d", result.ScrViewportWidth, result.ScrViewportHeight)
+		}
 	}
 
 	if sizeRegex.MatchString(screenSize) {
 		matched := sizeRegex.FindStringSubmatch(screenSize)
-		screenWidth, _ := strconv.ParseUint(matched[1], 10, 16)
-		screenHeight, _ := strconv.ParseUint(matched[2], 10, 16)
+		screenWidth, screenWidthErr := strconv.ParseUint(matched[1], 10, 16)
+		screenHeight, screenHeightErr := strconv.ParseUint(matched[2], 10, 16)
 
-		result.ScreenWidth = uint16(screenWidth)
-		result.ScreenHeight = uint16(screenHeight)
-		result.Screen = fmt.Sprintf("%dx%d", screenWidth, screenHeight)
+		if screenWidthErr == nil && screenHeightErr == nil {
+			result.ScrScreenWidth = uint16(screenWidth)
+			result.ScrScreenHeight = uint16(screenHeight)
+			result.ScrScreen = fmt.Sprintf("%dx%d", screenWidth, screenHeight)
 
-		result.ResolutonWidth = uint16(float64(screenWidth) * pixelRatio)
-		result.ResolutonHeight = uint16(float64(screenHeight) * pixelRatio)
-		result.Resoluton = fmt.Sprintf("%dx%d", result.ResolutonWidth, result.ResolutonHeight)
+			if result.ScrDevicePixelRatio != 0 {
+				result.ScrResolutonWidth = uint16(float64(screenWidth) * result.ScrDevicePixelRatio)
+				result.ScrResolutonHeight = uint16(float64(screenHeight) * result.ScrDevicePixelRatio)
+				result.ScrResoluton = fmt.Sprintf("%dx%d", result.ScrResolutonWidth, result.ScrResolutonHeight)
+			}
+		}
 	}
 
-	return &result
+	return result
 }

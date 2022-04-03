@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"strconv"
 
+	ua "github.com/mileusna/useragent"
 	"github.com/ua-parser/uap-go/uaparser"
 )
 
@@ -11,27 +12,35 @@ import (
 //go:embed embed/build/user_agents.yaml
 var userAgents []byte
 
-// UserAgentParser is parser instance
-type UserAgentParser struct {
+const (
+	uaTypeUnknown = "unknown"
+	uaTypeMobile  = "mobile"
+	uaTypeDesktop = "desktop"
+	uaTypeTablet  = "tablet"
+	uaTypeBot     = "bot"
+)
+
+type userAgentParser struct {
 	parser *uaparser.Parser
 }
 
-// UserAgentResult result of processed data
-type UserAgentResult struct {
-	BrowserName         string
-	BrowserVersionMajor uint64
-	BrowserVersion      string
-	OSName              string
-	OSVersionMajor      uint64
-	OSVersion           string
-	DeviceBrand         string
-	DeviceFamily        string
-	DeviceModel         string
+type userAgentResult struct {
+	UaType                string
+	UaFull                string
+	UaChecksum            string
+	UaBrowserName         string
+	UaBrowserVersionMajor uint64
+	UaBrowserVersion      string
+	UaOSName              string
+	UaOSVersionMajor      uint64
+	UaOSVersion           string
+	UaDeviceBrand         string
+	UaDeviceFamily        string
+	UaDeviceModel         string
 }
 
-// NewUserAgentParser new instance of UserAgentParser
-func NewUserAgentParser() *UserAgentParser {
-	uaParser := UserAgentParser{}
+func newUserAgentParser() *userAgentParser {
+	uaParser := userAgentParser{}
 	parser, err := uaparser.NewFromBytes(userAgents)
 	if err != nil {
 		panic(err)
@@ -40,44 +49,59 @@ func NewUserAgentParser() *UserAgentParser {
 	return &uaParser
 }
 
-// Parse return result for user agent
-func (uaParser *UserAgentParser) Parse(uaString string) UserAgentResult {
+func (uaParser *userAgentParser) parse(uaString string) userAgentResult {
 	client := uaParser.parser.Parse(uaString)
 
-	result := UserAgentResult{}
+	result := userAgentResult{
+		UaChecksum: checksum(uaString),
+		UaFull:     uaString,
+		UaType:     uaTypeUnknown,
+	}
 
-	result.BrowserName = client.UserAgent.Family
-	result.OSName = client.Os.Family
-	result.DeviceBrand = client.Device.Brand
-	result.DeviceFamily = client.Device.Family
-	result.DeviceModel = client.Device.Model
+	// process type
+	ua := ua.Parse(uaString)
+	if ua.Mobile {
+		result.UaType = uaTypeMobile
+	} else if ua.Bot {
+		result.UaType = uaTypeBot
+	} else if ua.Desktop {
+		result.UaType = uaTypeDesktop
+	} else if ua.Tablet {
+		result.UaType = uaTypeTablet
+	}
 
-	result.BrowserVersion = client.UserAgent.Major
+	result.UaBrowserName = sanitizeTitle(client.UserAgent.Family)
+	result.UaOSName = sanitizeTitle(client.Os.Family)
+	result.UaDeviceBrand = sanitizeTitle(client.Device.Brand)
+	result.UaDeviceFamily = sanitizeTitle(client.Device.Family)
+	result.UaDeviceModel = sanitizeTitle(client.Device.Model)
 
-	browserVersionMajor, err1 := strconv.ParseUint(client.UserAgent.Major, 10, 64)
-	if err1 == nil && browserVersionMajor > 0 {
-		result.BrowserVersionMajor = browserVersionMajor
+	result.UaBrowserVersion = client.UserAgent.Major
+
+	browserVersionMajor, browserVersionMajorErr := strconv.ParseUint(client.UserAgent.Major, 10, 64)
+	if browserVersionMajorErr == nil && browserVersionMajor > 0 {
+		result.UaBrowserVersionMajor = browserVersionMajor
 	}
 
 	if client.UserAgent.Minor != "" {
-		result.BrowserVersion += "." + client.UserAgent.Minor
+		result.UaBrowserVersion += "." + client.UserAgent.Minor
 	}
 	if client.UserAgent.Patch != "" {
-		result.BrowserVersion += "." + client.UserAgent.Patch
+		result.UaBrowserVersion += "." + client.UserAgent.Patch
 	}
 
-	result.OSVersion = client.Os.Major
+	result.UaOSVersion = client.Os.Major
 
-	osVersionMajor, err2 := strconv.ParseUint(client.Os.Major, 10, 64)
-	if err2 == nil && osVersionMajor > 0 {
-		result.OSVersionMajor = osVersionMajor
+	osVersionMajor, osVersionMajorErr := strconv.ParseUint(client.Os.Major, 10, 64)
+	if osVersionMajorErr == nil && osVersionMajor > 0 {
+		result.UaOSVersionMajor = osVersionMajor
 	}
 
 	if client.Os.Minor != "" {
-		result.OSVersion += "." + client.Os.Minor
+		result.UaOSVersion += "." + client.Os.Minor
 	}
 	if client.Os.Patch != "" {
-		result.OSVersion += "." + client.Os.Patch
+		result.UaOSVersion += "." + client.Os.Patch
 	}
 
 	return result

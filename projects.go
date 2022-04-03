@@ -1,83 +1,76 @@
 package main
 
 import (
-	"encoding/json"
+	"errors"
+	"net"
 	"net/url"
 	"regexp"
 	"sync"
 )
 
-// Projects is project manager public/private keys and domain map
-type Projects struct {
-	sync.RWMutex
-	publicHash        map[string]bool
-	privateHash       map[string]string
+type projects struct {
+	sync.Mutex
+	publicIDs         map[string]bool
+	privateKeys       map[string]string
 	cached            map[string]string
 	domainMap         map[string]string
 	wildcardDomainMap map[string]string
 }
 
-var projectIDRegex, _ = regexp.Compile(`^[a-zA-Z0-9]{12}$`)
+type projectData struct {
+	PrivateKey      string   `json:"p"`
+	Domains         []string `json:"d"`
+	WildcardDomains []string `json:"w"`
+}
 
-var wildcardDomainRegex, _ = regexp.Compile(`^\*\.(.*)$`)
+var publicInstaceIDRegex = regexp.MustCompile(`^[a-zA-Z0-9]{12}$`)
 
-// NewProjectManager return project manager
-func NewProjectManager() *Projects {
+func validatePublicInstaceID(pid string) (string, error) {
+	if ok := publicInstaceIDRegex.MatchString(pid); ok {
+		return pid, nil
+	}
+	return "", errors.New("invalid public instance id")
+}
+
+func newProjectsManager() *projects {
 	cached := make(map[string]string)
 	domainMap := make(map[string]string)
 	wildcardDomainMap := make(map[string]string)
-	privateHash := make(map[string]string)
-	publicHash := make(map[string]bool)
+	privateKeys := make(map[string]string)
+	publicIDs := make(map[string]bool)
 
-	result := Projects{
+	result := projects{
 		cached:            cached,
 		domainMap:         domainMap,
 		wildcardDomainMap: wildcardDomainMap,
-		privateHash:       privateHash,
-		publicHash:        publicHash,
+		privateKeys:       privateKeys,
+		publicIDs:         publicIDs,
 	}
 
 	return &result
 }
 
-// LoadJSON load json will store updated data for new requests
-func (p *Projects) LoadJSON(jsonData []byte) error {
-	type projectData struct {
-		PrivateHash string   `json:"ph"`
-		Domains     []string `json:"d"`
-	}
-	var data map[string]projectData
-
-	err := json.Unmarshal(jsonData, &data)
-	if err != nil {
-		return err
-	}
-
+func (p *projects) load(data map[string]projectData) error {
 	p.Lock()
 	defer p.Unlock()
 
 	cached := make(map[string]string)
-	privateHash := make(map[string]string)
-	publicHash := make(map[string]bool)
 	domainMap := make(map[string]string)
 	wildcardDomainMap := make(map[string]string)
+	privateKeys := make(map[string]string)
+	publicIDs := make(map[string]bool)
 
-	for projectPublicHash, projectData := range data {
-		publicHash[projectPublicHash] = true
-		privateHash[projectData.PrivateHash] = projectPublicHash
+	for publicID, projectData := range data {
+		publicIDs[publicID] = true
+		privateKeys[projectData.PrivateKey] = publicID
 		for _, domain := range projectData.Domains {
-			// is wildcard?
-			if wildcardDomainRegex.MatchString(domain) {
-				matched := wildcardDomainRegex.FindStringSubmatch(domain)
-				urlParsed, err := url.ParseRequestURI("http://" + matched[1])
-				if err == nil {
-					wildcardDomainMap[urlParsed.Hostname()] = projectPublicHash
-				}
-			} else { // normal domain
-				urlParsed, err := url.ParseRequestURI("http://" + domain)
-				if err == nil {
-					domainMap[urlParsed.Hostname()] = projectPublicHash
-				}
+			if isValidURL("http://" + domain) {
+				domainMap[domain] = publicID
+			}
+		}
+		for _, wildcardDomain := range projectData.WildcardDomains {
+			if isValidURL("http://" + wildcardDomain) {
+				wildcardDomainMap[wildcardDomain] = publicID
 			}
 		}
 	}
@@ -85,59 +78,63 @@ func (p *Projects) LoadJSON(jsonData []byte) error {
 	p.cached = cached
 	p.domainMap = domainMap
 	p.wildcardDomainMap = wildcardDomainMap
-	p.privateHash = privateHash
-	p.publicHash = publicHash
+	p.publicIDs = publicIDs
+	p.privateKeys = privateKeys
 
 	return nil
 }
 
-// ValidateAPI is domain public hash validator
-func (p *Projects) ValidateAPI(projectPublicHash string, projectPrivateHash string) bool {
-	if publicHash, ok := p.privateHash[projectPrivateHash]; ok && publicHash == projectPublicHash {
+func (p *projects) validateIDAndPrivate(publicInstaceID string, privateKey string) bool {
+	if publicInstaceIDFromPrivate, ok := p.privateKeys[privateKey]; ok && publicInstaceIDFromPrivate == publicInstaceID {
 		return true
 	}
 
 	return false
 }
 
-// ValidateEvent is check project public hash exist on request
-func (p *Projects) ValidateEvent(projectPublicHash string) bool {
-	return p.publicHash[projectPublicHash]
+func (p *projects) validateID(publicInstaceID string) bool {
+	return p.publicIDs[publicInstaceID]
 }
 
-// Validate is domain public hash validator
-func (p *Projects) ValidatePageView(projectPublicHash string, domain string) bool {
-	if !projectIDRegex.MatchString(projectPublicHash) {
+func (p *projects) validateIDAndURL(publicInstaceID string, requestURL *url.URL) bool {
+	if !publicInstaceIDRegex.MatchString(publicInstaceID) {
 		return false
 	}
 
-	if cached, ok := p.cached[projectPublicHash]; ok && cached == domain {
+	if requestURL == nil {
+		return false
+	}
+
+	hostname := requestURL.Hostname()
+
+	p.Lock()
+	defer p.Unlock()
+
+	if cached, ok := p.cached[publicInstaceID]; ok && cached == hostname {
 		return true
 	}
 
-	p.RLock()
-	defer p.RUnlock()
-
-	if found, ok := p.domainMap[domain]; ok {
-		if found == projectPublicHash {
-			p.cached[projectPublicHash] = domain
+	if found, ok := p.domainMap[hostname]; ok {
+		if found == publicInstaceID {
+			p.cached[publicInstaceID] = hostname
 			return true
 		}
 	}
 
-	for mainHost, projectPublicHashIteration := range p.wildcardDomainMap {
-		wildRegex1 := `^.*\.` + regexp.QuoteMeta(mainHost) + `$`
+	if net.ParseIP(hostname) != nil {
+		return false
+	}
 
-		regex1, e := regexp.Compile(wildRegex1)
-		if e == nil && regex1.MatchString(domain) && projectPublicHash == projectPublicHashIteration {
-			p.cached[projectPublicHash] = domain
+	for domain, domainPublicInstaceID := range p.wildcardDomainMap {
+		if domain == hostname {
+			p.cached[publicInstaceID] = hostname
 			return true
 		}
-		wildRegex2 := `^` + regexp.QuoteMeta(mainHost) + `$`
+		domainRegexString := `.*\.` + regexp.QuoteMeta(domain) + `$`
+		domainRegex, domainRegexErr := regexp.Compile(domainRegexString)
 
-		regex2, e := regexp.Compile(wildRegex2)
-		if e == nil && regex2.MatchString(domain) && projectPublicHash == projectPublicHashIteration {
-			p.cached[projectPublicHash] = domain
+		if domainRegexErr == nil && domainRegex.MatchString(hostname) && publicInstaceID == domainPublicInstaceID {
+			p.cached[publicInstaceID] = hostname
 			return true
 		}
 	}

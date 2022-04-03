@@ -15,6 +15,19 @@
   </p>
 </div>
 
+## Development
+
+```bash
+# prepare dependencies
+./make.sh
+docker-compose -f docker-compose.dev.yml up -d
+# import clickhouse schema
+docker exec -t clickhouse-client /usr/bin/clickhouse-client --multiquery --host clickhouse-single --user 'analytics' --password 'password123123' < clickhouse/schema.sql
+
+# run cli
+docker exec -it clickhouse-client /usr/bin/clickhouse-client --host clickhouse-single --user 'analytics' --password 'password123123'
+```
+
 <div>
   <p align="center">
     <img alt="aasaam software development group" width="64" src="https://raw.githubusercontent.com/aasaam/information/master/logo/aasaam.svg">

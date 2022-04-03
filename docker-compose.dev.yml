@@ -17,3 +17,35 @@ services:
     container_name: adminer
     ports:
       - 8080:8080
+  web-server:
+    image: ghcr.io/aasaam/web-server
+    container_name: web-server
+    network_mode: host
+    volumes:
+      - ./nginx/nginx.conf.tmpl:/usr/local/openresty/nginx/addon/gomplates/nginx.tmpl
+  clickhouse-single:
+      image: yandex/clickhouse-server:22
+      restart: always
+      container_name: clickhouse-single
+      hostname: clickhouse-single
+      environment:
+        # default password is `password123123`
+        CLICKOUSE_PASSWORD_SHA256_HEX: ${CLICKOUSE_PASSWORD_SHA256_HEX:-933762e2bddba897d976a4dd8fc6c78fcf8288f8be646a0816aa0c40e287b207}
+      ulimits:
+        nofile:
+          soft: 262144
+          hard: 262144
+      ports:
+        - 8123:8123
+        - 9000:9000
+        - 9009:9009
+      volumes:
+        - ./clickhouse/logs:/var/log/clickhouse-server
+        - ./clickhouse/db:/var/lib/clickhouse
+        - ./clickhouse/config.d:/etc/clickhouse-server/config.d
+        - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml
+  clickhouse-client:
+      image: yandex/clickhouse-client:22
+      container_name: clickhouse-client
+      hostname: clickhouse-client
+      entrypoint: tail -f /dev/null

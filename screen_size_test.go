@@ -5,42 +5,73 @@ import (
 )
 
 func TestParseScreenSize(t *testing.T) {
-	scr1 := ParseScreenSize("p-p", "1376x774", "1376x389", 1.3953488372093024, 24)
+	scr1 := parseScreenSize("p-p", "1376x774", "1376x389", "1.3953488372093024", "24")
 
-	if scr1.Resoluton != "1920x1080" || scr1.ScreenOrientation != ScreenOrientationPortraitPrimary {
-		t.Errorf("invalid screen orientation")
-	}
-	scr11 := ParseScreenSize("p-s", "1376x774", "1376x389", 1.3953488372093024, 24)
-
-	if scr11.ScreenOrientation != ScreenOrientationPortraitSecondary {
-		t.Errorf("invalid screen orientation")
+	if scr1.ScrColorDepth != 24 {
+		t.Errorf("invalid color depth")
 	}
 
-	scr12 := ParseScreenSize("l-p", "1376x774", "1376x389", 1.3953488372093024, 24)
+	if scr1.ScrDevicePixelRatio != 1.3953488372093024 {
+		t.Errorf("invalid device pixel ratio")
+	}
 
-	if scr12.ScreenOrientation != ScreenOrientationLandscapePrimary {
+	if scr1.ScrResoluton != "1920x1080" || !scr1.ScrScreenOrientationIsPortrait {
 		t.Errorf("invalid screen orientation")
 	}
 
-	scr13 := ParseScreenSize("l-s", "1376x774", "1376x389", 1.3953488372093024, 24)
-	if scr13.ScreenOrientation != ScreenOrientationLandscapeSecondary {
+	if scr1.ScrResoluton == "" {
+		t.Errorf("invalid resoluton")
+	}
+
+	scr11 := parseScreenSize("p-s", "1376x774", "1376x389", "1", "16")
+
+	if scr11.ScrColorDepth != 16 {
+		t.Errorf("invalid color depth")
+	}
+
+	if scr11.ScrDevicePixelRatio != 1 {
+		t.Errorf("invalid device pixel ratio")
+	}
+
+	if !scr11.ScrScreenOrientationIsPortrait || !scr11.ScrScreenOrientationIsSecondary {
 		t.Errorf("invalid screen orientation")
 	}
 
-	if scr12.Resoluton != "1920x1080" {
-		t.Errorf("invalid resolution")
+	scr12 := parseScreenSize("l-p", "1376x774", "1376x389", "", "24")
+
+	if scr12.ScrResoluton != "" {
+		t.Errorf("invalid resoluton")
 	}
 
-	scr2 := ParseScreenSize("l-p", "2x2", "1x1", 1.3953488372093024, 24)
+	if scr12.ScrScreenOrientationIsPortrait || scr12.ScrScreenOrientationIsSecondary {
+		t.Errorf("invalid screen orientation")
+	}
 
-	if scr2.ColorDepth != 24 {
-		t.Errorf("invalid resolution")
+}
+
+func TestParseScreenSize2(t *testing.T) {
+	scr1 := parseScreenSize("l-s", "1376x774", "1376x389", "1.3953488372093024", "24")
+
+	if scr1.ScrColorDepth != 24 {
+		t.Errorf("invalid color depth")
+	}
+
+	if scr1.ScrDevicePixelRatio != 1.3953488372093024 {
+		t.Errorf("invalid device pixel ratio")
+	}
+
+	if scr1.ScrResoluton != "1920x1080" || scr1.ScrScreenOrientationIsPortrait || !scr1.ScrScreenOrientationIsSecondary {
+		t.Errorf("invalid screen orientation")
+	}
+
+	if scr1.ScrResoluton == "" {
+		t.Errorf("invalid resoluton")
 	}
 
 }
 
 func BenchmarkParseScreenSize(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		ParseScreenSize("l-p", "1376x774", "1376x389", 1.3953488372093024, 24)
+		parseScreenSize("l-p", "1376x774", "1376x389", "1.3953488372093024", "24")
 	}
 }

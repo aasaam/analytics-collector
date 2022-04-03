@@ -1,5 +1,9 @@
 embed/build/
 tmp/
+clickhouse/logs/
+clickhouse/db/
+
+analytics-node
 
 coverage.*
 go.sum

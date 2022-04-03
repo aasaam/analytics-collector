@@ -2,16 +2,17 @@ package main
 
 import (
 	"context"
+	"net"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/jackc/pgx/v4"
 )
 
-var sampleIP1 = "81.2.69.142"
-var sampleIP2 = "12.81.92.2"
+var sampleIPString = "1.1.1.1"
 
-func TestGeoIPParser1(t *testing.T) {
+func getGeoParser() *geoParser {
 	postgisConnectionString := os.Getenv("POSTGIS_URI")
 	if postgisConnectionString == "" {
 		postgisConnectionString = "postgres://geonames:geonames@127.0.0.1:5432/geonames"
@@ -21,39 +22,54 @@ func TestGeoIPParser1(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close(context.Background())
+	geoParser, err := newGeoParser(conn, "tmp/GeoLite2-City.mmdb", "tmp/GeoLite2-ASN.mmdb")
+	if err != nil {
+		panic(err)
+	}
+	return geoParser
+}
 
-	geoIPParser := NewGeoIPParser(conn, "data/Geo-City.mmdb", "data/Geo-ASN.mmdb")
-	parsedIP1 := geoIPParser.ParseIP(sampleIP1)
+func TestGeoIPParser1(t *testing.T) {
+	geoParser := getGeoParser()
 
-	if parsedIP1.IPCountry != "GB" {
+	ip := net.ParseIP(sampleIPString)
+
+	parsedIP1 := geoParser.newResultFromIP(ip)
+	if len(parsedIP1.GeoIPCountry) != 2 {
 		t.Errorf("invalid parsed data")
 	}
 
-	parsedIP2 := geoIPParser.ParseIP(sampleIP2)
-	if parsedIP2.IPASName != "AT&T Services" {
+	parsedIP2 := geoParser.newResultFromIP(ip)
+	if !strings.Contains(strings.ToLower(parsedIP2.GeoIPAutonomousSystemOrganization), "cloudflare") {
 		t.Errorf("invalid parsed data")
 	}
 
-	parsedIP3 := geoIPParser.ParseIP("z.z.z.z")
-	if parsedIP3.IP != "" {
+	parsedIP3 := geoParser.newResultFromIP(nil)
+	if parsedIP3.GeoIP != "" {
 		t.Errorf("invalid parsed data")
 	}
 
-	lookup1 := geoIPParser.LookupLocation(35.6892, 51.3890, 1000)
-	if lookup1.ClientCity != "Tehran" {
+	parsedIP4 := geoParser.newResultFromIP(net.ParseIP("2001:0db8:85a3:0000:0000:8a2e:0370:7334"))
+	if parsedIP4.GeoIP != "" {
+		t.Errorf("invalid parsed data")
+	}
+}
+
+func TestGeoIPParser2(t *testing.T) {
+	geoParser := getGeoParser()
+
+	ip := net.ParseIP(sampleIPString)
+
+	// ip from England
+	parsedIP1 := geoParser.newResultFromIP(ip)
+	if len(parsedIP1.GeoIPCountry) != 2 {
 		t.Errorf("invalid parsed data")
 	}
 
-	// default location data base on IP address
-	geoResult := NewGeoResult(parsedIP1)
-	if geoResult.IPCountry != "GB" || geoResult.Country != "GB" {
-		t.Errorf("invalid parsed data")
-	}
+	// client from iran tehran
+	parsedIP1 = geoParser.clientLocationUpdate(parsedIP1, 35.6892, 51.3890)
 
-	// now patch with client geo location
-	geoResult.AddLocation(lookup1)
-	if geoResult.ClientCity != "Tehran" || geoResult.Country != "IR" {
+	if parsedIP1.GeoResultCountry != "IR" {
 		t.Errorf("invalid parsed data")
 	}
 }

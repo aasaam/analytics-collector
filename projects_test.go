@@ -1,98 +1,134 @@
 package main
 
 import (
+	_ "embed"
+	"encoding/json"
 	"strconv"
 	"testing"
 )
 
-var jsonSample = `
-{
-	"000000000000": {
-		"ph": "000000000000",
-		"d": [
-			"example.com",
-			"*.sub.example.com"
-		]
-	},
-	"111111111111": {
-		"ph": "111111111111",
-		"d": [
-			"example.net",
-			"*.sub.example.net"
-		]
+//go:embed projects.json
+var jsonSample []byte
+
+func TestProjectManager0(t *testing.T) {
+	if _, err := validatePublicInstaceID(""); err == nil {
+		t.Errorf("error must throw")
+	}
+	if _, err := validatePublicInstaceID("000000000000"); err != nil {
+		t.Errorf("error must not throw")
 	}
 }
-`
 
 func TestProjectManager1(t *testing.T) {
-	pManager := NewProjectManager()
+	pm := newProjectsManager()
 
-	err1 := pManager.LoadJSON([]byte(`1`))
-	if err1 == nil {
-		t.Errorf("error must be thrown")
-	}
+	var data map[string]projectData
 
-	err := pManager.LoadJSON([]byte(jsonSample))
+	err := json.Unmarshal(jsonSample, &data)
 	if err != nil {
 		t.Error(err)
 	}
 
-	v00 := pManager.ValidateEvent("000000000000")
-	if !v00 {
+	err2 := pm.load(data)
+	if err2 != nil {
+		t.Error(err2)
+	}
+
+	if !pm.validateID("000000000000") {
 		t.Errorf("project api must matched")
 	}
 
-	v0 := pManager.ValidateAPI("000000000000", "000000000000")
-	if !v0 {
+	if pm.validateID("111111111111") {
+		t.Errorf("project api must not matched")
+	}
+
+	if !pm.validateIDAndPrivate("000000000000", "000000000000111111111111") {
 		t.Errorf("project api must matched")
 	}
 
-	v0f := pManager.ValidateAPI("000000000000", "000000000001")
-	if v0f {
-		t.Errorf("project api must not match")
+	if pm.validateIDAndPrivate("000000000000", "222222222222222222222222") {
+		t.Errorf("project api must not matched")
 	}
 
-	v1 := pManager.ValidatePageView("000000000001", "example.com")
-	if v1 {
-		t.Errorf("project id must not matched")
+	if !pm.validateIDAndURL("000000000000", getURL("http://example.com")) {
+		t.Errorf("project must matched")
 	}
 
-	v31 := pManager.ValidatePageView("000000000000", "example.com")
-	v32 := pManager.ValidatePageView("000000000000", "example.com")
-	if !v31 || !v32 {
-		t.Errorf("project id must matched")
+	if !pm.validateIDAndURL("000000000000", getURL("http://example.com")) {
+		t.Errorf("project must matched")
 	}
 
-	v2 := pManager.ValidatePageView("0", "yahoo.com")
-	if v2 {
-		t.Errorf("project id must not matched")
+	if !pm.validateIDAndURL("000000000000", getURL("http://example.net")) {
+		t.Errorf("project must matched")
 	}
 
-	v41 := pManager.ValidatePageView("000000000000", "very.sub.example.com")
-	v42 := pManager.ValidatePageView("000000000000", "sub.example.com")
-	if !v41 || !v42 {
-		t.Errorf("project id must matched")
+	if !pm.validateIDAndURL("000000000000", getURL("https://www.example.net")) {
+		t.Errorf("project must matched")
+	}
+
+	if pm.validateIDAndURL("000000000000", getURL("http://1.1.1.1")) {
+		t.Errorf("project must matched")
+	}
+
+	if pm.validateIDAndURL("000000000000", getURL("https://www.example-not-exist.net")) {
+		t.Errorf("project must matched")
+	}
+}
+
+func TestProjectManager2(t *testing.T) {
+	pm := newProjectsManager()
+
+	var data map[string]projectData
+
+	err := json.Unmarshal(jsonSample, &data)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err2 := pm.load(data)
+	if err2 != nil {
+		t.Error(err2)
+	}
+
+	if pm.validateIDAndURL("1", getURL("https://www.example.net")) {
+		t.Errorf("project must matched")
+	}
+	if pm.validateIDAndURL("000000000000", getURL("")) {
+		t.Errorf("project must matched")
 	}
 }
 
 func BenchmarkValidateWildCardNoCache(b *testing.B) {
-	pManager := NewProjectManager()
-	pManager.LoadJSON([]byte(jsonSample))
+	pm := newProjectsManager()
+	var data map[string]projectData
+	json.Unmarshal(jsonSample, &data)
+	pm.load(data)
+
 	for n := 0; n < b.N; n++ {
-		pManager.ValidatePageView("000000000000", strconv.Itoa(n)+".sub.example.com")
+		u := getURL("https://" + strconv.Itoa(n) + ".sub.example.net")
+		pm.validateIDAndURL("000000000000", u)
 	}
 }
+
 func BenchmarkValidateWildCardCache(b *testing.B) {
-	pManager := NewProjectManager()
-	pManager.LoadJSON([]byte(jsonSample))
+	pm := newProjectsManager()
+	var data map[string]projectData
+	json.Unmarshal(jsonSample, &data)
+	pm.load(data)
+
+	u := getURL("https://sub.example.net")
 	for n := 0; n < b.N; n++ {
-		pManager.ValidatePageView("000000000000", "static.sub.example.com")
+		pm.validateIDAndURL("000000000000", u)
 	}
 }
+
 func BenchmarkValidateAPI(b *testing.B) {
-	pManager := NewProjectManager()
-	pManager.LoadJSON([]byte(jsonSample))
+	pm := newProjectsManager()
+	var data map[string]projectData
+	json.Unmarshal(jsonSample, &data)
+	pm.load(data)
+
 	for n := 0; n < b.N; n++ {
-		pManager.ValidateAPI("000000000000", "000000000001")
+		pm.validateIDAndPrivate("000000000000", "000000000000111111111111")
 	}
 }

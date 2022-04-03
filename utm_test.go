@@ -1,63 +1,62 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/url"
 	"testing"
 )
 
-func prettyPrint(data interface{}) {
-	var p []byte
-	//    var err := error
-	p, err := json.MarshalIndent(data, "", "\t")
-	if err != nil {
-		fmt.Println(err)
-		return
+func TestParseUTM1(t *testing.T) {
+	u := getURL("https://www.google.com")
+
+	utm := parseUTM(u)
+	if utm.UTMValid || utm.UTMExist {
+		t.Errorf("invalid utm parse")
 	}
-	fmt.Printf("%s \n", p)
+}
+func TestParseUTM2(t *testing.T) {
+	u := getURL("https://www.example.com?UTM_SOURCE=source&utm_medium=medium&utm_campaign=sale1&utm_id=id&utm_term=keyword1&utm_content=content")
+
+	utm := parseUTM(u)
+	if !utm.UTMValid || !utm.UTMExist {
+		t.Errorf("invalid utm parse")
+	}
+}
+func TestParseUTM3(t *testing.T) {
+	sampleName := " This IS <>\"' for Name"
+	u := getURL("https://www.example.com?UTM_SOURCE=source&utm_medium=medium&utm_campaign=" + sampleName + "&utm_id=id&utm_term=keyword1&utm_content=content")
+
+	utm := parseUTM(u)
+	if !utm.UTMValid || !utm.UTMExist {
+		t.Errorf("invalid utm parse")
+	}
+}
+func TestParseUTM4(t *testing.T) {
+	sampleName := " This IS <>\"' for Name"
+	u := getURL("https://www.example.com/?utm_source=source&utm_medium=medium&utm_campaign=" + url.QueryEscape(sampleName) + "&utm_id=id&utm_term=keyword1&utm_content=content")
+
+	utm := parseUTM(u)
+	if !utm.UTMValid || !utm.UTMExist {
+		t.Errorf("invalid utm parse")
+	}
+}
+func TestParseUTM5(t *testing.T) {
+	u := getURL("https://www.example.com?UTM_SOURCE=source&utm_medium=medium")
+
+	utm := parseUTM(u)
+	if utm.UTMValid || !utm.UTMExist {
+		t.Errorf("invalid utm parse")
+	}
+}
+func TestParseUTM6(t *testing.T) {
+	utm := parseUTM(nil)
+	if utm.UTMValid || utm.UTMExist {
+		t.Errorf("invalid utm parse")
+	}
 }
 
-func TestParseUTM(t *testing.T) {
-	sampleName := " This IS <>\"' for Name"
-
-	utm0 := ParseUTM("\x18")
-
-	if utm0.Valid {
-		t.Errorf("invalid utm parse")
-	}
-
-	utm1 := ParseUTM("https://www.google.com")
-
-	if utm1.Valid {
-		t.Errorf("invalid utm parse")
-	}
-
-	utm11 := ParseUTM("https://www.example.com?UTM_SOURCE=source&utm_medium=medium")
-
-	if utm11.Valid {
-		t.Errorf("invalid utm parse")
-	}
-
-	utm2 := ParseUTM("https://www.example.com?UTM_SOURCE=source&utm_medium=medium&utm_campaign=sale1&utm_id=id&utm_term=keyword1&utm_content=content")
-
-	if !utm2.Valid || utm2.CampaignName == "" {
-		t.Errorf("invalid utm parse")
-	}
-
-	utm3 := ParseUTM("https://www.example.com?UTM_SOURCE=source&utm_medium=medium&utm_campaign=" + sampleName + "&utm_id=id&utm_term=keyword1&utm_content=content")
-
-	if !utm3.Valid {
-		t.Errorf("invalid utm parse")
-	}
-
-	utm4 := ParseUTM("https://www.example.com/?UTM_SOURCE=source&utm_medium=medium&utm_campaign=" + url.QueryEscape(sampleName) + "&utm_id=id&utm_term=keyword1&utm_content=content")
-
-	if !utm4.Valid {
-		t.Errorf("invalid utm parse")
-	}
-
-	if utm4.CampaignName != utm3.CampaignName {
-		t.Errorf("invalid utm parse")
+func BenchmarkParseUTM(b *testing.B) {
+	u := getURL("https://www.example.com?UTM_SOURCE=source&utm_medium=medium&utm_campaign=sale1&utm_id=id&utm_term=keyword1&utm_content=content")
+	for n := 0; n < b.N; n++ {
+		parseUTM(u)
 	}
 }

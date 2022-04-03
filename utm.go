@@ -5,23 +5,24 @@ import (
 	"strings"
 )
 
-// UTM is Urchin Tracking Module for online marketing campaigns
-type UTM struct {
-	Valid        bool
-	Source       string
-	Medium       string
-	CampaignName string
-	ID           string
-	Term         string
-	Content      string
+type utm struct {
+	UTMValid    bool
+	UTMExist    bool
+	UTMSource   string
+	UTMMedium   string
+	UTMCampaign string
+	UTMID       string
+	UTMTerm     string
+	UTMContent  string
 }
 
-// ParseUTM return parsed utm parameters from URL
-func ParseUTM(urlString string) UTM {
-	result := UTM{}
+func parseUTM(u *url.URL) utm {
+	result := utm{
+		UTMExist: false,
+		UTMValid: false,
+	}
 
-	u, err := url.Parse(urlString)
-	if err != nil {
+	if u == nil {
 		return result
 	}
 
@@ -31,23 +32,29 @@ func ParseUTM(urlString string) UTM {
 
 		switch kci {
 		case "utm_source":
-			result.Source = strings.TrimSpace(v[0])
+			result.UTMExist = true
+			result.UTMSource = v[0]
 		case "utm_medium":
-			result.Medium = strings.TrimSpace(v[0])
+			result.UTMExist = true
+			result.UTMMedium = v[0]
 		case "utm_campaign":
-			result.CampaignName = strings.TrimSpace(v[0])
+			result.UTMExist = true
+			result.UTMCampaign = v[0]
 		case "utm_id":
-			result.ID = strings.TrimSpace(v[0])
+			result.UTMExist = true
+			result.UTMID = v[0]
 		case "utm_term":
-			result.Term = strings.TrimSpace(v[0])
+			result.UTMExist = true
+			result.UTMTerm = v[0]
 		case "utm_content":
-			result.Content = strings.TrimSpace(v[0])
+			result.UTMExist = true
+			result.UTMContent = v[0]
 		}
 	}
 
-	result.Valid = false
-	if result.Source != "" && result.Medium != "" && result.CampaignName != "" {
-		result.Valid = true
+	result.UTMValid = false
+	if result.UTMSource != "" && result.UTMMedium != "" && result.UTMCampaign != "" {
+		result.UTMValid = true
 	}
 
 	return result
