@@ -165,7 +165,7 @@ func runServer(c *cli.Context) error {
 				if clickhouseConnErr != nil {
 					conf.getLogger().
 						Error().
-						Str("type", error_type_app).
+						Str("type", errorTypeApp).
 						Str("on", "clickhouse-connection").
 						Str("error", clickhouseConnErr.Error()).
 						Send()
@@ -185,7 +185,7 @@ func runServer(c *cli.Context) error {
 					if recordsBatchErr != nil {
 						conf.getLogger().
 							Error().
-							Str("type", error_type_app).
+							Str("type", errorTypeApp).
 							Str("on", "clickhouse-connection").
 							Str("error", recordsBatchErr.Error()).
 							Send()
@@ -201,7 +201,7 @@ func runServer(c *cli.Context) error {
 						if recordDecodeErr != nil {
 							conf.getLogger().
 								Error().
-								Str("type", error_type_app).
+								Str("type", errorTypeApp).
 								Str("on", "record-decode").
 								Str("error", recordDecodeErr.Error()).
 								Send()
@@ -218,7 +218,7 @@ func runServer(c *cli.Context) error {
 								if insertErr != nil {
 									conf.getLogger().
 										Error().
-										Str("type", error_type_app).
+										Str("type", errorTypeApp).
 										Str("on", "record-insert").
 										Str("error", insertErr.Error()).
 										Send()
@@ -229,7 +229,7 @@ func runServer(c *cli.Context) error {
 							if insertErr != nil {
 								conf.getLogger().
 									Error().
-									Str("type", error_type_app).
+									Str("type", errorTypeApp).
 									Str("on", "record-insert").
 									Str("error", insertErr.Error()).
 									Send()
@@ -241,7 +241,7 @@ func runServer(c *cli.Context) error {
 					if recordsBatchSendErr != nil {
 						conf.getLogger().
 							Error().
-							Str("type", error_type_app).
+							Str("type", errorTypeApp).
 							Str("on", "record-batch-send").
 							Str("error", recordsBatchSendErr.Error()).
 							Send()
@@ -262,7 +262,7 @@ func runServer(c *cli.Context) error {
 					if clientErrorsBatchErr != nil {
 						conf.getLogger().
 							Error().
-							Str("type", error_type_app).
+							Str("type", errorTypeApp).
 							Str("on", "clickhouse-connection").
 							Str("error", clientErrorsBatchErr.Error()).
 							Send()
@@ -278,7 +278,7 @@ func runServer(c *cli.Context) error {
 						if clientErrorDecodeErr != nil {
 							conf.getLogger().
 								Error().
-								Str("type", error_type_app).
+								Str("type", errorTypeApp).
 								Str("on", "client-error-decode").
 								Str("error", clientErrorDecodeErr.Error()).
 								Send()
@@ -289,7 +289,7 @@ func runServer(c *cli.Context) error {
 						if insertErr != nil {
 							conf.getLogger().
 								Error().
-								Str("type", error_type_app).
+								Str("type", errorTypeApp).
 								Str("on", "client-error-insert").
 								Str("error", insertErr.Error()).
 								Send()
@@ -300,7 +300,7 @@ func runServer(c *cli.Context) error {
 					if clientErrorsBatchSendErr != nil {
 						conf.getLogger().
 							Error().
-							Str("type", error_type_app).
+							Str("type", errorTypeApp).
 							Str("on", "client-error-batch-send").
 							Str("error", clientErrorsBatchSendErr.Error()).
 							Send()

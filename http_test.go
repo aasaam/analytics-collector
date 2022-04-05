@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -55,6 +54,7 @@ func TestHTTP11(t *testing.T) {
 		"/a.js",
 		"/l.js",
 		"/amp.json",
+		"/robots.txt",
 	}
 
 	for _, p := range statics {
@@ -351,7 +351,7 @@ func TestHTTP33(t *testing.T) {
 	r1.Header.Set(fiber.HeaderUserAgent, sampleUserAgent)
 	r1.Header.Set(fiber.HeaderContentType, "application/json")
 	rs1, _ := app.Test(r1)
-	fmt.Println(rs1.StatusCode)
+
 	if rs1.StatusCode != fiber.StatusOK {
 		t.Errorf("invalid response")
 	}

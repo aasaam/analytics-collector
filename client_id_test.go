@@ -2,19 +2,12 @@ package main
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
 	"time"
 )
 
-func TestClientIdFromStd0(t *testing.T) {
-	d := `{"cid_std":"MTY0OTEwOTcwMToxNjQ5MTExNTAxOjAwMDAwMDAwMDAwMDAwMDA=","p":{"u":"https://exmple.net/","t":"نرم افزارها جامعه کتابهای ایپسوم با، نامفهوم، می طلبد و زمان گرافیک در","l":"fa","cu":"https://exmple.net/","ei":"63","em":"page","et":"A0000","r":"https://www.google.com","bc":{"n1":"ارائه آنچنان-1","u1":"/1-%D8%A7%DB%8C%D8%AC%D8%A7%D8%AF-%D9%85%DB%8C-%D8%B7%D9%84%D8%A8%D8%AF-%D9%88-%DA%A9%D8%A7%D8%B1%D8%A8%D8%B1%D8%AF%D9%87%D8%A7%DB%8C-%DA%86%D8%A7%D9%BE-%DA%A9%D8%AA%D8%A7%D8%A8%D9%87%D8%A7%DB%8C","n2":"و دشواری که-2","u2":"/2-%D9%88-%D8%AF%D8%B4%D9%88%D8%A7%D8%B1%DB%8C-%D9%85%D8%AA%D9%86-%D8%A7%D8%B3%D8%AA%D9%81%D8%A7%D8%AF%D9%87-%D9%BE%DB%8C%D9%88%D8%B3%D8%AA%D9%87-%D8%B3%D8%AA%D9%88%D9%86"},"scr":"393x851","vps":"405x740","cd":"24","k":"مورد,نیاز,امید,مورد,برای,فراوان,قرار,گیرد,شرایط,روزنامه","rs":"","dpr":"2.75","if":false,"ts":true,"sot":"p-p","prf":{"dlt":"0","tct":"0","srt":"111","pdt":"9","rt":"27","dit":"383","clt":"383","r":7},"geo":{"lat":35.722035,"lon":51.4074033}}}`
-	var s postRequest
-	e := json.Unmarshal([]byte(d), &s)
-	fmt.Println(e)
-}
 func TestClientIdFromStd1(t *testing.T) {
 	initTime := time.Now().Add(time.Duration(-60) * time.Minute).Unix()
 	sessionTime := time.Now().Add(time.Duration(-30) * time.Minute).Unix()

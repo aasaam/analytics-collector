@@ -82,6 +82,7 @@ func newGeoParser(
 }
 
 func (geoParser *geoParser) getGeonameData(
+	country string,
 	latitude float64,
 	longitude float64,
 ) (geonameData, error) {
@@ -106,7 +107,7 @@ func (geoParser *geoParser) getGeonameData(
 		&result.country,
 	)
 
-	if err == nil && result.city != "" {
+	if err == nil && result.country != country {
 		result.valid = true
 		return result, nil
 	}
@@ -135,8 +136,8 @@ func (geoParser *geoParser) newResultFromIP(ip net.IP) geoResult {
 		obj.GeoIPLocationLongitude = recordCity.Location.Longitude
 
 		var geonameData geonameData
-		if obj.GeoIPLocationLongitude != 0 || obj.GeoIPLocationLatitude != 0 {
-			geonameData, _ = geoParser.getGeonameData(obj.GeoIPLocationLatitude, obj.GeoIPLocationLongitude)
+		if obj.GeoIPCountry != "" && (obj.GeoIPLocationLongitude != 0 || obj.GeoIPLocationLatitude != 0) {
+			geonameData, _ = geoParser.getGeonameData(obj.GeoIPCountry, obj.GeoIPLocationLatitude, obj.GeoIPLocationLongitude)
 		}
 
 		if geonameData.valid {

@@ -49,6 +49,8 @@ require (
 	go.opentelemetry.io/otel v1.4.1 // indirect
 	go.opentelemetry.io/otel/trace v1.4.1 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
+	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/sys v0.0.0-20220325203850-36772127a21f // indirect
+	golang.org/x/tools v0.1.10 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 )

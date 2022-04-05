@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"fmt"
 	"net"
 	"net/url"
 	"time"
@@ -122,6 +121,8 @@ func init() {
 	recordModeMap["e_js_c"] = recordModeEventJSCross
 	recordModeMap["e_sw"] = recordModeEventServiceWorker
 	recordModeMap["e_api"] = recordModeEventAPI
+
+	// etc
 	recordModeMap["err"] = recordModeClientError
 }
 
@@ -155,27 +156,29 @@ func newRecord(modeQuery string, publicInstaceIDQuery string) (*record, error) {
 }
 
 func (r *record) setAPI(
-	postRequestAPI *postRequestAPI,
+	postData *postRequest,
 ) *errorMessage {
-	if postRequestAPI == nil {
-		return &error_api_fields_missed
+	if postData.API == nil {
+		return &errorAPIFieldsAreMissing
 	}
 
 	n := time.Now().Unix()
-	if postRequestAPI.ClientTime <= n && postRequestAPI.ClientTime >= (n-28800) {
-		r.Created = time.Unix(postRequestAPI.ClientTime, 0)
+	if postData.API.ClientTime <= n && postData.API.ClientTime >= (n-28800) {
+		r.Created = time.Unix(postData.API.ClientTime, 0)
 	}
 
-	ip := net.ParseIP(postRequestAPI.ClientIP)
+	ip := net.ParseIP(postData.API.ClientIP)
 	if ip == nil {
-		return &error_api_client_id_not_valid
+		return &errorAPIClientIPNotValid
 	}
 
 	r.IP = ip
 
-	if postRequestAPI.ClientUserAgent == "" {
-		return &error_api_client_user_agent_not_valid
+	if postData.API.ClientUserAgent == "" {
+		return &errorAPIClientUserAgentNotValid
 	}
+
+	r.CID = clientIDFromOther([]string{r.IP.String(), postData.API.ClientUserAgent})
 
 	return nil
 }
@@ -206,38 +209,36 @@ func (r *record) verify(
 ) *errorMessage {
 	// initialize
 	if r.Mode < 1 || r.IP == nil {
-		return &error_record_not_proccessed
-	}
-
-	// in api mode private key must matched
-	if r.Mode == recordModeEventAPI && !projectsManager.validateIDAndPrivate(r.PublicInstaceID, privateKey) {
-		return &error_api_invalid_private_key
-	}
-
-	// in page js event must match with page url
-	if r.Mode == recordModeEventJSInPageView && !projectsManager.validateIDAndURL(r.PublicInstaceID, r.PURL) {
-		return &error_project_public_id_url_did_not_matched
+		return &errorRecordNotProccessedYet
 	}
 
 	// page view require matched project id and url of page view
 	if r.isPageView() {
-
 		if r.PURL == nil {
-			return &error_url_required_and_must_valid
+			return &errorURLRequiredAndMustBeValid
 		}
-		fmt.Println(r.PublicInstaceID, r.PURL)
 		if !projectsManager.validateIDAndURL(r.PublicInstaceID, r.PURL) {
-			return &error_project_public_id_url_did_not_matched
+			return &errorProjectPublicIDAndURLDidNotMatched
 		}
 		return nil
 	}
 
+	// in api mode private key must matched
+	if r.Mode == recordModeEventAPI && !projectsManager.validateIDAndPrivate(r.PublicInstaceID, privateKey) {
+		return &errorAPIPrivateKeyFailed
+	}
+
+	// in page js event must match with page url
+	if r.Mode == recordModeEventJSInPageView && !projectsManager.validateIDAndURL(r.PublicInstaceID, r.PURL) {
+		return &errorProjectPublicIDAndURLDidNotMatched
+	}
+
 	if r.Mode == recordModeClientError && r.PURL != nil && !projectsManager.validateIDAndURL(r.PublicInstaceID, r.PURL) {
-		return &error_project_public_id_url_did_not_matched
+		return &errorProjectPublicIDAndURLDidNotMatched
 	}
 
 	if r.Mode > 99 && r.EventCount < 1 {
-		return &error_events_are_empty
+		return &errorEventsAreEmpty
 	}
 
 	return nil
@@ -269,7 +270,7 @@ func (r *record) setPostRequest(
 	postRequest *postRequest,
 	refererParser *refererParser,
 	geoParser *geoParser,
-) *errorMessage {
+) {
 	if postRequest.ClientErrorMessage != "" {
 		r.ClientErrorMessage = postRequest.ClientErrorMessage
 		r.ClientErrorObject = postRequest.ClientErrorObject
@@ -400,12 +401,6 @@ func (r *record) setPostRequest(
 	} else if r.Mode == recordModeClientError && r.IP != nil {
 		r.CID = clientIDFromOther([]string{r.IP.String(), r.UserAgentResult.UaFull})
 	}
-
-	if !r.CID.Valid {
-		return &error_record_cid_not_proccessed
-	}
-
-	return nil
 }
 
 func (r *record) finalize() ([]byte, error) {

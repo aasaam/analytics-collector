@@ -123,7 +123,6 @@ func TestGetCursorID(t *testing.T) {
 }
 func TestGetURLPath(t *testing.T) {
 	urls := []string{
-		"https://www.google.com",
 		"https://www.google.com/path/تست/file.html?",
 		"https://www.google.com/path/%D8%AA%D8%B3%D8%AA/file.html?",
 		"https://www.google.com/path/to/file.html?foo=bar",

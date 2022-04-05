@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -18,13 +16,12 @@ func httpRecord(
 	// no cache at all
 	noCache(c)
 
-	record, recordErr := newRecord(c.Query(record_query_mode), c.Query(record_query_public_instace_id))
+	record, recordErr := newRecord(c.Query(recordQueryMode), c.Query(recordQueryPublicInstaceID))
 
 	if recordErr != nil {
 		return httpErrorResponse(
 			c,
-			error_invalid_mode_or_project_public_id.msg,
-			error_invalid_mode_or_project_public_id.code,
+			errorInvalidModeOrProjectPublicID,
 		)
 	}
 
@@ -32,13 +29,13 @@ func httpRecord(
 	userAgent := c.Get(fiber.HeaderUserAgent)
 
 	record.setQueryParameters(
-		c.Query(record_query_url),
-		c.Query(record_query_canonical),
-		c.Query(record_query_title),
-		c.Query(record_query_lang),
-		c.Query(record_query_entity_id),
-		c.Query(record_query_entity_module),
-		c.Query(record_query_entity_taxonomy_id),
+		c.Query(recordQueryURL),
+		c.Query(recordQueryCanonicalURL),
+		c.Query(recordQueryTitle),
+		c.Query(recordQueryLang),
+		c.Query(recordQueryEntityID),
+		c.Query(recordQueryEntityModule),
+		c.Query(recordQueryEntityTaxonomyID),
 	)
 
 	// in not api mode ip must get from request
@@ -46,6 +43,11 @@ func httpRecord(
 		record.IP = ip
 		record.GeoResult = geoParser.newResultFromIP(ip)
 		record.UserAgentResult = userAgentParser.parse(userAgent)
+
+		if record.Mode == recordModeClientError {
+			cid := clientIDFromOther([]string{ip.String(), userAgent})
+			record.CID = cid
+		}
 	}
 
 	// recordModePageViewJavaScript
@@ -54,45 +56,27 @@ func httpRecord(
 	if c.Method() == fiber.MethodPost {
 		var postData postRequest
 		if postDataErr := c.BodyParser(&postData); postDataErr != nil {
-			fmt.Println(postDataErr)
 			return httpErrorResponse(
 				c,
-				fiber.StatusBadRequest,
-				fiber.StatusBadRequest,
+				errorBadPOSTBody,
 			)
 		}
 
-		if record.Mode == recordModeEventAPI && postData.API != nil {
-			// updates
-			userAgent = postData.API.ClientUserAgent
-			ip = record.IP
-			cid := clientIDFromOther([]string{ip.String(), userAgent})
-
-			// apply updates
-			record.UserAgentResult = userAgentParser.parse(userAgent)
-			record.GeoResult = geoParser.newResultFromIP(ip)
-			record.CID = cid
-		}
-
-		setPostRequestErr := record.setPostRequest(&postData, refererParser, geoParser)
-
-		if setPostRequestErr != nil {
-			return httpErrorResponse(
-				c,
-				setPostRequestErr.msg,
-				setPostRequestErr.code,
-			)
-		}
-
-		if record.Mode == recordModeClientError { // on client error
-
+		// changes if in api mode
+		if record.Mode == recordModeEventAPI {
+			// set api parameters
+			apiErr := record.setAPI(&postData)
+			if apiErr != nil {
+				return httpErrorResponse(
+					c,
+					*apiErr,
+				)
+			}
+		} else if record.Mode == recordModeClientError { // on client error
 			go func() {
-				cid := clientIDFromOther([]string{ip.String(), userAgent})
-				record.CID = cid
-
 				conf.getLogger().
 					Debug().
-					Str("type", error_type_client).
+					Str("type", errorTypeClient).
 					Str("error", postData.ClientErrorObject).
 					Str("ip", ip.String()).
 					Str("method", c.Method()).
@@ -107,7 +91,7 @@ func httpRecord(
 
 				conf.getLogger().
 					Error().
-					Str("type", error_type_app).
+					Str("type", errorTypeApp).
 					Str("error", finalizeErr.Error()).
 					Str("ip", ip.String()).
 					Str("method", c.Method()).
@@ -117,7 +101,7 @@ func httpRecord(
 
 			defer conf.getLogger().
 				Debug().
-				Str("type", error_type_client).
+				Str("type", errorTypeClient).
 				Str("ip", ip.String()).
 				Str("err", postData.ClientErrorObject).
 				Msg(postData.ClientErrorMessage)
@@ -125,33 +109,26 @@ func httpRecord(
 			return c.JSON(1)
 		}
 
+		if record.Mode == recordModeEventAPI && postData.API != nil {
+			// updates
+			userAgent = postData.API.ClientUserAgent
+			ip = record.IP
+
+			// apply updates
+			record.UserAgentResult = userAgentParser.parse(userAgent)
+			record.GeoResult = geoParser.newResultFromIP(ip)
+		}
+
+		record.setPostRequest(&postData, refererParser, geoParser)
+
 		// changes if in api mode
 		if record.Mode == recordModeEventAPI {
-			if postData.API == nil {
-				return httpErrorResponse(
-					c,
-					error_api_fields_missed.msg,
-					error_api_fields_missed.code,
-				)
-			}
-
-			// set api parameters
-			apiErr := record.setAPI(postData.API)
-			if apiErr != nil {
-				return httpErrorResponse(
-					c,
-					apiErr.msg,
-					apiErr.code,
-				)
-			}
-
 			// check api key
 			apiVerifyError := record.verify(projectsManager, postData.API.PrivateInstanceKey)
 			if apiVerifyError != nil {
 				return httpErrorResponse(
 					c,
-					apiVerifyError.msg,
-					apiVerifyError.code,
+					*apiVerifyError,
 				)
 			}
 
@@ -163,7 +140,7 @@ func httpRecord(
 				}
 				conf.getLogger().
 					Error().
-					Str("type", error_type_app).
+					Str("type", errorTypeApp).
 					Str("error", finalizeErr.Error()).
 					Str("ip", ip.String()).
 					Str("method", c.Method()).
@@ -172,36 +149,33 @@ func httpRecord(
 			}()
 
 			return c.JSON(true)
-
-		} else {
-			getVerifyError := record.verify(projectsManager, "")
-
-			if getVerifyError != nil {
-				return httpErrorResponse(
-					c,
-					getVerifyError.msg,
-					getVerifyError.code,
-				)
-			}
-
-			go func() {
-				finalizeByte, finalizeErr := record.finalize()
-				if finalizeErr == nil {
-					storage.addRecord(finalizeByte)
-				} else {
-					conf.getLogger().
-						Error().
-						Str("type", error_type_app).
-						Str("error", finalizeErr.Error()).
-						Str("ip", ip.String()).
-						Str("method", c.Method()).
-						Str("path", c.Path()).
-						Send()
-				}
-			}()
-
-			return c.JSON(1)
 		}
+
+		postVerifyError := record.verify(projectsManager, "")
+		if postVerifyError != nil {
+			return httpErrorResponse(
+				c,
+				*postVerifyError,
+			)
+		}
+
+		go func() {
+			finalizeByte, finalizeErr := record.finalize()
+			if finalizeErr == nil {
+				storage.addRecord(finalizeByte)
+			} else {
+				conf.getLogger().
+					Error().
+					Str("type", errorTypeApp).
+					Str("error", finalizeErr.Error()).
+					Str("ip", ip.String()).
+					Str("method", c.Method()).
+					Str("path", c.Path()).
+					Send()
+			}
+		}()
+
+		return c.JSON(1)
 
 		// recordModePageViewImageLegacy
 		// recordModePageViewImageNoScript
@@ -217,14 +191,13 @@ func httpRecord(
 			}
 		}
 
-		record.setReferer(refererParser, getURL(c.Query(record_query_referer)))
+		record.setReferer(refererParser, getURL(c.Query(recordQueryRefererURL)))
 
 		getVerifyError := record.verify(projectsManager, "")
 		if getVerifyError != nil {
 			return httpErrorResponse(
 				c,
-				getVerifyError.msg,
-				getVerifyError.code,
+				*getVerifyError,
 			)
 		}
 
@@ -235,7 +208,7 @@ func httpRecord(
 			} else {
 				conf.getLogger().
 					Error().
-					Str("type", error_type_app).
+					Str("type", errorTypeApp).
 					Str("error", finalizeErr.Error()).
 					Str("ip", ip.String()).
 					Str("method", c.Method()).
@@ -246,8 +219,8 @@ func httpRecord(
 
 		// image response single gif
 		if record.isImage() {
-			c.Set(fiber.HeaderContentType, mimetype_gif)
-			return c.Send(single_gif_image)
+			c.Set(fiber.HeaderContentType, mimetypeGIF)
+			return c.Send(singleGifImage)
 		}
 
 		return c.JSON(1)
@@ -255,7 +228,6 @@ func httpRecord(
 
 	return httpErrorResponse(
 		c,
-		error_record_not_valid.msg,
-		error_record_not_valid.code,
+		errorRecordNotValid,
 	)
 }

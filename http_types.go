@@ -7,37 +7,37 @@ import (
 )
 
 const (
-	nginx_x_accel_expires     = "X-Accel-Expires"
-	collector_url_replacement = "__COLLECTOR_URL__"
+	nginxXAccelExpires      = "X-Accel-Expires"
+	collectorURLReplacement = "__COLLECTOR_URL__"
 )
 
 const (
-	error_type_app    = "app"
-	error_type_client = "client"
+	errorTypeApp    = "app"
+	errorTypeClient = "client"
 )
 
 const (
-	mimetype_js  = "text/javascript"
-	mimetype_map = "application/json"
-	mimetype_gif = "image/gif"
+	mimetypeJS   = "text/javascript"
+	mimetypeText = "text/plain"
+	mimetypeGIF  = "image/gif"
 )
 
 const (
-	metrics_path = "/metrics"
+	metricsPath = "/metrics"
 )
 
 const (
-	record_query_mode              = "m"
-	record_query_public_instace_id = "i"
+	recordQueryMode            = "m"
+	recordQueryPublicInstaceID = "i"
 
-	record_query_url                = "u"
-	record_query_canonical          = "cu"
-	record_query_referer            = "r"
-	record_query_title              = "t"
-	record_query_lang               = "l"
-	record_query_entity_id          = "ei"
-	record_query_entity_module      = "em"
-	record_query_entity_taxonomy_id = "et"
+	recordQueryURL              = "u"
+	recordQueryCanonicalURL     = "cu"
+	recordQueryRefererURL       = "r"
+	recordQueryTitle            = "t"
+	recordQueryLang             = "l"
+	recordQueryEntityID         = "ei"
+	recordQueryEntityModule     = "em"
+	recordQueryEntityTaxonomyID = "et"
 )
 
 type errorMessage struct {
@@ -127,18 +127,21 @@ type postRequest struct {
 	API                *postRequestAPI     `json:"ar,omitempty"`
 }
 
-var single_gif_image, _ = base64.StdEncoding.DecodeString("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7")
+var singleGifImage, _ = base64.StdEncoding.DecodeString("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7")
 
 var (
-	error_record_not_proccessed                 errorMessage = errorMessage{code: fiber.StatusConflict, msg: "error_record_not_proccessed"}
-	error_record_not_valid                      errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "error_record_not_valid"}
-	error_record_cid_not_proccessed             errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "error_record_cid_not_proccessed"}
-	error_project_public_id_url_did_not_matched errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "error_project_public_id_url_did_not_matched"}
-	error_invalid_mode_or_project_public_id     errorMessage = errorMessage{code: fiber.StatusUnprocessableEntity, msg: "error_invalid_mode_or_project_public_id"}
-	error_url_required_and_must_valid           errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "error_url_required_and_must_valid"}
-	error_api_fields_missed                     errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "error_api_fields_missed"}
-	error_api_invalid_private_key               errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "error_api_invalid_private_key"}
-	error_api_client_id_not_valid               errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "error_api_client_id_not_valid"}
-	error_api_client_user_agent_not_valid       errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "error_api_client_user_agent_not_valid"}
-	error_events_are_empty                      errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "error_events_are_empty"}
+	errorInternalServerError                errorMessage = errorMessage{code: fiber.StatusInternalServerError, msg: "errorInternalServerError"}
+	errorMetricsForbidden                   errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "errorMetricsForbidden"}
+	errorRecordNotProccessedYet             errorMessage = errorMessage{code: fiber.StatusConflict, msg: "errorRecordNotProccessedYet"}
+	errorRecordNotValid                     errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "errorRecordNotValid"}
+	errorRecordCIDNotProccessed             errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "errorRecordCIDNotProccessed"}
+	errorProjectPublicIDAndURLDidNotMatched errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "errorProjectPublicIDAndURLDidNotMatched"}
+	errorInvalidModeOrProjectPublicID       errorMessage = errorMessage{code: fiber.StatusUnprocessableEntity, msg: "errorInvalidModeOrProjectPublicID"}
+	errorURLRequiredAndMustBeValid          errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "errorURLRequiredAndMustBeValid"}
+	errorAPIFieldsAreMissing                errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "errorAPIFieldsAreMissing"}
+	errorAPIPrivateKeyFailed                errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "errorAPIPrivateKeyFailed"}
+	errorAPIClientIPNotValid                errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "errorAPIClientIPNotValid"}
+	errorAPIClientUserAgentNotValid         errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "errorAPIClientUserAgentNotValid"}
+	errorEventsAreEmpty                     errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "errorEventsAreEmpty"}
+	errorBadPOSTBody                        errorMessage = errorMessage{code: fiber.StatusUnprocessableEntity, msg: "errorBadPOSTBody"}
 )

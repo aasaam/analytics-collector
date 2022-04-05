@@ -26,29 +26,32 @@ var embedLDotJS []byte
 //go:embed embed/build/amp.json
 var embedAmpDotJSON []byte
 
+//go:embed embed/robots.txt
+var embedRobotsDotTXT []byte
+
 func replaceCollectorURL(in []byte, collectorURL *url.URL) []byte {
 	str := string(in)
-	str = strings.ReplaceAll(str, collector_url_replacement, collectorURL.String())
+	str = strings.ReplaceAll(str, collectorURLReplacement, collectorURL.String())
 	return []byte(str)
 }
 
-func httpErrorResponse(c *fiber.Ctx, message interface{}, code int) error {
-	defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(code)).Inc()
-	c.Status(code)
-	return c.JSON(message)
+func httpErrorResponse(c *fiber.Ctx, errMsg errorMessage) error {
+	defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(errMsg.code)).Inc()
+	c.Status(errMsg.code)
+	return c.JSON(errMsg.msg)
 }
 
 func staticCache(c *fiber.Ctx, staticCacheTTL uint) {
 	ttlString := strconv.FormatUint(uint64(staticCacheTTL), 10)
 	c.Set(fiber.HeaderCacheControl, "public, max-age="+ttlString+", stale-while-revalidate="+ttlString)
-	c.Set(nginx_x_accel_expires, ttlString)
+	c.Set(nginxXAccelExpires, ttlString)
 }
 
 func noCache(c *fiber.Ctx) {
 	c.Set(fiber.HeaderCacheControl, "no-cache, no-store, must-revalidate")
 	c.Set(fiber.HeaderPragma, "no-cache")
 	c.Set(fiber.HeaderExpires, "0")
-	c.Set(nginx_x_accel_expires, "0")
+	c.Set(nginxXAccelExpires, "0")
 }
 
 func getClientIP(c *fiber.Ctx) net.IP {
@@ -95,7 +98,6 @@ func newHTTPServer(
 		StrictRouting:         true,
 		Prefork:               false,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-
 			code := fiber.StatusInternalServerError
 			if e, ok := err.(*fiber.Error); ok {
 				code = e.Code
@@ -107,7 +109,7 @@ func newHTTPServer(
 
 			defer conf.getLogger().
 				Error().
-				Str("type", error_type_app).
+				Str("type", errorTypeApp).
 				Str("error", err.Error()).
 				Str("ip", ip.String()).
 				Str("method", c.Method()).
@@ -115,7 +117,7 @@ func newHTTPServer(
 				Int("status_code", code).
 				Send()
 
-			return httpErrorResponse(c, code, code)
+			return httpErrorResponse(c, errorInternalServerError)
 		},
 	})
 
@@ -129,18 +131,18 @@ func newHTTPServer(
 	app.Use(func(c *fiber.Ctx) error {
 		ip := getClientIP(c)
 
-		if c.Path() == metrics_path {
+		if c.Path() == metricsPath {
 			if !conf.canAccessMetrics(ip) {
 				code := fiber.StatusForbidden
 				defer conf.getLogger().
 					Warn().
-					Str("type", error_type_app).
+					Str("type", errorTypeApp).
 					Str("ip", ip.String()).
 					Str("method", c.Method()).
 					Str("path", c.Path()).
 					Int("status_code", code).
 					Send()
-				return httpErrorResponse(c, code, code)
+				return httpErrorResponse(c, errorMetricsForbidden)
 			}
 			return c.Next()
 		}
@@ -175,29 +177,35 @@ func newHTTPServer(
 		return c.JSON("no favicon")
 	})
 
+	app.Get("/robots.txt", func(c *fiber.Ctx) error {
+		staticCache(c, staticCacheTTL)
+		c.Set(fiber.HeaderContentType, mimetypeText)
+		return c.Send(embedRobotsDotTXT)
+	})
+
 	embedADotJS = replaceCollectorURL(embedADotJS, conf.collectorURL)
 	app.Get("/a.js", func(c *fiber.Ctx) error {
 		staticCache(c, staticCacheTTL)
-		c.Set(fiber.HeaderContentType, mimetype_js)
+		c.Set(fiber.HeaderContentType, mimetypeJS)
 		return c.Send(embedADotJS)
 	})
 
 	embedLDotJS = replaceCollectorURL(embedLDotJS, conf.collectorURL)
 	app.Get("/l.js", func(c *fiber.Ctx) error {
 		staticCache(c, staticCacheTTL)
-		c.Set(fiber.HeaderContentType, mimetype_js)
+		c.Set(fiber.HeaderContentType, mimetypeJS)
 		return c.Send(embedLDotJS)
 	})
 
 	embedAmpDotJSON = replaceCollectorURL(embedAmpDotJSON, conf.collectorURL)
 	app.Get("/amp.json", func(c *fiber.Ctx) error {
 		staticCache(c, staticCacheTTL)
-		c.Set(fiber.HeaderContentType, mimetype_js)
+		c.Set(fiber.HeaderContentType, mimetypeJS)
 		return c.Send(embedAmpDotJSON)
 	})
 
 	handler := promhttp.HandlerFor(promRegistry, promhttp.HandlerOpts{})
-	app.Get(metrics_path, adaptor.HTTPHandler(handler))
+	app.Get(metricsPath, adaptor.HTTPHandler(handler))
 
 	// 404
 	app.Use(func(c *fiber.Ctx) error {
@@ -205,7 +213,7 @@ func newHTTPServer(
 		defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(code)).Inc()
 		defer conf.getLogger().
 			Debug().
-			Str("type", error_type_app).
+			Str("type", errorTypeApp).
 			Str("ip", getClientIP(c).String()).
 			Str("method", c.Method()).
 			Str("url", c.Context().URI().String()).

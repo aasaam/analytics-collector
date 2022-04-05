@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/base64"
-	"fmt"
 	"net"
 	"net/url"
 	"strconv"
@@ -43,8 +42,7 @@ func TestRecord2(t *testing.T) {
 	projects := projects{}
 
 	em1 := recordSample.verify(&projects, "")
-
-	if em1 != &error_record_not_proccessed {
+	if em1 != &errorRecordNotProccessedYet {
 		t.Errorf("invalid verify")
 	}
 
@@ -113,7 +111,7 @@ func TestRecord4(t *testing.T) {
 
 	pm := getTestProjects()
 
-	if recordSample.verify(pm, "") != &error_record_not_proccessed {
+	if recordSample.verify(pm, "") != &errorRecordNotProccessedYet {
 		t.Errorf("invalid verify")
 	}
 
@@ -121,7 +119,7 @@ func TestRecord4(t *testing.T) {
 
 	recordSample.IP = net.ParseIP("1.1.1.1")
 
-	if recordSample.verify(pm, "") != &error_url_required_and_must_valid {
+	if recordSample.verify(pm, "") != &errorURLRequiredAndMustBeValid {
 		t.Errorf("invalid verify")
 	}
 
@@ -129,7 +127,7 @@ func TestRecord4(t *testing.T) {
 
 	recordSample.PURL = u1
 
-	if recordSample.verify(pm, "") != &error_project_public_id_url_did_not_matched {
+	if recordSample.verify(pm, "") != &errorProjectPublicIDAndURLDidNotMatched {
 		t.Errorf("invalid verify")
 	}
 
@@ -152,7 +150,7 @@ func TestRecord5(t *testing.T) {
 	u2, _ := url.Parse("http://example.com")
 	recordSample.PURL = u2
 
-	if recordSample.verify(pm, "") != &error_api_invalid_private_key {
+	if recordSample.verify(pm, "") != &errorAPIPrivateKeyFailed {
 		t.Errorf("invalid verify")
 	}
 }
@@ -209,11 +207,7 @@ func TestRecord10(t *testing.T) {
 		Events: &events,
 	}
 
-	err := recordSample.setPostRequest(&post, refererParser, geoParser)
-
-	if err != nil {
-		t.Error(err)
-	}
+	recordSample.setPostRequest(&post, refererParser, geoParser)
 
 	if recordSample.verify(pm, "") != nil {
 		t.Errorf("invalid verify")
@@ -283,13 +277,7 @@ func TestRecord11(t *testing.T) {
 		Events: &events,
 	}
 
-	err := recordSample.setPostRequest(&post, refererParser, geoParser)
-
-	if err == nil {
-		t.Error("must thrown")
-	}
-
-	fmt.Println(recordSample.BreadCrumb)
+	recordSample.setPostRequest(&post, refererParser, geoParser)
 
 	if recordSample.verify(pm, "") != nil {
 		t.Errorf("invalid verify")
@@ -348,13 +336,9 @@ func TestRecord12(t *testing.T) {
 		Events: &events,
 	}
 
-	err := recordSample.setPostRequest(&post, refererParser, geoParser)
+	recordSample.setPostRequest(&post, refererParser, geoParser)
 
-	if err != nil {
-		t.Error(err)
-	}
-
-	if recordSample.verify(pm, "") != &error_project_public_id_url_did_not_matched {
+	if recordSample.verify(pm, "") != &errorProjectPublicIDAndURLDidNotMatched {
 		t.Errorf("invalid verify")
 	}
 }
@@ -422,13 +406,9 @@ func TestRecord13(t *testing.T) {
 		Page:               &postPage,
 	}
 
-	err := recordSample.setPostRequest(&post, refererParser, geoParser)
+	recordSample.setPostRequest(&post, refererParser, geoParser)
 
-	if err != nil {
-		t.Error(err)
-	}
-
-	if recordSample.verify(pm, "") != &error_project_public_id_url_did_not_matched {
+	if recordSample.verify(pm, "") != &errorProjectPublicIDAndURLDidNotMatched {
 		t.Errorf("invalid verify")
 	}
 }
@@ -482,13 +462,9 @@ func TestRecord14(t *testing.T) {
 		Page:               &postPage,
 	}
 
-	err := recordSample.setPostRequest(&post, refererParser, geoParser)
+	recordSample.setPostRequest(&post, refererParser, geoParser)
 
-	if err != nil {
-		t.Error(err)
-	}
-
-	if recordSample.verify(pm, "") != &error_project_public_id_url_did_not_matched {
+	if recordSample.verify(pm, "") != &errorProjectPublicIDAndURLDidNotMatched {
 		t.Errorf("invalid verify")
 	}
 }

@@ -30,7 +30,7 @@ docker exec -it clickhouse-client bash
 clickhouse-client --multiquery --host clickhouse-single --user 'analytics' --password 'password123123' < /tmp/schema.sql
 
 # run cli
-docker exec -it clickhouse-client /usr/bin/clickhouse-client --host clickhouse-single --user 'analytics' --password 'password123123'
+docker exec -it clickhouse-client /usr/bin/clickhouse-client --vertical --host clickhouse-single --user 'analytics' --password 'password123123'
 ```
 
 <div>
