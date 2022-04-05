@@ -37,6 +37,7 @@ jobs:
         run: |
           ./make.sh
           docker build -t aasaam/analytics-collector .
+          docker image inspect aasaam/analytics-collector:latest
           docker push aasaam/analytics-collector
           docker tag aasaam/analytics-collector ghcr.io/aasaam/analytics-collector:latest
           docker push ghcr.io/aasaam/analytics-collector:latest
