@@ -62,6 +62,10 @@ func runServer(c *cli.Context) error {
 		c.String("allowed-metrics-ips"),
 	)
 
+	clickhouseInterval := time.Duration(c.Int("clickhouse-interval")) * time.Second
+
+clickHouseInitStep:
+
 	clickhouseInit, _, clickhouseInitErr := getClickhouseConnection(
 		c.String("clickhouse-servers"),
 		c.String("clickhouse-database"),
@@ -79,11 +83,12 @@ func runServer(c *cli.Context) error {
 		nil,
 	)
 
-	/*
-		progress func(p *clickhouse.Progress),
-		profile func(p *clickhouse.ProfileInfo),
-	*/
 	if clickhouseInitErr != nil {
+		conf.getLogger().
+			Error().
+			Msg(clickhouseInitErr.Error())
+		time.Sleep(clickhouseInterval)
+		goto clickHouseInitStep
 		return clickhouseInitErr
 	}
 
@@ -156,7 +161,6 @@ func runServer(c *cli.Context) error {
 	/**
 	 * Records
 	 */
-	clickhouseInterval := time.Duration(c.Int("clickhouse-interval"))
 	go func() {
 		for {
 			func() {
@@ -351,7 +355,7 @@ func runServer(c *cli.Context) error {
 						Msg(fmt.Sprintf("Insert %d item(s) in %.2f seconds(s)", inserts, inSeconds))
 				}
 			}()
-			time.Sleep(time.Duration(1) * time.Second)
+			time.Sleep(clickhouseInterval)
 		}
 	}()
 

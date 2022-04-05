@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -55,7 +57,7 @@ func httpRecord(
 	// recordModeEvent*
 	if c.Method() == fiber.MethodPost {
 		var postData postRequest
-		if postDataErr := c.BodyParser(&postData); postDataErr != nil {
+		if postDataErr := json.Unmarshal(c.Body(), &postData); postDataErr != nil {
 			return httpErrorResponse(
 				c,
 				errorBadPOSTBody,

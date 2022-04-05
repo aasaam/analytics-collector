@@ -47,19 +47,19 @@ func parseScreenSize(
 	}
 
 	switch screenOrientation {
-	case "p-p":
+	case "portrait-primary":
 		result.ScrScreenOrientation = true
 		result.ScrScreenOrientationIsPortrait = true
 		result.ScrScreenOrientationIsSecondary = false
-	case "p-s":
+	case "portrait-secondary":
 		result.ScrScreenOrientation = true
 		result.ScrScreenOrientationIsPortrait = true
 		result.ScrScreenOrientationIsSecondary = true
-	case "l-p":
+	case "landscape-primary":
 		result.ScrScreenOrientation = true
 		result.ScrScreenOrientationIsPortrait = false
 		result.ScrScreenOrientationIsSecondary = false
-	case "l-s":
+	case "landscape-secondary":
 		result.ScrScreenOrientation = true
 		result.ScrScreenOrientationIsPortrait = false
 		result.ScrScreenOrientationIsSecondary = true

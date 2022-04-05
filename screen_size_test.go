@@ -5,7 +5,7 @@ import (
 )
 
 func TestParseScreenSize(t *testing.T) {
-	scr1 := parseScreenSize("p-p", "1376x774", "1376x389", "1.3953488372093024", "24")
+	scr1 := parseScreenSize("portrait-primary", "1376x774", "1376x389", "1.3953488372093024", "24")
 
 	if scr1.ScrColorDepth != 24 {
 		t.Errorf("invalid color depth")
@@ -23,7 +23,7 @@ func TestParseScreenSize(t *testing.T) {
 		t.Errorf("invalid resoluton")
 	}
 
-	scr11 := parseScreenSize("p-s", "1376x774", "1376x389", "1", "16")
+	scr11 := parseScreenSize("portrait-secondary", "1376x774", "1376x389", "1", "16")
 
 	if scr11.ScrColorDepth != 16 {
 		t.Errorf("invalid color depth")
@@ -37,7 +37,7 @@ func TestParseScreenSize(t *testing.T) {
 		t.Errorf("invalid screen orientation")
 	}
 
-	scr12 := parseScreenSize("l-p", "1376x774", "1376x389", "", "24")
+	scr12 := parseScreenSize("landscape-primary", "1376x774", "1376x389", "", "24")
 
 	if scr12.ScrResoluton != "" {
 		t.Errorf("invalid resoluton")
@@ -50,7 +50,7 @@ func TestParseScreenSize(t *testing.T) {
 }
 
 func TestParseScreenSize2(t *testing.T) {
-	scr1 := parseScreenSize("l-s", "1376x774", "1376x389", "1.3953488372093024", "24")
+	scr1 := parseScreenSize("landscape-secondary", "1376x774", "1376x389", "1.3953488372093024", "24")
 
 	if scr1.ScrColorDepth != 24 {
 		t.Errorf("invalid color depth")
@@ -72,6 +72,6 @@ func TestParseScreenSize2(t *testing.T) {
 
 func BenchmarkParseScreenSize(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		parseScreenSize("l-p", "1376x774", "1376x389", "1.3953488372093024", "24")
+		parseScreenSize("landscape-primary", "1376x774", "1376x389", "1.3953488372093024", "24")
 	}
 }

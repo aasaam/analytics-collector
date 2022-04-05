@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -351,6 +352,32 @@ func TestHTTP33(t *testing.T) {
 	r1.Header.Set(fiber.HeaderUserAgent, sampleUserAgent)
 	r1.Header.Set(fiber.HeaderContentType, "application/json")
 	rs1, _ := app.Test(r1)
+
+	if rs1.StatusCode != fiber.StatusOK {
+		t.Errorf("invalid response")
+	}
+}
+func TestHTTP40(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
+
+	c1 := newConfig("error", 0, true, "http://127.0.0.1", "127.0.0.1")
+	geoParser := getGeoParser()
+	projectsManager := getTestProjects()
+	storage := newStorage()
+	app := newHTTPServer(c1, geoParser, projectsManager, storage)
+
+	jsonSample := `{"cid_std":"MTY0OTE4MzAzMzoxNjQ5MTgzMDMzOjFmdnRmZzF2OWdmMTE1YnI=","p":{"u":"https://www.example.net/%D8%A8%D8%AE%D8%B4-%D8%B1%D8%B3%D8%A7%D9%86%D9%87-71/1011644-%D9%BE%DB%8C%D8%A7%D9%85-%D8%B1%D9%87%D8%A8%D8%B1-%D9%85%D8%B9%D8%B8%D9%85-%D8%A7%D9%86%D9%82%D9%84%D8%A7%D8%A8-%D8%A8%D9%87-%D9%85%D9%86%D8%A7%D8%B3%D8%A8%D8%AA-%D8%A2%D8%BA%D8%A7%D8%B2-%D8%B3%D8%A7%D9%84-%D9%86%D9%88%DB%8C%D8%AF-%D8%A7%D9%85%DB%8C%D8%AF%D8%A8%D8%AE%D8%B4-%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF%DB%8C-%D8%A7%D8%B2-%D8%B7%D8%B1%D9%81-%D8%B1%D9%87%D8%A8%D8%B1-%D8%A7%D9%86%D9%82%D9%84%D8%A7%D8%A8-%D8%A8%D8%B1%D8%A7%DB%8C-%D8%B3%D8%A7%D9%84-%D9%82%D8%B1%D9%86-%D8%AC%D8%AF%DB%8C%D8%AF","t":"پیام رهبر معظم انقلاب به مناسبت آغاز سال 1401 | نوید امیدبخش اقتصادی از طرف رهبر انقلاب برای سال و قرن جدید","l":"fa","cu":"https://www.example.net/بخش-%D8%B1%D8%B3%D8%A7%D9%86%D9%87-71/1011644-%D9%BE%DB%8C%D8%A7%D9%85-%D8%B1%D9%87%D8%A8%D8%B1-%D9%85%D8%B9%D8%B8%D9%85-%D8%A7%D9%86%D9%82%D9%84%D8%A7%D8%A8-%D8%A8%D9%87-%D9%85%D9%86%D8%A7%D8%B3%D8%A8%D8%AA-%D8%A2%D8%BA%D8%A7%D8%B2-%D8%B3%D8%A7%D9%84-%D9%86%D9%88%DB%8C%D8%AF-%D8%A7%D9%85%DB%8C%D8%AF%D8%A8%D8%AE%D8%B4-%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF%DB%8C-%D8%A7%D8%B2-%D8%B7%D8%B1%D9%81-%D8%B1%D9%87%D8%A8%D8%B1-%D8%A7%D9%86%D9%82%D9%84%D8%A7%D8%A8-%D8%A8%D8%B1%D8%A7%DB%8C-%D8%B3%D8%A7%D9%84-%D9%82%D8%B1%D9%86-%D8%AC%D8%AF%DB%8C%D8%AF","ei":"","em":"","r":"","bc":{},"scr":"1920x1080","vps":"1868x344","cd":"24","k":"حضرت آیت الله العظمی خامنه ای,پیام نوروزی رهبر انقلاب,پیام نوروزی رهبر معظم انقلاب,پیام آغاز سال 1401 رهبر انقلاب","rs":"","dpr":"1","if":false,"ts":false,"sot":"landscape-primary","prf":{"dlt":"0","tct":"66","srt":"179","pdt":"93","rt":"0","dit":"617","clt":"617","r":38}}}`
+
+	r1 := httptest.NewRequest("POST", "/?m=pv_js&i=000000000000", strings.NewReader(jsonSample))
+	r1.Header.Set(fiber.HeaderXForwardedFor, "1.1.1.1")
+	r1.Header.Set(fiber.HeaderUserAgent, sampleUserAgent)
+	r1.Header.Set(fiber.HeaderContentType, "text/plain;charset=UTF-8")
+	rs1, _ := app.Test(r1)
+
+	fmt.Println(rs1.StatusCode)
 
 	if rs1.StatusCode != fiber.StatusOK {
 		t.Errorf("invalid response")
