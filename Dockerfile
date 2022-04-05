@@ -14,7 +14,8 @@ RUN cd /src \
   && cat coverage.out | grep -v "main.go" | grep -v "clickhouse.go" > coverage.txt \
   && TOTAL_COVERAGE_FOR_CI_F=$(go tool cover -func coverage.txt | grep total | grep -Eo '[0-9]+.[0-9]+') \
   && echo "TOTAL_COVERAGE_FOR_CI_F: $TOTAL_COVERAGE_FOR_CI_F" \
-  && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o analytics-collector
+  && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o analytics-collector \
+  && ls -lah /src/analytics-collector
 
 FROM scratch
 
