@@ -9,6 +9,7 @@ require (
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/mileusna/useragent v1.0.2
 	github.com/oschwald/geoip2-golang v1.7.0
+	github.com/paulmach/orb v0.4.0
 	github.com/prometheus/client_golang v1.12.1
 	github.com/rs/zerolog v1.26.1
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
@@ -36,7 +37,6 @@ require (
 	github.com/klauspost/compress v1.15.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/oschwald/maxminddb-golang v1.9.0 // indirect
-	github.com/paulmach/orb v0.4.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
@@ -49,8 +49,6 @@ require (
 	go.opentelemetry.io/otel v1.4.1 // indirect
 	go.opentelemetry.io/otel/trace v1.4.1 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
-	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/sys v0.0.0-20220325203850-36772127a21f // indirect
-	golang.org/x/tools v0.1.10 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 )
