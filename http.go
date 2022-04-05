@@ -33,7 +33,7 @@ func replaceCollectorURL(in []byte, collectorURL *url.URL) []byte {
 }
 
 func httpErrorResponse(c *fiber.Ctx, message interface{}, code int) error {
-	defer prometheusResponseErrors.WithLabelValues(strconv.Itoa(code)).Inc()
+	defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(code)).Inc()
 	c.Status(code)
 	return c.JSON(message)
 }
@@ -67,10 +67,10 @@ func getClientIP(c *fiber.Ctx) net.IP {
 		}
 	}
 
-	ipObject := net.ParseIP(ipString)
-
+	var ipObject net.IP
+	ipObject = net.ParseIP(ipString)
 	if ipObject == nil {
-		panic("ip address is not found")
+		ipObject = net.ParseIP("0.0.0.0")
 	}
 
 	c.Locals("ip", ipObject)
@@ -82,14 +82,13 @@ func newHTTPServer(
 	conf *config,
 	geoParser *geoParser,
 	projectsManager *projects,
-	st *storage,
+	storage *storage,
 ) *fiber.App {
 	refererParser := newRefererParser()
 	userAgentParser := newUserAgentParser()
+	promRegistry := getPrometheusRegistry()
 
 	staticCacheTTL := conf.staticCacheTTL
-
-	promRegistry := getPrometheusRegistry()
 
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
@@ -102,7 +101,7 @@ func newHTTPServer(
 				code = e.Code
 			}
 
-			defer prometheusResponseErrors.WithLabelValues(strconv.Itoa(code)).Inc()
+			defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(code)).Inc()
 
 			ip := getClientIP(c)
 
@@ -112,7 +111,7 @@ func newHTTPServer(
 				Str("error", err.Error()).
 				Str("ip", ip.String()).
 				Str("method", c.Method()).
-				Str("url", c.Request().URI().String()).
+				Str("path", c.Path()).
 				Int("status_code", code).
 				Send()
 
@@ -132,26 +131,28 @@ func newHTTPServer(
 
 		if c.Path() == metrics_path {
 			if !conf.canAccessMetrics(ip) {
+				code := fiber.StatusForbidden
 				defer conf.getLogger().
 					Warn().
 					Str("type", error_type_app).
 					Str("ip", ip.String()).
 					Str("method", c.Method()).
-					Str("url", c.Context().URI().String()).
-					Msg("forbidden")
-				return httpErrorResponse(c, 403, 403)
+					Str("path", c.Path()).
+					Int("status_code", code).
+					Send()
+				return httpErrorResponse(c, code, code)
 			}
 			return c.Next()
-		} else {
-			defer prometheusTotalRequests.Inc()
 		}
+
+		defer promMetricHTTPTotalRequests.Inc()
 
 		defer conf.getLogger().
 			Trace().
 			Str("ip", ip.String()).
 			Str("method", c.Method()).
 			Str("url", c.Context().URI().String()).
-			Msg("access granted")
+			Msg("http_access")
 
 		return c.Next()
 	})
@@ -164,13 +165,14 @@ func newHTTPServer(
 			geoParser,
 			userAgentParser,
 			projectsManager,
-			st,
+			storage,
 		)
 	})
 
 	app.Get("/favicon.ico", func(c *fiber.Ctx) error {
-		c.Status(404)
-		return c.JSON("not found")
+		staticCache(c, 86400)
+		c.Status(fiber.StatusNotFound)
+		return c.JSON("no favicon")
 	})
 
 	embedADotJS = replaceCollectorURL(embedADotJS, conf.collectorURL)
@@ -199,16 +201,18 @@ func newHTTPServer(
 
 	// 404
 	app.Use(func(c *fiber.Ctx) error {
-		defer prometheusResponseErrors.WithLabelValues("404").Inc()
+		code := fiber.StatusNotFound
+		defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(code)).Inc()
 		defer conf.getLogger().
 			Debug().
 			Str("type", error_type_app).
 			Str("ip", getClientIP(c).String()).
 			Str("method", c.Method()).
 			Str("url", c.Context().URI().String()).
-			Msg("not found")
-		c.Status(fiber.StatusNotFound)
-		return c.JSON(fiber.StatusNotFound)
+			Int("status_code", code).
+			Send()
+		c.Status(code)
+		return c.JSON(code)
 	})
 
 	return app

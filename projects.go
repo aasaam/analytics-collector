@@ -85,7 +85,7 @@ func (p *projects) load(data map[string]projectData) error {
 }
 
 func (p *projects) validateIDAndPrivate(publicInstaceID string, privateKey string) bool {
-	if publicInstaceIDFromPrivate, ok := p.privateKeys[privateKey]; ok && publicInstaceIDFromPrivate == publicInstaceID {
+	if publicInstaceIDFromPrivate, ok := p.privateKeys[privateKey]; ok && privateKey != "" && publicInstaceIDFromPrivate == publicInstaceID {
 		return true
 	}
 

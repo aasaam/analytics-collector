@@ -3,7 +3,7 @@ tmp/
 clickhouse/logs/
 clickhouse/db/
 
-analytics-node
+analytics-collector
 
 coverage.*
 go.sum

@@ -23,26 +23,28 @@ var cidStandardRegex = regexp.MustCompile(`^(?P<InitTime>[0-9]{9,11}):(?P<Sessio
 
 type clientID struct {
 	Valid              bool
-	CIDType            uint8
-	CIDUserChecksum    string
-	CIDSessionChecksum string
-	CIDStdInitTime     time.Time
-	CIDStdSessionTime  time.Time
+	CidType            uint8
+	CidUserChecksum    string
+	CidSessionChecksum string
+	CidStdInitTime     time.Time
+	CidStdSessionTime  time.Time
 }
 
-func clientIDFromAMP(ampCIDString string) clientID {
+func clientIDFromAMP(ampCidString string) clientID {
 	t := time.Now()
 	timestamp := t.Unix()
 	sessionEach30Minutes := math.Round(float64(timestamp) / 1800)
 	sessionEach30MinutesString := fmt.Sprint(sessionEach30Minutes)
 
-	userChecksum := checksum(ampCIDString)
+	userChecksum := checksum(ampCidString)
 
 	cid := clientID{
 		Valid:              true,
-		CIDType:            clientIDTypeAmp,
-		CIDUserChecksum:    userChecksum,
-		CIDSessionChecksum: checksum(userChecksum + ":" + sessionEach30MinutesString),
+		CidType:            clientIDTypeAmp,
+		CidUserChecksum:    userChecksum,
+		CidSessionChecksum: checksum(userChecksum + ":" + sessionEach30MinutesString),
+		CidStdInitTime:     time.Unix(0, 0),
+		CidStdSessionTime:  time.Unix(0, 0),
 	}
 
 	return cid
@@ -58,9 +60,11 @@ func clientIDFromOther(parts []string) clientID {
 
 	cid := clientID{
 		Valid:              true,
-		CIDType:            clientIDTypeOther,
-		CIDUserChecksum:    userChecksum,
-		CIDSessionChecksum: checksum(userChecksum + ":" + sessionEach30MinutesString),
+		CidType:            clientIDTypeOther,
+		CidUserChecksum:    userChecksum,
+		CidSessionChecksum: checksum(userChecksum + ":" + sessionEach30MinutesString),
+		CidStdInitTime:     time.Unix(0, 0),
+		CidStdSessionTime:  time.Unix(0, 0),
 	}
 
 	return cid
@@ -78,23 +82,24 @@ func clientIDStandardParser(cidString string) (clientID, error) {
 	if ok := cidStandardRegex.MatchString(decoded); ok {
 		matched := cidStandardRegex.FindStringSubmatch(decoded)
 		initTime, err := strconv.ParseInt(matched[1], 10, 64)
-		if err != nil || initTime < minimumTime {
+		if err != nil || initTime < minimumTime || initTime > time.Now().Add(time.Hour).Unix() {
 			return cidInvalid, errors.New("invalid client identifier init time")
 		}
 		sessionTime, err := strconv.ParseInt(matched[2], 10, 64)
-		if err != nil || sessionTime < initTime {
-			return cidInvalid, errors.New("invalid client identifier daily time")
+		if err != nil || sessionTime < initTime || sessionTime > time.Now().Add(time.Duration(12)*time.Hour).Unix() {
+			return cidInvalid, errors.New("invalid client identifier session time")
 		}
-		if (sessionTime - initTime) > 86400 {
-			return cidInvalid, errors.New("session time must be at least 86400 with initialize time")
+		diffSession := sessionTime - initTime
+		if diffSession > 86400 {
+			return cidInvalid, errors.New("session time must be at least 86400 with initialize time and past 24 hours")
 		}
 		cidValid := clientID{}
 		cidValid.Valid = true
-		cidValid.CIDType = clientIDTypeStd
-		cidValid.CIDStdInitTime = time.Unix(initTime, 0)
-		cidValid.CIDStdSessionTime = time.Unix(sessionTime, 0)
-		cidValid.CIDUserChecksum = checksum(strings.Join([]string{matched[1], matched[3]}, ":"))
-		cidValid.CIDSessionChecksum = checksum(strings.Join([]string{matched[1], matched[2], matched[3]}, ":"))
+		cidValid.CidType = clientIDTypeStd
+		cidValid.CidStdInitTime = time.Unix(initTime, 0)
+		cidValid.CidStdSessionTime = time.Unix(sessionTime, 0)
+		cidValid.CidUserChecksum = checksum(strings.Join([]string{matched[1], matched[3]}, ":"))
+		cidValid.CidSessionChecksum = checksum(strings.Join([]string{matched[1], matched[2], matched[3]}, ":"))
 		return cidValid, nil
 	}
 	return cidInvalid, errors.New("invalid client identifier")

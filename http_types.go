@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	api_key_header            = "x-private-key"
 	nginx_x_accel_expires     = "X-Accel-Expires"
 	collector_url_replacement = "__COLLECTOR_URL__"
 )
@@ -71,22 +70,22 @@ type postRequestBreadcrumb struct {
 	N3 string `json:"n3,omitempty"`
 	N4 string `json:"n4,omitempty"`
 	N5 string `json:"n5,omitempty"`
-	P1 string `json:"p1,omitempty"`
-	P2 string `json:"p2,omitempty"`
-	P3 string `json:"p3,omitempty"`
-	P4 string `json:"p4,omitempty"`
-	P5 string `json:"p5,omitempty"`
+	U1 string `json:"u1,omitempty"`
+	U2 string `json:"u2,omitempty"`
+	U3 string `json:"u3,omitempty"`
+	U4 string `json:"u4,omitempty"`
+	U5 string `json:"u5,omitempty"`
 }
 
 type postRequestPerformanceData struct {
-	PerfPageLoadTime       uint16 `json:"plt,omitempty"`
-	PerfDomainLookupTime   uint16 `json:"dlt,omitempty"`
-	PerfTCPConnectTime     uint16 `json:"tct,omitempty"`
-	PerfServerResponseTime uint16 `json:"srt,omitempty"`
-	PerfPageDownloadTime   uint16 `json:"pdt,omitempty"`
-	PerfRedirectTime       uint16 `json:"rt,omitempty"`
-	PerfDOMInteractiveTime uint16 `json:"dit,omitempty"`
-	PerfContentLoadTime    uint16 `json:"clt,omitempty"`
+	PerfPageLoadTime       string `json:"plt,omitempty"`
+	PerfDomainLookupTime   string `json:"dlt,omitempty"`
+	PerfTCPConnectTime     string `json:"tct,omitempty"`
+	PerfServerResponseTime string `json:"srt,omitempty"`
+	PerfPageDownloadTime   string `json:"pdt,omitempty"`
+	PerfRedirectTime       string `json:"rt,omitempty"`
+	PerfDOMInteractiveTime string `json:"dit,omitempty"`
+	PerfContentLoadTime    string `json:"clt,omitempty"`
 	PerfResource           uint16 `json:"r,omitempty"`
 }
 
@@ -115,7 +114,7 @@ type postRequestPage struct {
 	PerformanceData      *postRequestPerformanceData `json:"prf,omitempty"`
 	GeographyData        *postRequestGeographyData   `json:"geo,omitempty"`
 
-	PropsUserIDOrName string `json:"usr,omitempty"`
+	UserIDOrName string `json:"usr,omitempty"`
 }
 
 type postRequest struct {
@@ -133,6 +132,7 @@ var single_gif_image, _ = base64.StdEncoding.DecodeString("R0lGODlhAQABAIAAAAAAA
 var (
 	error_record_not_proccessed                 errorMessage = errorMessage{code: fiber.StatusConflict, msg: "error_record_not_proccessed"}
 	error_record_not_valid                      errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "error_record_not_valid"}
+	error_record_cid_not_proccessed             errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "error_record_cid_not_proccessed"}
 	error_project_public_id_url_did_not_matched errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "error_project_public_id_url_did_not_matched"}
 	error_invalid_mode_or_project_public_id     errorMessage = errorMessage{code: fiber.StatusUnprocessableEntity, msg: "error_invalid_mode_or_project_public_id"}
 	error_url_required_and_must_valid           errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "error_url_required_and_must_valid"}
@@ -140,4 +140,5 @@ var (
 	error_api_invalid_private_key               errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "error_api_invalid_private_key"}
 	error_api_client_id_not_valid               errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "error_api_client_id_not_valid"}
 	error_api_client_user_agent_not_valid       errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "error_api_client_user_agent_not_valid"}
+	error_events_are_empty                      errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "error_events_are_empty"}
 )

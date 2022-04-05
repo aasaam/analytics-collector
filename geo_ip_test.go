@@ -30,6 +30,11 @@ func getGeoParser() *geoParser {
 }
 
 func TestGeoIPParser1(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
+
 	geoParser := getGeoParser()
 
 	ip := net.ParseIP(sampleIPString)
@@ -56,6 +61,11 @@ func TestGeoIPParser1(t *testing.T) {
 }
 
 func TestGeoIPParser2(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
+
 	geoParser := getGeoParser()
 
 	ip := net.ParseIP(sampleIPString)
@@ -63,6 +73,13 @@ func TestGeoIPParser2(t *testing.T) {
 	// ip from England
 	parsedIP1 := geoParser.newResultFromIP(ip)
 	if len(parsedIP1.GeoIPCountry) != 2 {
+		t.Errorf("invalid parsed data")
+	}
+
+	// client from invalid
+	parsedIP1 = geoParser.clientLocationUpdate(parsedIP1, -90.01, 180.01)
+
+	if parsedIP1.GeoResultCountry == "IR" {
 		t.Errorf("invalid parsed data")
 	}
 

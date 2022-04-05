@@ -48,4 +48,6 @@ services:
       image: yandex/clickhouse-client:22
       container_name: clickhouse-client
       hostname: clickhouse-client
+      volumes:
+        - ./clickhouse/schema.sql:/tmp/schema.sql
       entrypoint: tail -f /dev/null

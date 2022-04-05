@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -11,12 +13,13 @@ func httpRecord(
 	geoParser *geoParser,
 	userAgentParser *userAgentParser,
 	projectsManager *projects,
-	st *storage,
+	storage *storage,
 ) error {
 	// no cache at all
 	noCache(c)
 
 	record, recordErr := newRecord(c.Query(record_query_mode), c.Query(record_query_public_instace_id))
+
 	if recordErr != nil {
 		return httpErrorResponse(
 			c,
@@ -26,6 +29,8 @@ func httpRecord(
 	}
 
 	ip := getClientIP(c)
+	userAgent := c.Get(fiber.HeaderUserAgent)
+
 	record.setQueryParameters(
 		c.Query(record_query_url),
 		c.Query(record_query_canonical),
@@ -35,8 +40,6 @@ func httpRecord(
 		c.Query(record_query_entity_module),
 		c.Query(record_query_entity_taxonomy_id),
 	)
-
-	userAgent := c.Get(fiber.HeaderUserAgent)
 
 	// in not api mode ip must get from request
 	if record.Mode != recordModeEventAPI {
@@ -50,8 +53,8 @@ func httpRecord(
 	// recordModeEvent*
 	if c.Method() == fiber.MethodPost {
 		var postData postRequest
-
 		if postDataErr := c.BodyParser(&postData); postDataErr != nil {
+			fmt.Println(postDataErr)
 			return httpErrorResponse(
 				c,
 				fiber.StatusBadRequest,
@@ -59,16 +62,76 @@ func httpRecord(
 			)
 		}
 
-		record.setPostRequest(&postData, refererParser, geoParser)
+		if record.Mode == recordModeEventAPI && postData.API != nil {
+			// updates
+			userAgent = postData.API.ClientUserAgent
+			ip = record.IP
+			cid := clientIDFromOther([]string{ip.String(), userAgent})
 
+			// apply updates
+			record.UserAgentResult = userAgentParser.parse(userAgent)
+			record.GeoResult = geoParser.newResultFromIP(ip)
+			record.CID = cid
+		}
+
+		setPostRequestErr := record.setPostRequest(&postData, refererParser, geoParser)
+
+		if setPostRequestErr != nil {
+			return httpErrorResponse(
+				c,
+				setPostRequestErr.msg,
+				setPostRequestErr.code,
+			)
+		}
+
+		if record.Mode == recordModeClientError { // on client error
+
+			go func() {
+				cid := clientIDFromOther([]string{ip.String(), userAgent})
+				record.CID = cid
+
+				conf.getLogger().
+					Debug().
+					Str("type", error_type_client).
+					Str("error", postData.ClientErrorObject).
+					Str("ip", ip.String()).
+					Str("method", c.Method()).
+					Str("path", c.Path()).
+					Msg(postData.ClientErrorMessage)
+
+				finalizeByte, finalizeErr := record.finalize()
+				if finalizeErr == nil {
+					storage.addClientError(finalizeByte)
+					return
+				}
+
+				conf.getLogger().
+					Error().
+					Str("type", error_type_app).
+					Str("error", finalizeErr.Error()).
+					Str("ip", ip.String()).
+					Str("method", c.Method()).
+					Str("path", c.Path()).
+					Send()
+			}()
+
+			defer conf.getLogger().
+				Debug().
+				Str("type", error_type_client).
+				Str("ip", ip.String()).
+				Str("err", postData.ClientErrorObject).
+				Msg(postData.ClientErrorMessage)
+			defer promMetricClientErrors.Inc()
+			return c.JSON(1)
+		}
+
+		// changes if in api mode
 		if record.Mode == recordModeEventAPI {
-			// check api key
-			apiVerifyError := record.verify(projectsManager, c.Get(api_key_header))
-			if apiVerifyError != nil {
+			if postData.API == nil {
 				return httpErrorResponse(
 					c,
-					apiVerifyError.msg,
-					apiVerifyError.code,
+					error_api_fields_missed.msg,
+					error_api_fields_missed.code,
 				)
 			}
 
@@ -82,42 +145,63 @@ func httpRecord(
 				)
 			}
 
-			// updates
-			userAgent = postData.API.ClientUserAgent
-			ip = record.IP
-			cid := clientIDFromOther([]string{ip.String(), userAgent})
+			// check api key
+			apiVerifyError := record.verify(projectsManager, postData.API.PrivateInstanceKey)
+			if apiVerifyError != nil {
+				return httpErrorResponse(
+					c,
+					apiVerifyError.msg,
+					apiVerifyError.code,
+				)
+			}
 
-			// apply updates
-			record.UserAgentResult = userAgentParser.parse(userAgent)
-			record.GeoResult = geoParser.newResultFromIP(ip)
-			record.CID = cid
-		}
+			go func() {
+				finalizeByte, finalizeErr := record.finalize()
+				if finalizeErr == nil {
+					storage.addRecord(finalizeByte)
+					return
+				}
+				conf.getLogger().
+					Error().
+					Str("type", error_type_app).
+					Str("error", finalizeErr.Error()).
+					Str("ip", ip.String()).
+					Str("method", c.Method()).
+					Str("path", c.Path()).
+					Send()
+			}()
 
-		if record.isClientError() {
-			defer prometheusClientErrors.Inc()
-			defer conf.getLogger().
-				Error().
-				Str("type", error_type_client).
-				Str("ip", ip.String()).
-				Str("err", postData.ClientErrorObject).
-				Msg(postData.ClientErrorMessage)
+			return c.JSON(true)
+
+		} else {
+			getVerifyError := record.verify(projectsManager, "")
+
+			if getVerifyError != nil {
+				return httpErrorResponse(
+					c,
+					getVerifyError.msg,
+					getVerifyError.code,
+				)
+			}
+
+			go func() {
+				finalizeByte, finalizeErr := record.finalize()
+				if finalizeErr == nil {
+					storage.addRecord(finalizeByte)
+				} else {
+					conf.getLogger().
+						Error().
+						Str("type", error_type_app).
+						Str("error", finalizeErr.Error()).
+						Str("ip", ip.String()).
+						Str("method", c.Method()).
+						Str("path", c.Path()).
+						Send()
+				}
+			}()
+
 			return c.JSON(1)
 		}
-
-		getVerifyError := record.verify(projectsManager, "")
-		if getVerifyError != nil {
-			return httpErrorResponse(
-				c,
-				getVerifyError.msg,
-				getVerifyError.code,
-			)
-		}
-
-		go func() {
-			st.addRecord(record.finalize())
-		}()
-
-		return c.JSON(1)
 
 		// recordModePageViewImageLegacy
 		// recordModePageViewImageNoScript
@@ -145,8 +229,19 @@ func httpRecord(
 		}
 
 		go func() {
-
-			st.addRecord(record.finalize())
+			finalizeByte, finalizeErr := record.finalize()
+			if finalizeErr == nil {
+				storage.addRecord(finalizeByte)
+			} else {
+				conf.getLogger().
+					Error().
+					Str("type", error_type_app).
+					Str("error", finalizeErr.Error()).
+					Str("ip", ip.String()).
+					Str("method", c.Method()).
+					Str("path", c.Path()).
+					Send()
+			}
 		}()
 
 		// image response single gif

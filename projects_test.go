@@ -10,6 +10,24 @@ import (
 //go:embed projects.json
 var jsonSample []byte
 
+func getTestProjects() *projects {
+	projectsManager := newProjectsManager()
+
+	var data map[string]projectData
+
+	err := json.Unmarshal(jsonSample, &data)
+	if err != nil {
+		panic(err)
+	}
+
+	err2 := projectsManager.load(data)
+	if err2 != nil {
+		panic(err2)
+	}
+
+	return projectsManager
+}
+
 func TestProjectManager0(t *testing.T) {
 	if _, err := validatePublicInstaceID(""); err == nil {
 		t.Errorf("error must throw")
@@ -20,19 +38,7 @@ func TestProjectManager0(t *testing.T) {
 }
 
 func TestProjectManager1(t *testing.T) {
-	pm := newProjectsManager()
-
-	var data map[string]projectData
-
-	err := json.Unmarshal(jsonSample, &data)
-	if err != nil {
-		t.Error(err)
-	}
-
-	err2 := pm.load(data)
-	if err2 != nil {
-		t.Error(err2)
-	}
+	pm := getTestProjects()
 
 	if !pm.validateID("000000000000") {
 		t.Errorf("project api must matched")
@@ -76,19 +82,7 @@ func TestProjectManager1(t *testing.T) {
 }
 
 func TestProjectManager2(t *testing.T) {
-	pm := newProjectsManager()
-
-	var data map[string]projectData
-
-	err := json.Unmarshal(jsonSample, &data)
-	if err != nil {
-		t.Error(err)
-	}
-
-	err2 := pm.load(data)
-	if err2 != nil {
-		t.Error(err2)
-	}
+	pm := getTestProjects()
 
 	if pm.validateIDAndURL("1", getURL("https://www.example.net")) {
 		t.Errorf("project must matched")
@@ -99,10 +93,7 @@ func TestProjectManager2(t *testing.T) {
 }
 
 func BenchmarkValidateWildCardNoCache(b *testing.B) {
-	pm := newProjectsManager()
-	var data map[string]projectData
-	json.Unmarshal(jsonSample, &data)
-	pm.load(data)
+	pm := getTestProjects()
 
 	for n := 0; n < b.N; n++ {
 		u := getURL("https://" + strconv.Itoa(n) + ".sub.example.net")
@@ -111,10 +102,7 @@ func BenchmarkValidateWildCardNoCache(b *testing.B) {
 }
 
 func BenchmarkValidateWildCardCache(b *testing.B) {
-	pm := newProjectsManager()
-	var data map[string]projectData
-	json.Unmarshal(jsonSample, &data)
-	pm.load(data)
+	pm := getTestProjects()
 
 	u := getURL("https://sub.example.net")
 	for n := 0; n < b.N; n++ {
@@ -123,10 +111,7 @@ func BenchmarkValidateWildCardCache(b *testing.B) {
 }
 
 func BenchmarkValidateAPI(b *testing.B) {
-	pm := newProjectsManager()
-	var data map[string]projectData
-	json.Unmarshal(jsonSample, &data)
-	pm.load(data)
+	pm := getTestProjects()
 
 	for n := 0; n < b.N; n++ {
 		pm.validateIDAndPrivate("000000000000", "000000000000111111111111")

@@ -16,30 +16,24 @@ func newStorage() *storage {
 	s := storage{
 		clientErrorCount: 0,
 		recordCount:      0,
+		clientErrors:     make([][]byte, 0),
+		records:          make([][]byte, 0),
 	}
 
-	prometheusStorageRecords.Add(0)
+	promMetricStorageQueueRecords.Set(0)
+	promMetricStorageQueueClientErrors.Set(0)
 
 	return &s
 }
 
-func (s *storage) setRecords(records [][]byte) {
-	s.records = records
-	s.recordCount = len(records)
-	prometheusStorageRecords.Add(float64(s.recordCount))
+func (s *storage) setRecords(items [][]byte) {
+	s.records = items
+	s.recordCount = len(items)
+	promMetricStorageQueueRecords.Set(float64(s.recordCount))
 }
 
 func (s *storage) getRecords() [][]byte {
-	s.Lock()
-	defer s.Unlock()
 	return s.records
-}
-
-func (s *storage) cleanRecords() {
-	records := make([][]byte, 0)
-	s.records = records
-	s.recordCount = 0
-	prometheusStorageRecords.Set(float64(s.recordCount))
 }
 
 func (s *storage) addRecord(r []byte) {
@@ -47,62 +41,37 @@ func (s *storage) addRecord(r []byte) {
 	defer s.Unlock()
 	s.records = append(s.records, r)
 	s.recordCount++
-	prometheusStorageRecords.Set(float64(s.recordCount))
+	promMetricStorageQueueRecords.Set(float64(s.recordCount))
+}
+
+func (s *storage) cleanRecords() {
+	items := make([][]byte, 0)
+	s.records = items
+	s.recordCount = 0
+	promMetricStorageQueueRecords.Set(0)
+}
+
+func (s *storage) setClientErrors(items [][]byte) {
+	s.clientErrors = items
+	s.clientErrorCount = len(items)
+	promMetricStorageQueueClientErrors.Set(float64(s.recordCount))
+}
+
+func (s *storage) getClientErrors() [][]byte {
+	return s.clientErrors
+}
+
+func (s *storage) cleanClientErrors() {
+	items := make([][]byte, 0)
+	s.clientErrors = items
+	s.clientErrorCount = 0
+	promMetricStorageQueueClientErrors.Set(0)
 }
 
 func (s *storage) addClientError(r []byte) {
 	s.Lock()
 	defer s.Unlock()
-	s.records = append(s.records, r)
-	s.recordCount++
-	prometheusStorageRecords.Set(float64(s.recordCount))
+	s.clientErrors = append(s.clientErrors, r)
+	s.clientErrorCount++
+	promMetricStorageQueueRecords.Set(float64(s.clientErrorCount))
 }
-
-// package main
-
-// import (
-// 	"sync"
-// )
-
-// type storage struct {
-// 	sync.Mutex
-// 	count int
-// 	items []record
-// }
-
-// func newStorage() *storage {
-// 	s := storage{
-// 		count: 0,
-// 	}
-
-// 	prometheusStorageItems.Add(0)
-
-// 	return &s
-// }
-
-// func (s *storage) setItems(items []record) {
-// 	s.items = items
-// 	s.count = len(items)
-// 	prometheusStorageItems.Add(float64(s.count))
-// }
-
-// func (s *storage) getItems() []record {
-// 	s.Lock()
-// 	defer s.Unlock()
-// 	return s.items
-// }
-
-// func (s *storage) clean() {
-// 	items := make([]record, 0)
-// 	s.items = items
-// 	s.count = 0
-// 	prometheusStorageItems.Set(float64(s.count))
-// }
-
-// func (s *storage) addRecord(r record) {
-// 	s.Lock()
-// 	defer s.Unlock()
-// 	s.items = append(s.items, r)
-// 	s.count++
-// 	prometheusStorageItems.Set(float64(s.count))
-// }

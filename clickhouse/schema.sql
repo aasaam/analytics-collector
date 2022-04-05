@@ -1,10 +1,43 @@
+-- variables
 SET allow_experimental_geo_types = 1;
+
+-- database
 CREATE DATABASE IF NOT EXISTS analytics;
 
+-- ClientErrors
 CREATE TABLE IF NOT EXISTS analytics.ClientErrors
 (
   Msg                                         String,
   Err                                         String,
+
+  PURL                                        String,
+
+  -- geo:asn
+  GeoIPAutonomousSystemNumber                 UInt16,
+  GeoIPAutonomousSystemOrganization           String,
+  -- geo:result
+	GeoResultAdministratorArea                  String,
+	GeoResultCity                               String,
+	GeoResultCityGeoNameID                      UInt32,
+	GeoResultCountry                            String,
+	GeoResultLocationLatitude                   Float64,
+	GeoResultLocationLongitude                  Float64,
+  -- geo:result+
+	GeoResultLocation                           Point,
+
+  -- user agent
+	UaType                                      LowCardinality(String),
+	UaFull                                      String,
+	UaChecksum                                  FixedString(40),
+	UaBrowserName                               LowCardinality(String),
+	UaBrowserVersionMajor                       UInt64,
+	UaBrowserVersion                            String,
+	UaOSName                                    LowCardinality(String),
+	UaOSVersionMajor                            UInt64,
+	UaOSVersion                                 String,
+	UaDeviceBrand                               LowCardinality(String),
+	UaDeviceFamily                              String,
+	UaDeviceModel                               String,
 
   -- requirements
   IP                                          IPv4,
@@ -13,14 +46,21 @@ CREATE TABLE IF NOT EXISTS analytics.ClientErrors
 	Created                                     Datetime
 )
 ENGINE = MergeTree()
-ORDER BY (Created, xxHash32(Msg))
+ORDER BY (Created, xxHash32(PURL))
 PARTITION BY toYYYYMM(Created)
-SAMPLE BY (xxHash32(msg));
+SAMPLE BY (xxHash32(PURL));
 
+-- Records
 CREATE TABLE IF NOT EXISTS analytics.Records
 (
+  -- event
+  ECategory                                   String,
+  EAction                                     String,
+  ELabel                                      String,
+  EValue                                      UInt64,
+
   -- etc
-  PropsUserIDOrName                           String,
+  UserIDOrName                                String,
 
   -- page
   PIsIframe                                   UInt8, --bool
@@ -37,17 +77,29 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   -- referer
   PRefererURLURL                              String,
   PRefererURLExternalHost                     String,
+  PRefererURLExternalDomain                   String,
   PRefererURLExternalName                     String,
   PRefererURLExternalType                     UInt8,
 
   -- session referer
   SRefererURLURL                              String,
   SRefererURLExternalHost                     String,
+  SRefererURLExternalDomain                   String,
   SRefererURLExternalName                     String,
   SRefererURLExternalType                     UInt8,
 
+  --- utm
+  UTMValid                                    UInt8, -- bool
+  UTMExist                                    UInt8, -- bool
+  UTMSource                                   String,
+	UTMMedium                                   String,
+	UTMCampaign                                 String,
+	UTMID                                       String,
+	UTMTerm                                     String,
+	UTMContent                                  String,
+
   -- performance
-  PerfExist                                   UInt8, --bool
+  PerfIsProcessed                             UInt8, --bool
 	PerfPageLoadTime                            UInt16,
 	PerfDomainLookupTime                        UInt16,
 	PerfTCPConnectTime                          UInt16,
@@ -59,6 +111,7 @@ CREATE TABLE IF NOT EXISTS analytics.Records
 	PerfResource                                UInt16,
 
   -- breadcrumb
+  BCLevel                                     UInt8,
   BCN1                                        String,
 	BCN2                                        String,
 	BCN3                                        String,
@@ -69,22 +122,6 @@ CREATE TABLE IF NOT EXISTS analytics.Records
 	BCP3                                        String,
 	BCP4                                        String,
 	BCP5                                        String,
-
-  -- event
-  ECategory                                   String,
-  EAction                                     String,
-  ELabel                                      String,
-  EValue                                      UInt64,
-
-  --- utm
-  UTMValid                                    UInt8, -- bool
-  UTMExist                                    UInt8, -- bool
-  UTMSource                                   String,
-	UTMMedium                                   String,
-	UTMCampaign                                 String,
-	UTMID                                       String,
-	UTMTerm                                     String,
-	UTMContent                                  String,
 
   -- user agent
 	UaType                                      LowCardinality(String),
@@ -122,7 +159,7 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   -- geo:ip
   GeoIPAdministratorArea                      String,
   GeoIPCity                                   String,
-  GeoIPCityGeoNameID                          UInt16,
+  GeoIPCityGeoNameID                          UInt32,
   GeoIPCountry                                LowCardinality(String),
   GeoIPLocationLatitude                       Float64,
   GeoIPLocationLongitude                      Float64,
@@ -131,29 +168,29 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   -- geo:client
 	GeoClientAdministratorArea                  String,
 	GeoClientCity                               String,
-	GeoClientCityGeoNameID                      UInt16,
+	GeoClientCityGeoNameID                      UInt32,
 	GeoClientCountry                            String,
 	GeoClientLocationLatitude                   Float64,
 	GeoClientLocationLongitude                  Float64,
   -- geo:client+
 	GeoClientLocation                           Point,
   -- geo:result
+	GeoResultFromClient                         UInt8, -- bool
 	GeoResultAdministratorArea                  String,
 	GeoResultCity                               String,
-	GeoResultCityGeoNameID                      UInt16,
+	GeoResultCityGeoNameID                      UInt32,
 	GeoResultCountry                            String,
-	GeoResultFromClient                         UInt8, -- bool
 	GeoResultLocationLatitude                   Float64,
 	GeoResultLocationLongitude                  Float64,
   -- geo:result+
 	GeoResultLocation                           Point,
 
   -- client
-  CIDType                                     UInt8,
-  CIDUserChecksum                             FixedString(40),
-  CIDSessionChecksum                          FixedString(40),
-  CIDStdInitTime                              Datetime,
-  CIDStdSessionTime                           Datetime,
+  CidType                                     UInt8,
+  CidUserChecksum                             FixedString(40),
+  CidSessionChecksum                          FixedString(40),
+  CidStdInitTime                              Datetime,
+  CidStdSessionTime                           Datetime,
 
   -- requirements
   IP                                          IPv4,
@@ -163,6 +200,6 @@ CREATE TABLE IF NOT EXISTS analytics.Records
 	Created                                     Datetime
 )
 ENGINE = MergeTree()
-ORDER BY (Created, xxHash32(CIDUserChecksum))
+ORDER BY (Created, xxHash32(CidUserChecksum))
 PARTITION BY toYYYYMM(Created)
-SAMPLE BY (xxHash32(CIDUserChecksum));
+SAMPLE BY (xxHash32(CidUserChecksum));

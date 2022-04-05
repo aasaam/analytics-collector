@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"net"
 	"net/url"
 	"time"
@@ -11,6 +12,7 @@ import (
 
 type breadCrumb struct {
 	BCIsProcessed bool
+	BCLevel       uint8
 	BCN1          string
 	BCN2          string
 	BCN3          string
@@ -44,11 +46,14 @@ type recordEvent struct {
 }
 
 type record struct {
-	Created         time.Time
-	CursorID        uint64
-	Mode            uint8
-	PublicInstaceID string
-	IP              net.IP
+	ClientErrorMessage string
+	ClientErrorObject  string
+	Created            time.Time
+	CursorID           uint64
+	Mode               uint8
+	modeString         string
+	PublicInstaceID    string
+	IP                 net.IP
 
 	PEntityID         string
 	PEntityModule     string
@@ -69,13 +74,13 @@ type record struct {
 	Events     []recordEvent
 
 	UserAgentResult userAgentResult
-	UTM             utm
+	Utm             utm
 	GeoResult       geoResult
 	ScreenInfo      screenInfo
 	BreadCrumb      breadCrumb
 	Performance     performance
 
-	PropsUserIDOrName string
+	UserIDOrName string
 }
 
 const (
@@ -103,18 +108,20 @@ var recordModeMap map[string]uint8
 
 func init() {
 	recordModeMap = make(map[string]uint8)
+
+	// pageview
 	recordModeMap["pv_js"] = recordModePageViewJavaScript
 	recordModeMap["pv_il"] = recordModePageViewImageLegacy
 	recordModeMap["pv_ins"] = recordModePageViewImageNoScript
 	recordModeMap["pv_amp"] = recordModePageViewAMP
 	recordModeMap["pv_amp_i"] = recordModePageViewAMPImage
 
+	// event
 	recordModeMap["e_o"] = recordModeEventOther
 	recordModeMap["e_js_pv"] = recordModeEventJSInPageView
 	recordModeMap["e_js_c"] = recordModeEventJSCross
 	recordModeMap["e_sw"] = recordModeEventServiceWorker
 	recordModeMap["e_api"] = recordModeEventAPI
-
 	recordModeMap["err"] = recordModeClientError
 }
 
@@ -140,6 +147,7 @@ func newRecord(modeQuery string, publicInstaceIDQuery string) (*record, error) {
 		return &r, err
 	}
 
+	r.modeString = modeQuery
 	r.Mode = mode
 	r.PublicInstaceID = publicInstaceID
 
@@ -192,10 +200,6 @@ func (r *record) isImage() bool {
 	return false
 }
 
-func (r *record) isClientError() bool {
-	return r.Mode == recordModeClientError
-}
-
 func (r *record) verify(
 	projectsManager *projects,
 	privateKey string,
@@ -217,17 +221,23 @@ func (r *record) verify(
 
 	// page view require matched project id and url of page view
 	if r.isPageView() {
+
 		if r.PURL == nil {
 			return &error_url_required_and_must_valid
 		}
+		fmt.Println(r.PublicInstaceID, r.PURL)
 		if !projectsManager.validateIDAndURL(r.PublicInstaceID, r.PURL) {
 			return &error_project_public_id_url_did_not_matched
 		}
 		return nil
 	}
 
-	if r.isClientError() && r.PURL != nil && !projectsManager.validateIDAndURL(r.PublicInstaceID, r.PURL) {
+	if r.Mode == recordModeClientError && r.PURL != nil && !projectsManager.validateIDAndURL(r.PublicInstaceID, r.PURL) {
 		return &error_project_public_id_url_did_not_matched
+	}
+
+	if r.Mode > 99 && r.EventCount < 1 {
+		return &error_events_are_empty
 	}
 
 	return nil
@@ -259,10 +269,15 @@ func (r *record) setPostRequest(
 	postRequest *postRequest,
 	refererParser *refererParser,
 	geoParser *geoParser,
-) {
+) *errorMessage {
+	if postRequest.ClientErrorMessage != "" {
+		r.ClientErrorMessage = postRequest.ClientErrorMessage
+		r.ClientErrorObject = postRequest.ClientErrorObject
+	}
+
 	if postRequest.Page != nil {
 		r.PURL = getURL(postRequest.Page.URL)
-		r.PropsUserIDOrName = postRequest.Page.PropsUserIDOrName
+		r.UserIDOrName = postRequest.Page.UserIDOrName
 		r.PCanonicalURL = getURL(postRequest.Page.CanonicalURL)
 		r.PTitle = postRequest.Page.Title
 		r.PLang = sanitizeLanguage(postRequest.Page.Lang)
@@ -281,35 +296,64 @@ func (r *record) setPostRequest(
 			)
 		}
 
+		if postRequest.Page.RefererURL != "" {
+			r.PRefererURL = refererParser.parse(r.PURL, getURL(postRequest.Page.RefererURL))
+		}
+
 		if postRequest.Page.RefererSessionURL != "" {
 			r.SRefererURL = refererParser.parse(r.PURL, getURL(postRequest.Page.RefererSessionURL))
 		}
 
 		if postRequest.Page.PerformanceData != nil {
 			r.Performance.PerfIsProcessed = true
-			r.Performance.PerfPageLoadTime = postRequest.Page.PerformanceData.PerfPageLoadTime
-			r.Performance.PerfDomainLookupTime = postRequest.Page.PerformanceData.PerfDomainLookupTime
-			r.Performance.PerfTCPConnectTime = postRequest.Page.PerformanceData.PerfTCPConnectTime
-			r.Performance.PerfServerResponseTime = postRequest.Page.PerformanceData.PerfServerResponseTime
-			r.Performance.PerfPageDownloadTime = postRequest.Page.PerformanceData.PerfPageDownloadTime
-			r.Performance.PerfRedirectTime = postRequest.Page.PerformanceData.PerfRedirectTime
-			r.Performance.PerfDOMInteractiveTime = postRequest.Page.PerformanceData.PerfDOMInteractiveTime
-			r.Performance.PerfContentLoadTime = postRequest.Page.PerformanceData.PerfContentLoadTime
+			r.Performance.PerfPageLoadTime = uint16FromString(postRequest.Page.PerformanceData.PerfPageLoadTime)
+			r.Performance.PerfDomainLookupTime = uint16FromString(postRequest.Page.PerformanceData.PerfDomainLookupTime)
+			r.Performance.PerfTCPConnectTime = uint16FromString(postRequest.Page.PerformanceData.PerfTCPConnectTime)
+			r.Performance.PerfServerResponseTime = uint16FromString(postRequest.Page.PerformanceData.PerfServerResponseTime)
+			r.Performance.PerfPageDownloadTime = uint16FromString(postRequest.Page.PerformanceData.PerfPageDownloadTime)
+			r.Performance.PerfRedirectTime = uint16FromString(postRequest.Page.PerformanceData.PerfRedirectTime)
+			r.Performance.PerfDOMInteractiveTime = uint16FromString(postRequest.Page.PerformanceData.PerfDOMInteractiveTime)
+			r.Performance.PerfContentLoadTime = uint16FromString(postRequest.Page.PerformanceData.PerfContentLoadTime)
 			r.Performance.PerfResource = postRequest.Page.PerformanceData.PerfResource
 		}
 
-		if postRequest.Page.PageBreadcrumbObject != nil {
-			r.BreadCrumb.BCIsProcessed = true
-			r.BreadCrumb.BCN1 = postRequest.Page.PageBreadcrumbObject.N1
-			r.BreadCrumb.BCN2 = postRequest.Page.PageBreadcrumbObject.N2
-			r.BreadCrumb.BCN3 = postRequest.Page.PageBreadcrumbObject.N3
-			r.BreadCrumb.BCN4 = postRequest.Page.PageBreadcrumbObject.N4
-			r.BreadCrumb.BCN5 = postRequest.Page.PageBreadcrumbObject.N5
-			r.BreadCrumb.BCP1 = postRequest.Page.PageBreadcrumbObject.P1
-			r.BreadCrumb.BCP2 = postRequest.Page.PageBreadcrumbObject.P2
-			r.BreadCrumb.BCP3 = postRequest.Page.PageBreadcrumbObject.P3
-			r.BreadCrumb.BCP4 = postRequest.Page.PageBreadcrumbObject.P4
-			r.BreadCrumb.BCP5 = postRequest.Page.PageBreadcrumbObject.P5
+		if postRequest.Page.PageBreadcrumbObject != nil && r.PURL != nil {
+			u1 := getURL(postRequest.Page.PageBreadcrumbObject.U1)
+			if u1 != nil && u1.Host == r.PURL.Host && postRequest.Page.PageBreadcrumbObject.N1 != "" {
+				r.BreadCrumb.BCIsProcessed = true
+				r.BreadCrumb.BCLevel = 1
+				r.BreadCrumb.BCN1 = postRequest.Page.PageBreadcrumbObject.N1
+				r.BreadCrumb.BCP1 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U1))
+
+				u2 := getURL(postRequest.Page.PageBreadcrumbObject.U2)
+				if u2 != nil && u2.Host == r.PURL.Host && postRequest.Page.PageBreadcrumbObject.N2 != "" {
+					r.BreadCrumb.BCLevel = 2
+					r.BreadCrumb.BCN2 = postRequest.Page.PageBreadcrumbObject.N2
+					r.BreadCrumb.BCP2 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U2))
+
+					u3 := getURL(postRequest.Page.PageBreadcrumbObject.U3)
+					if u3 != nil && u3.Host == r.PURL.Host && postRequest.Page.PageBreadcrumbObject.N3 != "" {
+						r.BreadCrumb.BCLevel = 3
+						r.BreadCrumb.BCN3 = postRequest.Page.PageBreadcrumbObject.N3
+						r.BreadCrumb.BCP3 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U3))
+
+						u4 := getURL(postRequest.Page.PageBreadcrumbObject.U4)
+						if u4 != nil && u4.Host == r.PURL.Host && postRequest.Page.PageBreadcrumbObject.N4 != "" {
+							r.BreadCrumb.BCLevel = 4
+							r.BreadCrumb.BCN4 = postRequest.Page.PageBreadcrumbObject.N4
+							r.BreadCrumb.BCP4 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U4))
+
+							u5 := getURL(postRequest.Page.PageBreadcrumbObject.U5)
+							if u5 != nil && u5.Host == r.PURL.Host && postRequest.Page.PageBreadcrumbObject.N5 != "" {
+								r.BreadCrumb.BCLevel = 5
+								r.BreadCrumb.BCN5 = postRequest.Page.PageBreadcrumbObject.N5
+								r.BreadCrumb.BCP5 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U5))
+							}
+						}
+					}
+
+				}
+			}
 		}
 
 		if postRequest.Page.GeographyData != nil {
@@ -328,35 +372,49 @@ func (r *record) setPostRequest(
 	if postRequest.Events != nil {
 		events := []recordEvent{}
 		for _, ev := range *postRequest.Events {
-			re := recordEvent{
-				ECategory: ev.Category,
-				EAction:   ev.Action,
-				ELabel:    ev.Label,
-				EValue:    ev.Value,
+			category := sanitizeName(ev.Category)
+			action := sanitizeName(ev.Action)
+
+			if category != "" && action != "" {
+				re := recordEvent{
+					ECategory: category,
+					EAction:   action,
+					ELabel:    ev.Label,
+					EValue:    ev.Value,
+				}
+				events = append(events, re)
 			}
-			events = append(events, re)
+
 		}
 		r.Events = events
 		r.EventCount = len(events)
 	}
 
-	if r.Mode == recordModePageViewJavaScript && postRequest.CIDStd != "" {
+	if r.Mode == recordModePageViewJavaScript || r.Mode == recordModeEventJSInPageView && postRequest.CIDStd != "" {
 		cid, cidErr := clientIDStandardParser(postRequest.CIDStd)
 		if cidErr == nil {
 			r.CID = cid
 		}
 	} else if r.Mode == recordModePageViewAMP && postRequest.CIDAmp != "" {
 		r.CID = clientIDFromAMP(postRequest.CIDAmp)
-	}
-
-	if !r.CID.Valid && r.UserAgentResult.UaFull != "" && r.IP != nil {
+	} else if r.Mode == recordModeClientError && r.IP != nil {
 		r.CID = clientIDFromOther([]string{r.IP.String(), r.UserAgentResult.UaFull})
 	}
+
+	if !r.CID.Valid {
+		return &error_record_cid_not_proccessed
+	}
+
+	return nil
 }
 
-func (r *record) finalize() []byte {
+func (r *record) finalize() ([]byte, error) {
+	if r.Mode < 1 || !r.CID.Valid {
+		return nil, errors.New("mode not processed or missing cid")
+	}
+
 	if r.PURL != nil {
-		r.UTM = parseUTM(r.PURL)
+		r.Utm = parseUTM(r.PURL)
 	}
 
 	if r.isPageView() {
@@ -365,8 +423,10 @@ func (r *record) finalize() []byte {
 
 	buf := &bytes.Buffer{}
 	if err := gob.NewEncoder(buf).Encode(*r); err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return buf.Bytes()
+	defer promMetricRecordMode.WithLabelValues(r.modeString).Inc()
+
+	return buf.Bytes(), nil
 }

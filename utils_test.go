@@ -121,6 +121,23 @@ func TestGetCursorID(t *testing.T) {
 		t.Errorf("must not same cursor")
 	}
 }
+func TestGetURLPath(t *testing.T) {
+	urls := []string{
+		"https://www.google.com",
+		"https://www.google.com/path/تست/file.html?",
+		"https://www.google.com/path/%D8%AA%D8%B3%D8%AA/file.html?",
+		"https://www.google.com/path/to/file.html?foo=bar",
+		"https://www.google.com/path/to/file.html?foo=bar#fragment",
+		"https://www.google.com/path/to/file.html?foo=bar#/extra",
+	}
+
+	for _, u := range urls {
+		p := getURLPath(getURL(u))
+		if p == "" {
+			t.Errorf("invalid url path")
+		}
+	}
+}
 
 func BenchmarkChecksum(b *testing.B) {
 	for n := 0; n < b.N; n++ {

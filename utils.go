@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,13 +20,28 @@ var sanitizeTitleMoreSpaceRegex = regexp.MustCompile(`[\s]+`)
 var sanitizeNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{1,31}$`)
 var entityIDRegex = regexp.MustCompile(`^[a-zA-Z0-9-_\/]{1,63}$`)
 var entityTaxonomyIDRegex = regexp.MustCompile(`^[A-Z]{1}[0-9a-z]{4}$`)
-var hexDecRegexReplace = regexp.MustCompile(`[^0-9]`)
 
-func urlString(u *url.URL) string {
+func uint16FromString(s string) uint16 {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return uint16(i)
+}
+
+func boolUint8(v bool) uint8 {
+	if v {
+		return 1
+	}
+	return 0
+}
+
+func getURLString(u *url.URL) string {
 	if u == nil {
 		return ""
 	}
 	return u.String()
+
 }
 
 func isValidURL(urlString string) bool {
@@ -36,6 +52,18 @@ func isValidURL(urlString string) bool {
 	_, err := url.Parse(urlString)
 
 	return err == nil
+}
+
+func getURLPath(u *url.URL) string {
+	r, e := regexp.Compile(regexp.QuoteMeta(u.Host) + `(.*)$`)
+	if e != nil {
+		return ""
+	}
+	if r.MatchString(u.String()) {
+		matched := r.FindStringSubmatch(u.String())
+		return matched[1]
+	}
+	return ""
 }
 
 func getURL(urlString string) *url.URL {

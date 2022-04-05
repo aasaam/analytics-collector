@@ -1,0 +1,36 @@
+name: test
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      -
+        name: Test
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./make.sh
+          echo ${{ github.ref }}
+          go get -u -v golang.org/x/lint/golint
+          go get -u -v golang.org/x/lint/golint
+          go mod tidy
+          go get -u -v
+          go mod download
+          golint .
+          export CI=1
+          go test -short -covermode=count -coverprofile=coverage.out
+          cat coverage.out | grep -v "main.go" > coverage.txt
+          TOTAL_COVERAGE_FOR_CI_F=$(go tool cover -func coverage.txt | grep total | grep -Eo '[0-9]+.[0-9]+')
+          echo "TOTAL_COVERAGE_FOR_CI_F: $TOTAL_COVERAGE_FOR_CI_F"

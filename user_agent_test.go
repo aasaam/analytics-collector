@@ -16,11 +16,11 @@ func TestUserAgentParser1(t *testing.T) {
 		"Wget/1.20.3 (linux-gnu)",
 	}
 
-	uaParser := newUserAgentParser()
+	userAgentParser := newUserAgentParser()
 
 	for _, uaString := range uaStrings {
 
-		parsed := uaParser.parse(uaString)
+		parsed := userAgentParser.parse(uaString)
 		if parsed.UaBrowserName == "" {
 			t.Errorf("invalid parsed data")
 		}
@@ -29,8 +29,8 @@ func TestUserAgentParser1(t *testing.T) {
 
 func BenchmarkNewUserAgentParser(b *testing.B) {
 	uaString := "Mozilla/5.0 (Linux; Android 5.0.2; SAMSUNG SM-A500FU Build/LRX22G) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/3.3 Chrome/38.0.2125.102 Mobile Safari/537.36"
-	uaParser := newUserAgentParser()
+	userAgentParser := newUserAgentParser()
 	for n := 0; n < b.N; n++ {
-		uaParser.parse(uaString)
+		userAgentParser.parse(uaString)
 	}
 }

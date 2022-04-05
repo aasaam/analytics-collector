@@ -9,58 +9,62 @@ import (
 var initTime = time.Now().Unix()
 
 var (
-	prometheusUptimeInSeconds = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "analytics_collector_uptime_in_seconds",
-		Help: "Uptime seconds during application running",
+	promMetricUptimeInSeconds = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "aasaam_analytics_collector_uptime_in_seconds",
+		Help: "Uptime in seconds that collector is running",
 	})
 
-	prometheusStorageRecords = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "analytics_collector_storage_records",
-		Help: "Number of storage records",
+	promMetricStorageQueueRecords = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "aasaam_analytics_collector_storage_queue_records",
+		Help: "Storage number of records that not inserted yet",
 	})
 
-	prometheusStorageClientErrors = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "analytics_collector_storage_client_errors",
-		Help: "Number of storage client errors",
+	promMetricStorageQueueClientErrors = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "aasaam_analytics_collector_storage_queue_client_errors",
+		Help: "Storage number of client errors that not inserted yet",
 	})
 
-	prometheusTotalRequests = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "analytics_collector_total_requests",
-		Help: "The total number requests",
+	promMetricHTTPTotalRequests = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "aasaam_analytics_collector_http_total_requests",
+		Help: "Total number http requests",
 	})
 
-	prometheusClientErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "analytics_collector_client_errors",
-		Help: "The total number of client errors",
-	})
-
-	prometheusProjectsErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "analytics_collector_projects_fetch_errors",
-		Help: "The total number of projects fetch errors",
-	})
-
-	prometheusProjectsSuccess = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "analytics_collector_projects_fetch_success",
-		Help: "The total number of projects fetch success",
-	})
-
-	prometheusResponseErrors = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "analytics_collector_response_errors",
-		Help: "The total number of response error",
+	promMetricHTTPErrors = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "aasaam_analytics_collector_http_errors",
+		Help: "Total number http response error",
 	}, []string{"status"})
+
+	promMetricRecordMode = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "aasaam_analytics_collector_record_mode",
+		Help: "Total number record modes",
+	}, []string{"mode"})
+
+	promMetricClientErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "aasaam_analytics_collector_client_errors",
+		Help: "Total number of client errors",
+	})
+
+	promMetricProjectsFetchErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "aasaam_analytics_collector_projects_fetch_errors",
+		Help: "Total number of projects fetch errors",
+	})
+
+	promMetricProjectsFetchSuccess = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "aasaam_analytics_collector_projects_fetch_success",
+		Help: "Total number of projects fetch success",
+	})
 )
 
 func getPrometheusRegistry() *prometheus.Registry {
 	promRegistry := prometheus.NewRegistry()
-	promRegistry.MustRegister(prometheusClientErrors)
-	promRegistry.MustRegister(prometheusProjectsErrors)
-	promRegistry.MustRegister(prometheusProjectsSuccess)
-	promRegistry.MustRegister(prometheusResponseErrors)
-	promRegistry.MustRegister(prometheusStorageClientErrors)
-	promRegistry.MustRegister(prometheusStorageRecords)
-	promRegistry.MustRegister(prometheusTotalRequests)
-	promRegistry.MustRegister(prometheusUptimeInSeconds)
-
-	prometheusUptimeInSeconds.Set(0)
+	promRegistry.MustRegister(promMetricUptimeInSeconds)
+	promRegistry.MustRegister(promMetricStorageQueueRecords)
+	promRegistry.MustRegister(promMetricStorageQueueClientErrors)
+	promRegistry.MustRegister(promMetricHTTPTotalRequests)
+	promRegistry.MustRegister(promMetricHTTPErrors)
+	promRegistry.MustRegister(promMetricRecordMode)
+	promRegistry.MustRegister(promMetricClientErrors)
+	promRegistry.MustRegister(promMetricProjectsFetchErrors)
+	promRegistry.MustRegister(promMetricProjectsFetchSuccess)
 	return promRegistry
 }

@@ -12,7 +12,7 @@ import (
 type config struct {
 	logger            *zerolog.Logger
 	staticCacheTTL    uint
-	clientSource      bool
+	testMode          bool
 	allowedMetricsIPs []net.IP
 	collectorURL      *url.URL
 }
@@ -20,14 +20,14 @@ type config struct {
 func newConfig(
 	logLevel string,
 	staticCacheTTL uint,
-	clientSource bool,
+	testMode bool,
 	collectorURL string,
 	allowedMetricsIPs string,
 ) *config {
 
 	c := config{
 		staticCacheTTL: staticCacheTTL,
-		clientSource:   clientSource,
+		testMode:       testMode,
 		collectorURL:   getURL(collectorURL),
 	}
 

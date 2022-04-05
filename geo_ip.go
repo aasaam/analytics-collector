@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"errors"
+	"math"
 	"net"
 
 	"github.com/jackc/pgx/v4"
@@ -35,7 +36,7 @@ type geoResult struct {
 	// geo:ip
 	GeoIPAdministratorArea string
 	GeoIPCity              string
-	GeoIPCityGeoNameID     uint16
+	GeoIPCityGeoNameID     uint32
 	GeoIPCountry           string
 	GeoIPLocationLatitude  float64
 	GeoIPLocationLongitude float64
@@ -43,14 +44,14 @@ type geoResult struct {
 	// geo:client
 	GeoClientAdministratorArea string
 	GeoClientCity              string
-	GeoClientCityGeoNameID     uint16
+	GeoClientCityGeoNameID     uint32
 	GeoClientCountry           string
 	GeoClientLocationLatitude  float64
 	GeoClientLocationLongitude float64
 
 	GeoResultAdministratorArea string
 	GeoResultCity              string
-	GeoResultCityGeoNameID     uint16
+	GeoResultCityGeoNameID     uint32
 	GeoResultCountry           string
 	GeoResultFromClient        bool
 	GeoResultLocationLatitude  float64
@@ -128,7 +129,7 @@ func (geoParser *geoParser) newResultFromIP(ip net.IP) geoResult {
 
 	if err == nil {
 		obj.GeoIPCity = recordCity.City.Names["en"]
-		obj.GeoIPCityGeoNameID = uint16(recordCity.City.GeoNameID)
+		obj.GeoIPCityGeoNameID = uint32(recordCity.City.GeoNameID)
 		obj.GeoIPCountry = recordCity.Country.IsoCode
 		obj.GeoIPLocationLatitude = recordCity.Location.Latitude
 		obj.GeoIPLocationLongitude = recordCity.Location.Longitude
@@ -144,7 +145,7 @@ func (geoParser *geoParser) newResultFromIP(ip net.IP) geoResult {
 				obj.GeoIPCity = geonameData.city
 			}
 			if obj.GeoIPCityGeoNameID < 1 {
-				obj.GeoIPCityGeoNameID = uint16(geonameData.id)
+				obj.GeoIPCityGeoNameID = uint32(geonameData.id)
 			}
 		}
 
@@ -170,6 +171,10 @@ func (geoParser *geoParser) clientLocationUpdate(
 	clientLocationLatitude float64,
 	clientLocationLongitude float64,
 ) geoResult {
+
+	if math.Abs(clientLocationLatitude) > 90 || math.Abs(clientLocationLatitude) > 180 {
+		return obj
+	}
 
 	query := `
 		SELECT
