@@ -92,7 +92,7 @@ func (rp *refererParser) parse(currentURL *url.URL, refererURL *url.URL) referer
 		return result
 	}
 
-	result.RefURL = currentURL
+	result.RefURL = refererURL
 
 	rHost := getDomain(refererURL)
 	cHost := getDomain(currentURL)
