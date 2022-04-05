@@ -18,7 +18,7 @@ services:
     tmpfs:
       - /cache:rw,nodev,nosuid,noexec,noatime,size=${ASM_CACHE_SIZE_MB:-1024}m
     volumes:
-      - ./cert.prod/:/cert:ro
+      - ./nginx/cert.prod:/cert:ro
       - ./nginx/nginx.conf.tmpl:/usr/local/openresty/nginx/addon/gomplates/nginx.tmpl
   clickhouse-single:
       image: yandex/clickhouse-server:22
