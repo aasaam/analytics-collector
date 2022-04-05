@@ -24,7 +24,6 @@
 # prepare dependencies
 ./make.sh
 sudo rm -rf clickhouse/db clickhouse/logs
-docker-compose -f docker-compose.dev.yml up -d
 # import clickhouse schema
 docker exec -it clickhouse-client bash
 clickhouse-client --multiquery --host clickhouse-single --user 'analytics' --password 'password123123' < /tmp/schema.sql
