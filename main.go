@@ -89,7 +89,6 @@ clickHouseInitStep:
 			Msg(clickhouseInitErr.Error())
 		time.Sleep(clickhouseInterval)
 		goto clickHouseInitStep
-		return clickhouseInitErr
 	}
 
 	clickhouseInit.Close()
@@ -175,7 +174,7 @@ clickHouseInitStep:
 					conf.getLogger().
 						Debug().
 						Msg("storage is empty")
-					time.Sleep(clickhouseInterval * time.Second)
+					time.Sleep(clickhouseInterval)
 					return
 				}
 
@@ -203,7 +202,7 @@ clickHouseInitStep:
 						Str("on", "clickhouse-connection").
 						Str("error", clickhouseConnErr.Error()).
 						Send()
-					time.Sleep(clickhouseInterval * time.Second)
+					time.Sleep(clickhouseInterval)
 					return
 				}
 
@@ -223,7 +222,7 @@ clickHouseInitStep:
 							Str("on", "clickhouse-connection").
 							Str("error", recordsBatchErr.Error()).
 							Send()
-						time.Sleep(clickhouseInterval * time.Second)
+						time.Sleep(clickhouseInterval)
 						return
 					}
 
@@ -302,7 +301,7 @@ clickHouseInitStep:
 							Str("on", "clickhouse-connection").
 							Str("error", clientErrorsBatchErr.Error()).
 							Send()
-						time.Sleep(clickhouseInterval * time.Second)
+						time.Sleep(clickhouseInterval)
 						return
 					}
 
