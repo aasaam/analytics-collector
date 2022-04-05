@@ -18,6 +18,5 @@ git clone --depth=1 https://github.com/aasaam/analytics-client.git tmp/analytics
 
 cp tmp/analytics-client/dist/*.js embed/build/
 cp tmp/analytics-client/dist/*.json embed/build/
-cp tmp/analytics-client/dist/*.map embed/build/
 
 wget -O embed/build/user_agents.yaml 'https://raw.githubusercontent.com/ua-parser/uap-core/master/regexes.yaml'
