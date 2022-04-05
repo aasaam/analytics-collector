@@ -184,6 +184,7 @@ func insertRecordBatch(
 		rec.Performance.PerfResource,
 
 		// breadcrumb
+		rec.BreadCrumb.BCLevel,
 		rec.BreadCrumb.BCN1,
 		rec.BreadCrumb.BCN2,
 		rec.BreadCrumb.BCN3,

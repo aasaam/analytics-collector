@@ -1,0 +1,250 @@
+user www-data www-data;
+worker_processes {{ env.Getenv "ASM_WORKER_PROCESSES" "auto" }};
+worker_rlimit_nofile {{ env.Getenv "ASM_WORKER_RLIMIT_NOFILE" "20480" }};
+worker_priority {{ env.Getenv "ASM_WORKER_PRIORITY" "-10" }};
+thread_pool default threads={{ env.Getenv "ASM_THREAD_POOL_THREADS" "32" }} max_queue={{ env.Getenv "ASM_THREAD_POOL_MAX_QUEUE" "65536" }};
+
+events {
+  worker_connections {{ env.Getenv "ASM_WORKER_CONNECTIONS" "8192" }};
+  worker_aio_requests {{ env.Getenv "ASM_WORKER_AIO_REQUESTS" "32" }};
+  accept_mutex_delay {{ env.Getenv "ASM_ACCEPT_MUTEX_DELAY" "500ms" }};
+  accept_mutex {{ env.Getenv "ASM_ACCEPT_MUTEX" "off" }};
+  use epoll;
+  multi_accept {{ env.Getenv "ASM_MULTI_ACCEPT" "on" }};
+}
+
+{{ $nodeID := env.Getenv "ASM_NODE_ID" "0" }}
+
+error_log /dev/stdout warn;
+
+http {
+
+  resolver {{ env.Getenv "ASM_RESOLVER_ADDR" "127.0.0.1" }} valid={{ env.Getenv "ASM_RESOLVER_VALID" "10m" }};
+  resolver_timeout {{ env.Getenv "ASM_RESOLVER_TIMEOUT" "5s" }};
+
+  error_log /dev/stdout warn;
+
+  variables_hash_max_size {{ env.Getenv "ASM_VARIABLES_HASH_MAX_SIZE" "4096" }};
+
+  open_file_cache max={{ env.Getenv "ASM_OPEN_FILE_CACHE_MAX" "1024" }} inactive={{ env.Getenv "ASM_OPEN_FILE_CACHE_INACTIVE" "10m" }};
+  open_file_cache_valid {{ env.Getenv "ASM_OPEN_FILE_CACHE_VALID" "5m" }};
+  open_file_cache_min_uses {{ env.Getenv "ASM_OPEN_FILE_CACHE_MIN_USES" "2" }};
+  open_file_cache_errors {{ env.Getenv "ASM_OPEN_FILE_CACHE_ERRORS" "on" }};
+
+  include /usr/local/openresty/nginx/defaults/http_custom_errors.conf;
+
+  default_type application/octet-stream;
+  include /usr/local/openresty/nginx/defaults/mime.types;
+
+  map $host $organization_title { default '{{ env.Getenv "ASM_ORGANIZATION_TITLE" "aasaam software development group" }}'; }
+  map $host $organization_brand_icon { default '{{ env.Getenv "ASM_ORGANIZATION_BRAND_ICON" "ir_aasaam" }}'; }
+
+  map $host $node_id { default '{{ $nodeID }}'; }
+  map $host $support_email { default '{{ env.Getenv "ASM_SUPPORT_EMAIL" "" }}'; }
+  map $host $support_tel { default '{{ env.Getenv "ASM_SUPPORT_TEL" "" }}'; }
+  map $host $support_url { default '{{ env.Getenv "ASM_SUPPORT_URL" "" }}'; }
+
+  map $host $protection_port { default '{{ env.Getenv "ASM_PROTECTION_PORT" "9121" }}'; }
+  map $host $acme_http_host_port { default '{{ env.Getenv "ASM_ACME_HTTP_HOST_PORT" "http://192.168.1.128:28080" }}'; }
+
+  include /usr/local/openresty/nginx/defaults/http_init_variables.conf;
+
+  geoip2 /GeoIP2/GeoLite2-City.mmdb {
+    $geo_continent_code source=$remote_addr continent code;
+    $geo_continent_name source=$remote_addr continent names en;
+    $geo_country_code source=$remote_addr country iso_code;
+    $geo_country_geocode source=$remote_addr country geoname_id;
+    $geo_country_name source=$remote_addr country names en;
+    $geo_city source=$remote_addr city names en;
+    $geo_timezone source=$remote_addr location time_zone;
+    $geo_latitude source=$remote_addr location latitude;
+    $geo_longitude source=$remote_addr location longitude;
+    $geo_accuracy_radius source=$remote_addr location longitude;
+  }
+
+  geoip2 /GeoIP2/GeoLite2-ASN.mmdb {
+    $geo_isp_number source=$remote_addr autonomous_system_number;
+    $geo_isp source=$remote_addr autonomous_system_organization;
+  }
+
+  access_log off;
+
+  server_tokens {{ env.Getenv "ASM_SERVER_TOKENS" "off" }};
+  client_max_body_size {{ env.Getenv "ASM_CLIENT_MAX_BODY_SIZE" "16m" }};
+  client_body_buffer_size {{ env.Getenv "ASM_CLIENT_MAX_BODY_SIZE" "16m" }};
+  client_body_timeout {{ env.Getenv "ASM_CLIENT_BODY_TIMEOUT" "15" }};
+  keepalive_requests {{ env.Getenv "ASM_KEEPALIVE_REQUESTS" "1024" }};
+  keepalive_timeout {{ env.Getenv "ASM_KEEPALIVE_TIMEOUT" "10" }};
+  reset_timedout_connection {{ env.Getenv "ASM_RESET_TIMEDOUT_CONNECTION" "on" }};
+  send_timeout {{ env.Getenv "ASM_SEND_TIMEOUT" "10" }};
+  sendfile {{ env.Getenv "ASM_SENDFILE" "on" }};
+  tcp_nodelay {{ env.Getenv "ASM_TCP_NODELAY" "on" }};
+  tcp_nopush {{ env.Getenv "ASM_TCP_NOPUSH" "on" }};
+
+  charset utf-8;
+  charset_types
+    application/atom+xml
+    application/dash+xml
+    application/javascript
+    application/json
+    application/ld+json
+    application/manifest+json
+    application/x-ndjson
+    application/rss+xml
+    application/vnd.apple.mpegurl
+    application/x-javascript
+    application/xml
+    image/svg+xml
+    text/css
+    text/javascript
+    text/plain
+    text/xml;
+
+  gzip {{ env.Getenv "ASM_GZIP" "on" }};
+  gzip_static {{ env.Getenv "ASM_GZIP_STATIC" "on" }};
+  gzip_min_length {{ env.Getenv "ASM_GZIP_MIN_LENGTH" "16" }};
+  gzip_comp_level {{ env.Getenv "ASM_GZIP_COMP_LEVEL" "6" }};
+  gzip_vary {{ env.Getenv "ASM_GZIP_VARY" "on" }};
+  gzip_proxied {{ env.Getenv "ASM_GZIP_PROXIED" "any" }};
+  gzip_types
+    audio/mpegurl
+    video/mpegurl
+    application/atom+xml
+    application/dash+xml
+    application/dicom
+    application/javascript
+    application/json
+    application/ld+json
+    application/manifest+json
+    application/x-ndjson
+    application/rss+xml
+    application/vnd.apple.mpegurl
+    application/vnd.ms-fontobject
+    application/x-javascript
+    application/xml
+    font/opentype
+    font/truetype
+    font/ttf
+    image/gif
+    image/jpeg
+    image/png
+    image/svg+xml
+    image/x-icon
+    text/css
+    text/javascript
+    text/plain
+    text/x-component
+    text/xml;
+
+  brotli {{ env.Getenv "ASM_BROTLI" "on" }};
+  brotli_static {{ env.Getenv "ASM_BROTLI_STATIC" "on" }};
+  brotli_comp_level {{ env.Getenv "ASM_BROTLI_COMP_LEVEL" "6" }};
+  brotli_min_length {{ env.Getenv "ASM_BROTLI_MIN_LENGTH" "16" }};
+  brotli_types
+    audio/mpegurl
+    video/mpegurl
+    application/atom+xml
+    application/dash+xml
+    application/dicom
+    application/javascript
+    application/json
+    application/ld+json
+    application/manifest+json
+    application/x-ndjson
+    application/rss+xml
+    application/vnd.apple.mpegurl
+    application/vnd.ms-fontobject
+    application/x-javascript
+    application/xml
+    font/opentype
+    font/truetype
+    font/ttf
+    image/gif
+    image/jpeg
+    image/png
+    image/svg+xml
+    image/x-icon
+    text/css
+    text/javascript
+    text/plain
+    text/x-component
+    text/xml;
+
+
+  #
+  # Total cache size {{ env.Getenv "ASM_CACHE_SIZE_MB" "1024" }}
+  #
+
+  proxy_http_version 1.1;
+  proxy_cache_path /cache/nginx-proxy levels=1:2 keys_zone=PROXYCACHE:{{ env.Getenv "ASM_PROXY_CACHE_PATH_KEYS_ZONE" "32m" }} max_size={{ env.Getenv "ASM_PROXY_CACHE_PATH_KEYS_MAX_SIZE_MB" "512" }}m inactive={{ env.Getenv "ASM_PROXY_CACHE_PATH_KEYS_INACTIVE" "60m" }};
+  proxy_cache_key {{ env.Getenv "ASM_PROXY_CACHE_KEY" "$scheme$request_method$host$request_uri" }};
+  proxy_cache_methods {{ env.Getenv "ASM_PROXY_CACHE_METHODS" "GET HEAD" }};
+  proxy_buffers {{ env.Getenv "ASM_PROXY_BUFFERS" "32" }} {{ env.Getenv "ASM_PROXY_BUFFERS_SIZE" "128k" }};
+  proxy_buffer_size {{ env.Getenv "ASM_PROXY_BUFFER_SIZE" "256k" }};
+
+  init_by_lua_block {
+    resty_md5 = require "resty.md5"
+    str = require "resty.string"
+    resty_woothee = require "resty.woothee"
+    resty_url = require "resty.url"
+
+    utils = require "utils"
+    locales = require "locales"
+    normalize = require "normalize"
+    browsers = require "browsers"
+    loading_page = require "loading_page"
+  }
+
+  http2_push_preload {{ env.Getenv "ASM_HTTP2_PUSH_PRELOAD" "on" }};
+
+  # default headers
+  more_set_headers "Server: aasaam";
+  more_set_headers "X-Aasaam-Node-ID: {{ $nodeID }}";
+
+  #############
+  # pagespeed #
+  #############
+  pagespeed off;
+
+  include /usr/local/openresty/nginx/defaults/naxsi_core.rules;
+
+  limit_req_zone $binary_remote_addr zone=protection_req_limit_per_ip:{{ env.Getenv "ASM_PROTECTION_REQ_LIMIT_PER_IP_ZONE" "10m" }} rate={{ env.Getenv "ASM_PROTECTION_REQ_LIMIT_IP_PER_SECOND" "10" }}r/s;
+  limit_conn_zone $binary_remote_addr zone=protection_conn_limit_per_ip:{{ env.Getenv "ASM_PROTECTION_CONN_LIMIT_PER_IP_ZONE" "10m" }};
+
+  server {
+    listen 80 default_server;
+    listen 443 ssl http2 default_server;
+
+    server_name _;
+
+    include /usr/local/openresty/nginx/defaults/server_include_defaults.conf;
+    include /usr/local/openresty/nginx/defaults/server_include_aasaam_service.conf;
+
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSLShared:{{ env.Getenv "ASM_HTTP_SSL_SESSION_CACHE" "16" }}m;
+    ssl_session_tickets off;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA;
+    ssl_prefer_server_ciphers on;
+    add_header Strict-Transport-Security "max-age=63072000" always;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+    ssl_certificate         /cert/fullchain.pem;
+    ssl_certificate_key     /cert/privkey.pem;
+    ssl_trusted_certificate /cert/chain.pem;
+    ssl_dhparam             /cert/dhparam.pem;
+
+    location / {
+      proxy_pass http://analytics-collector:4000;
+      proxy_http_version 1.1;
+
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $remote_addr;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Host $http_host;
+    }
+  }
+}

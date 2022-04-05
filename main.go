@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/gob"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -21,6 +22,19 @@ var clickhouseInsertRecords string
 
 //go:embed clickhouse/insert_client_errors.sql
 var clickhouseInsertClientErrors string
+
+func projectsLoadJSON(pathJSON string) (map[string]projectData, error) {
+	b, err := ioutil.ReadFile(pathJSON)
+	if err != nil {
+		return nil, err
+	}
+	var r map[string]projectData
+	errJSON := json.Unmarshal(b, &r)
+	if errJSON != nil {
+		return nil, err
+	}
+	return r, nil
+}
 
 func projectsLoad(url string) (map[string]projectData, error) {
 	resp, err := http.Get(url)
@@ -84,47 +98,60 @@ func runServer(c *cli.Context) error {
 	/**
 	 * Projects
 	 */
-	sleepTime := time.Duration(c.Int64("management-call-interval")) * time.Second
-	go func() {
-		for {
-			promMetricUptimeInSeconds.Set(float64(time.Now().Unix() - initTime))
+	projectsJSON := c.String("management-projects-json")
 
-			projects, projectsErr := projectsLoad(c.String("management-projects-endpoint"))
-			if projectsErr != nil {
-				promMetricProjectsFetchErrors.Inc()
-				conf.getLogger().
-					Error().
-					Str("type", "projects_load").
-					Str("on", "load_from_management").
-					Str("error", projectsErr.Error()).
-					Send()
-				time.Sleep(sleepTime)
-				continue
-			}
-
-			projectsManagerErr := projectsManager.load(projects)
-			if projectsManagerErr != nil {
-				promMetricProjectsFetchErrors.Inc()
-				conf.getLogger().
-					Error().
-					Str("type", "projects_load").
-					Str("on", "load_data").
-					Str("error", projectsManagerErr.Error()).
-					Send()
-				time.Sleep(sleepTime)
-				continue
-			}
-
-			conf.getLogger().
-				Trace().
-				Str("type", "projects_load").
-				Bool("success", true).
-				Send()
-
-			promMetricProjectsFetchSuccess.Inc()
-			time.Sleep(sleepTime)
+	if projectsJSON != "" {
+		projects, projectsErr := projectsLoadJSON(c.String("management-projects-json"))
+		if projectsErr != nil {
+			return projectsErr
 		}
-	}()
+		projectsManagerErr := projectsManager.load(projects)
+		if projectsManagerErr != nil {
+			return projectsErr
+		}
+	} else {
+		sleepTime := time.Duration(c.Int64("management-call-interval")) * time.Second
+		go func() {
+			for {
+				promMetricUptimeInSeconds.Set(float64(time.Now().Unix() - initTime))
+
+				projects, projectsErr := projectsLoad(c.String("management-projects-endpoint"))
+				if projectsErr != nil {
+					promMetricProjectsFetchErrors.Inc()
+					conf.getLogger().
+						Error().
+						Str("type", "projects_load").
+						Str("on", "load_from_management").
+						Str("error", projectsErr.Error()).
+						Send()
+					time.Sleep(sleepTime)
+					continue
+				}
+
+				projectsManagerErr := projectsManager.load(projects)
+				if projectsManagerErr != nil {
+					promMetricProjectsFetchErrors.Inc()
+					conf.getLogger().
+						Error().
+						Str("type", "projects_load").
+						Str("on", "load_data").
+						Str("error", projectsManagerErr.Error()).
+						Send()
+					time.Sleep(sleepTime)
+					continue
+				}
+
+				conf.getLogger().
+					Trace().
+					Str("type", "projects_load").
+					Bool("success", true).
+					Send()
+
+				promMetricProjectsFetchSuccess.Inc()
+				time.Sleep(sleepTime)
+			}
+		}()
+	}
 
 	/**
 	 * Records
@@ -133,6 +160,9 @@ func runServer(c *cli.Context) error {
 	go func() {
 		for {
 			func() {
+				startTime := time.Now().UnixMilli()
+				inserts := 0
+
 				storage.Lock()
 				defer storage.Unlock()
 
@@ -223,6 +253,7 @@ func runServer(c *cli.Context) error {
 										Str("error", insertErr.Error()).
 										Send()
 								}
+								inserts += 1
 							}
 						} else {
 							insertErr := insertRecordBatch(recordsBatch, rec, "", "", "", 0)
@@ -234,6 +265,7 @@ func runServer(c *cli.Context) error {
 									Str("error", insertErr.Error()).
 									Send()
 							}
+							inserts += 1
 						}
 					}
 
@@ -286,6 +318,7 @@ func runServer(c *cli.Context) error {
 						}
 
 						insertErr := insertClientErrBatch(clientErrorsBatch, ce)
+
 						if insertErr != nil {
 							conf.getLogger().
 								Error().
@@ -294,6 +327,7 @@ func runServer(c *cli.Context) error {
 								Str("error", insertErr.Error()).
 								Send()
 						}
+						inserts += 1
 					}
 
 					clientErrorsBatchSendErr := clientErrorsBatch.Send()
@@ -307,6 +341,14 @@ func runServer(c *cli.Context) error {
 					}
 
 					storage.cleanRecords()
+				}
+
+				if inserts > 0 {
+					endTime := time.Now().UnixMilli()
+					inSeconds := (float64(endTime) - float64(startTime)) / 1000
+					conf.getLogger().
+						Debug().
+						Msg(fmt.Sprintf("Insert %d item(s) in %.2f seconds(s)", inserts, inSeconds))
 				}
 			}()
 			time.Sleep(time.Duration(1) * time.Second)
@@ -400,14 +442,21 @@ func main() {
 					Usage:    "URL of management server that expose projects",
 					Value:    "http://localhost:9897/projects.json",
 					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_MMDB_ASN_PATH"},
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_MANAGEMENT_PROJECTS_ENDPOINT"},
+				},
+				&cli.StringFlag{
+					Name:     "management-projects-json",
+					Usage:    "Path of JSON file of projects",
+					Value:    "",
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_MANAGEMENT_PROJECTS_JSON"},
 				},
 				&cli.Int64Flag{
 					Name:     "management-call-interval",
 					Usage:    "Call update for projects in seconds",
 					Value:    10,
 					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_MMDB_ASN_PATH"},
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_MMDB_MANAGEMENT_CALL_INTERVAL"},
 				},
 				&cli.StringFlag{
 					Name:     "log-level",

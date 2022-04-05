@@ -1,4 +1,4 @@
-INSERT INTO Records (
+INSERT INTO ClientErrors (
   Msg                                         , -- String,
   Err                                         , -- String,
 

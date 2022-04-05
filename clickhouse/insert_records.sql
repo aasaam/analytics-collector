@@ -57,6 +57,7 @@ INSERT INTO Records (
 	PerfResource                                , -- UInt16,
 
   -- breadcrumb
+  BCLevel                                     , -- UInt8,
   BCN1                                        , -- String,
 	BCN2                                        , -- String,
 	BCN3                                        , -- String,

@@ -1,32 +1,25 @@
 version: "3"
 
 services:
+  analytics-collector:
+    image: ghcr.io/aasaam/analytics-collector:latest
+    container_name: analytics-collector
   postgis:
     image: ghcr.io/aasaam/geonames-postgis:latest
     container_name: geonames-postgis
-    ports:
-      - 5432:5432
     environment:
       - POSTGRES_PASSWORD=geonames
       - POSTGRES_USER=geonames
       - POSTGRES_DB=geonames
-  adminer:
-    image: adminer
-    depends_on:
-      - postgis
-    container_name: adminer
-    ports:
-      - 8080:8080
   web-server:
     image: ghcr.io/aasaam/web-server
     container_name: web-server
     network_mode: host
-    privileged: true
     tmpfs:
       - /cache:rw,nodev,nosuid,noexec,noatime,size=${ASM_CACHE_SIZE_MB:-1024}m
     volumes:
-      - ./nginx/dev.nginx.conf.tmpl:/usr/local/openresty/nginx/addon/gomplates/nginx.tmpl
-      - ./nginx/cert:/cert:ro
+      - ./cert.prod/:/cert:ro
+      - ./nginx/nginx.conf.tmpl:/usr/local/openresty/nginx/addon/gomplates/nginx.tmpl
   clickhouse-single:
       image: yandex/clickhouse-server:22
       restart: always
@@ -40,13 +33,13 @@ services:
           soft: 262144
           hard: 262144
       ports:
-        - 8123:8123
-        - 9000:9000
-        - 9009:9009
+        - 127.0.0.1:8123:8123
+        - 127.0.0.1:9000:9000
+        - 127.0.0.1:9009:9009
       volumes:
-        # - ./clickhouse/logs:/var/log/clickhouse-server
-        # - ./clickhouse/db:/var/lib/clickhouse
-        - ./clickhouse/config.d.dev:/etc/clickhouse-server/config.d
+        - ./var/clickhouse/logs:/var/log/clickhouse-server
+        - ./var/clickhouse/db:/var/lib/clickhouse
+        - ./clickhouse/config.d.prod:/etc/clickhouse-server/config.d
         - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml
   clickhouse-client:
       image: yandex/clickhouse-client:22

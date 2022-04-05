@@ -73,15 +73,10 @@ func httpRecord(
 				)
 			}
 		} else if record.Mode == recordModeClientError { // on client error
+
 			go func() {
-				conf.getLogger().
-					Debug().
-					Str("type", errorTypeClient).
-					Str("error", postData.ClientErrorObject).
-					Str("ip", ip.String()).
-					Str("method", c.Method()).
-					Str("path", c.Path()).
-					Msg(postData.ClientErrorMessage)
+				record.ClientErrorMessage = postData.ClientErrorMessage
+				record.ClientErrorObject = postData.ClientErrorObject
 
 				finalizeByte, finalizeErr := record.finalize()
 				if finalizeErr == nil {
@@ -98,13 +93,6 @@ func httpRecord(
 					Str("path", c.Path()).
 					Send()
 			}()
-
-			defer conf.getLogger().
-				Debug().
-				Str("type", errorTypeClient).
-				Str("ip", ip.String()).
-				Str("err", postData.ClientErrorObject).
-				Msg(postData.ClientErrorMessage)
 			defer promMetricClientErrors.Inc()
 			return c.JSON(1)
 		}
