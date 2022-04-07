@@ -9,7 +9,7 @@ require (
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/mileusna/useragent v1.0.2
 	github.com/oschwald/geoip2-golang v1.7.0
-	github.com/paulmach/orb v0.4.0
+	github.com/paulmach/orb v0.5.0
 	github.com/prometheus/client_golang v1.12.1
 	github.com/rs/zerolog v1.26.1
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
@@ -50,5 +50,5 @@ require (
 	go.opentelemetry.io/otel/trace v1.4.1 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/sys v0.0.0-20220325203850-36772127a21f // indirect
-	google.golang.org/protobuf v1.26.0 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
 )
