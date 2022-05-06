@@ -13,7 +13,7 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/rs/zerolog v1.26.1
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
-	github.com/urfave/cli/v2 v2.5.1
+	github.com/urfave/cli/v2 v2.6.0
 	golang.org/x/net v0.0.0-20220403103023-749bd193bc2b
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 v2.4.0
