@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.0.12
 	github.com/gofiber/adaptor/v2 v2.1.23
-	github.com/gofiber/fiber/v2 v2.32.0
+	github.com/gofiber/fiber/v2 v2.33.0
 	github.com/jackc/pgx/v4 v4.16.0
 	github.com/mileusna/useragent v1.0.2
 	github.com/oschwald/geoip2-golang v1.7.0
