@@ -10,7 +10,7 @@ require (
 	github.com/mileusna/useragent v1.0.2
 	github.com/oschwald/geoip2-golang v1.7.0
 	github.com/paulmach/orb v0.6.0
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/rs/zerolog v1.26.1
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
 	github.com/urfave/cli/v2 v2.6.0
