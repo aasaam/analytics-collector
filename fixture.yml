@@ -24,13 +24,9 @@ PublicInstanceID:
     - www.example.net
 
 PEntityTaxonomyID:
-  - a001
-  - a002
-  - g001
-  -
-  -
-  -
-  -
+  - A0001
+  - A0002
+  - G0001
   -
 
 Geo:

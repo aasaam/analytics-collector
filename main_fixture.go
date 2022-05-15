@@ -228,9 +228,11 @@ clickHouseInitStep:
 
 				entID := ""
 				entMod := ""
+				entTID := ""
 				if fake.Number(0, 5) == 5 {
 					entID = strconv.Itoa(fake.Number(1, 100000))
 					entMod = f.PEntityModule[rand.Intn(len(f.PEntityModule))]
+					entTID = f.PEntityTaxonomyID[rand.Intn(len(f.PEntityTaxonomyID))]
 				}
 
 				r.setQueryParameters(
@@ -240,7 +242,7 @@ clickHouseInitStep:
 					"en",
 					entID,
 					entMod,
-					f.PEntityTaxonomyID[rand.Intn(len(f.PEntityTaxonomyID))],
+					entTID,
 				)
 
 				// refere
@@ -264,25 +266,23 @@ clickHouseInitStep:
 			}
 
 			if r.Mode >= 100 && r.Mode < 200 { // it's event
-				if fake.Number(0, 5) == 5 {
-					r.EventCount = fake.Number(0, 3)
-					Events := make([]recordEvent, 0)
-					for i := 0; i < r.EventCount; i += 1 {
-						ev := recordEvent{
-							ECategory: f.ECategory[rand.Intn(len(f.ECategory))],
-							EAction:   f.EAction[rand.Intn(len(f.EAction))],
-						}
-						if fake.Number(0, 3) == 3 {
-							ev.ELabel = fake.Noun()
-						}
-						if fake.Number(0, 3) == 3 {
-							ev.EValue = uint64(fake.Number(1, 10000))
-						}
-
-						Events = append(Events, ev)
+				r.EventCount = fake.Number(0, 3)
+				Events := make([]recordEvent, 0)
+				for i := 0; i < r.EventCount; i += 1 {
+					ev := recordEvent{
+						ECategory: f.ECategory[rand.Intn(len(f.ECategory))],
+						EAction:   f.EAction[rand.Intn(len(f.EAction))],
 					}
-					r.Events = Events
+					if fake.Number(0, 3) == 3 {
+						ev.ELabel = fake.Noun()
+					}
+					if fake.Number(0, 3) == 3 {
+						ev.EValue = uint64(fake.Number(1, 10000))
+					}
+
+					Events = append(Events, ev)
 				}
+				r.Events = Events
 			}
 
 			// finalize
