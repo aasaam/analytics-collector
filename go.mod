@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.0.14
+	github.com/brianvoe/gofakeit/v6 v6.16.0
 	github.com/gofiber/adaptor/v2 v2.1.23
 	github.com/gofiber/fiber/v2 v2.33.0
 	github.com/jackc/pgx/v4 v4.16.1
@@ -22,7 +23,6 @@ require (
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/brianvoe/gofakeit/v6 v6.16.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/gofiber/utils v0.1.2 // indirect
