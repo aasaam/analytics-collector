@@ -140,7 +140,7 @@ INSERT INTO Records (
 
   -- requirements
   IP                                          , -- IPv4,
-	PublicInstaceID                             , -- String,
+	PublicInstanceID                             , -- String,
 	Mode                                        , -- UInt8,
   CursorID                                    , -- UInt64,
 	Created                                     -- Datetime

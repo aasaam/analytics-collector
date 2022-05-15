@@ -29,10 +29,10 @@ func getTestProjects() *projects {
 }
 
 func TestProjectManager0(t *testing.T) {
-	if _, err := validatePublicInstaceID(""); err == nil {
+	if _, err := validatePublicInstanceID(""); err == nil {
 		t.Errorf("error must throw")
 	}
-	if _, err := validatePublicInstaceID("000000000000"); err != nil {
+	if _, err := validatePublicInstanceID("000000000000"); err != nil {
 		t.Errorf("error must not throw")
 	}
 }

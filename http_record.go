@@ -18,7 +18,7 @@ func httpRecord(
 	// no cache at all
 	noCache(c)
 
-	record, recordErr := newRecord(c.Query(recordQueryMode), c.Query(recordQueryPublicInstaceID))
+	record, recordErr := newRecord(c.Query(recordQueryMode), c.Query(recordQueryPublicInstanceID))
 
 	if recordErr != nil {
 		return httpErrorResponse(

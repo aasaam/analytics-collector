@@ -27,8 +27,8 @@ const (
 )
 
 const (
-	recordQueryMode            = "m"
-	recordQueryPublicInstaceID = "i"
+	recordQueryMode             = "m"
+	recordQueryPublicInstanceID = "i"
 
 	recordQueryURL              = "u"
 	recordQueryCanonicalURL     = "cu"

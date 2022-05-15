@@ -4,6 +4,8 @@ services:
   analytics-collector:
     image: ghcr.io/aasaam/analytics-collector:latest
     container_name: analytics-collector
+    depends_on:
+      - clickhouse-single
   postgis:
     image: ghcr.io/aasaam/geonames-postgis:latest
     container_name: geonames-postgis
@@ -15,6 +17,8 @@ services:
     image: ghcr.io/aasaam/web-server
     container_name: web-server
     network_mode: host
+    depends_on:
+      - analytics-collector
     tmpfs:
       - /cache:rw,nodev,nosuid,noexec,noatime,size=${ASM_CACHE_SIZE_MB:-1024}m
     volumes:

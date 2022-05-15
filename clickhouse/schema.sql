@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS analytics.ClientErrors
 
   -- requirements
   IP                                          IPv4,
-	PublicInstaceID                             String,
+	PublicInstanceID                             String,
 	Mode                                        UInt8,
 	Created                                     Datetime
 )
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS analytics.Records
 
   -- requirements
   IP                                          IPv4,
-	PublicInstaceID                             String,
+	PublicInstanceID                             String,
 	Mode                                        UInt8,
   CursorID                                    UInt64,
 	Created                                     Datetime

@@ -380,6 +380,105 @@ func main() {
 	app.EnableBashCompletion = true
 	app.Commands = []*cli.Command{
 		{
+			Name:   "fixture",
+			Usage:  "Run fixture",
+			Action: runFixture,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:     "fixture-yaml-path",
+					Usage:    "YAML fixture path for generate data",
+					Value:    "./fixture.yml",
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_FIXTURE_YAML_PATH"},
+				},
+				&cli.IntFlag{
+					Name:     "fixture-interval",
+					Usage:    "Interval fixture in seconds",
+					Value:    3,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_FIXTURE_INTERVAL"},
+				},
+				&cli.StringFlag{
+					Name:     "clickhouse-servers",
+					Usage:    "Comma separeted clickhouse ip:port",
+					Value:    "127.0.0.1:9000",
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_SERVERS"},
+				},
+
+				&cli.StringFlag{
+					Name:     "clickhouse-database",
+					Usage:    "Clickhouse database name",
+					Value:    "analytics",
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_DATABASE"},
+				},
+				&cli.StringFlag{
+					Name:     "clickhouse-username",
+					Usage:    "Clickhouse username",
+					Value:    "analytics",
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_USERNAME"},
+				},
+				&cli.StringFlag{
+					Name:     "clickhouse-password",
+					Usage:    "Clickhouse password",
+					Value:    "password123123",
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_PASSWORD"},
+				},
+				&cli.IntFlag{
+					Name:     "clickhouse-max-execution-time",
+					Usage:    "Clickhouse max execution time",
+					Value:    60,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_MAX_EXECUTION_TIME"},
+				},
+				&cli.IntFlag{
+					Name:     "clickhouse-dial-timeout",
+					Usage:    "Clickhouse dial timeout in seconds",
+					Value:    5,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_DIAL_TIMEOUT"},
+				},
+				&cli.IntFlag{
+					Name:     "clickhouse-max-idle-conns",
+					Usage:    "Clickhouse max idle connections",
+					Value:    5,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_MAX_IDLE_CONNS"},
+				},
+				&cli.IntFlag{
+					Name:     "clickhouse-max-open-conns",
+					Usage:    "Clickhouse max open connections",
+					Value:    10,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_MAX_OPEN_CONNS"},
+				},
+				&cli.IntFlag{
+					Name:     "clickhouse-conn-max-lifetime",
+					Usage:    "Clickhouse connection max lifetime in seconds",
+					Value:    3600,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_CONN_MAX_LIFETIME"},
+				},
+				&cli.IntFlag{
+					Name:     "clickhouse-max-block-size",
+					Usage:    "Clickhouse max block size",
+					Value:    10,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_MAX_BLOCK_SIZE"},
+				},
+				&cli.BoolFlag{
+					Name:     "clickhouse-compression-lz4",
+					Usage:    "Clickhouse compression LZ4",
+					Value:    false,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_COMPRESSION_LZ4"},
+				},
+			},
+		},
+		{
 			Name:   "run",
 			Usage:  "Run server",
 			Action: runServer,
@@ -408,7 +507,7 @@ func main() {
 				&cli.Int64Flag{
 					Name:     "static-cache-ttl",
 					Usage:    "Application listen http ip:port address",
-					Value:    86400,
+					Value:    4 * 3600,
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_STATIC_CACHE_TTL"},
 				},
@@ -464,7 +563,7 @@ func main() {
 				&cli.StringFlag{
 					Name:     "log-level",
 					Usage:    "Could be one of `panic`, `fatal`, `error`, `warn`, `info`, `debug` or `trace`",
-					Value:    "debug",
+					Value:    "warn",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_LOG_LEVEL"},
 				},

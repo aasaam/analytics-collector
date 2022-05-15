@@ -107,7 +107,7 @@ func insertClientErrBatch(
 		rec.UserAgentResult.UaDeviceModel,
 
 		rec.IP,
-		rec.PublicInstaceID,
+		rec.PublicInstanceID,
 		rec.Mode,
 		rec.Created,
 	)
@@ -265,7 +265,7 @@ func insertRecordBatch(
 		rec.CID.CidStdSessionTime,
 
 		rec.IP,
-		rec.PublicInstaceID,
+		rec.PublicInstanceID,
 		rec.Mode,
 		rec.CursorID,
 		rec.Created,

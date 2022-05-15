@@ -33,7 +33,7 @@ INSERT INTO ClientErrors (
 
   -- requirements
   IP                                          , -- IPv4,
-	PublicInstaceID                             , -- String,
+	PublicInstanceID                             , -- String,
 	Mode                                        , -- UInt8,
 	Created                                     -- Datetime
 )

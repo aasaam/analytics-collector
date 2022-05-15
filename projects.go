@@ -23,10 +23,10 @@ type projectData struct {
 	WildcardDomains []string `json:"w"`
 }
 
-var publicInstaceIDRegex = regexp.MustCompile(`^[a-zA-Z0-9]{12}$`)
+var publicInstanceIDRegex = regexp.MustCompile(`^[a-zA-Z0-9]{12}$`)
 
-func validatePublicInstaceID(pid string) (string, error) {
-	if ok := publicInstaceIDRegex.MatchString(pid); ok {
+func validatePublicInstanceID(pid string) (string, error) {
+	if ok := publicInstanceIDRegex.MatchString(pid); ok {
 		return pid, nil
 	}
 	return "", errors.New("invalid public instance id")
@@ -84,20 +84,20 @@ func (p *projects) load(data map[string]projectData) error {
 	return nil
 }
 
-func (p *projects) validateIDAndPrivate(publicInstaceID string, privateKey string) bool {
-	if publicInstaceIDFromPrivate, ok := p.privateKeys[privateKey]; ok && privateKey != "" && publicInstaceIDFromPrivate == publicInstaceID {
+func (p *projects) validateIDAndPrivate(publicInstanceID string, privateKey string) bool {
+	if publicInstanceIDFromPrivate, ok := p.privateKeys[privateKey]; ok && privateKey != "" && publicInstanceIDFromPrivate == publicInstanceID {
 		return true
 	}
 
 	return false
 }
 
-func (p *projects) validateID(publicInstaceID string) bool {
-	return p.publicIDs[publicInstaceID]
+func (p *projects) validateID(publicInstanceID string) bool {
+	return p.publicIDs[publicInstanceID]
 }
 
-func (p *projects) validateIDAndURL(publicInstaceID string, requestURL *url.URL) bool {
-	if !publicInstaceIDRegex.MatchString(publicInstaceID) {
+func (p *projects) validateIDAndURL(publicInstanceID string, requestURL *url.URL) bool {
+	if !publicInstanceIDRegex.MatchString(publicInstanceID) {
 		return false
 	}
 
@@ -110,13 +110,13 @@ func (p *projects) validateIDAndURL(publicInstaceID string, requestURL *url.URL)
 	p.Lock()
 	defer p.Unlock()
 
-	if cached, ok := p.cached[publicInstaceID]; ok && cached == hostname {
+	if cached, ok := p.cached[publicInstanceID]; ok && cached == hostname {
 		return true
 	}
 
 	if found, ok := p.domainMap[hostname]; ok {
-		if found == publicInstaceID {
-			p.cached[publicInstaceID] = hostname
+		if found == publicInstanceID {
+			p.cached[publicInstanceID] = hostname
 			return true
 		}
 	}
@@ -125,16 +125,16 @@ func (p *projects) validateIDAndURL(publicInstaceID string, requestURL *url.URL)
 		return false
 	}
 
-	for domain, domainPublicInstaceID := range p.wildcardDomainMap {
+	for domain, domainPublicInstanceID := range p.wildcardDomainMap {
 		if domain == hostname {
-			p.cached[publicInstaceID] = hostname
+			p.cached[publicInstanceID] = hostname
 			return true
 		}
 		domainRegexString := `.*\.` + regexp.QuoteMeta(domain) + `$`
 		domainRegex, domainRegexErr := regexp.Compile(domainRegexString)
 
-		if domainRegexErr == nil && domainRegex.MatchString(hostname) && publicInstaceID == domainPublicInstaceID {
-			p.cached[publicInstaceID] = hostname
+		if domainRegexErr == nil && domainRegex.MatchString(hostname) && publicInstanceID == domainPublicInstanceID {
+			p.cached[publicInstanceID] = hostname
 			return true
 		}
 	}

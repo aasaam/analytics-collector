@@ -51,7 +51,7 @@ type record struct {
 	CursorID           uint64
 	Mode               uint8
 	modeString         string
-	PublicInstaceID    string
+	PublicInstanceID   string
 	IP                 net.IP
 
 	PEntityID         string
@@ -133,7 +133,7 @@ func validateMode(m string) (uint8, error) {
 	return 0, errors.New("invalid mode of request")
 }
 
-func newRecord(modeQuery string, publicInstaceIDQuery string) (*record, error) {
+func newRecord(modeQuery string, publicInstanceIDQuery string) (*record, error) {
 	r := record{
 		Created: time.Now(),
 	}
@@ -143,14 +143,14 @@ func newRecord(modeQuery string, publicInstaceIDQuery string) (*record, error) {
 		return &r, err
 	}
 
-	publicInstaceID, err := validatePublicInstaceID(publicInstaceIDQuery)
+	publicInstanceID, err := validatePublicInstanceID(publicInstanceIDQuery)
 	if err != nil {
 		return &r, err
 	}
 
 	r.modeString = modeQuery
 	r.Mode = mode
-	r.PublicInstaceID = publicInstaceID
+	r.PublicInstanceID = publicInstanceID
 
 	return &r, nil
 }
@@ -217,23 +217,23 @@ func (r *record) verify(
 		if r.PURL == nil {
 			return &errorURLRequiredAndMustBeValid
 		}
-		if !projectsManager.validateIDAndURL(r.PublicInstaceID, r.PURL) {
+		if !projectsManager.validateIDAndURL(r.PublicInstanceID, r.PURL) {
 			return &errorProjectPublicIDAndURLDidNotMatched
 		}
 		return nil
 	}
 
 	// in api mode private key must matched
-	if r.Mode == recordModeEventAPI && !projectsManager.validateIDAndPrivate(r.PublicInstaceID, privateKey) {
+	if r.Mode == recordModeEventAPI && !projectsManager.validateIDAndPrivate(r.PublicInstanceID, privateKey) {
 		return &errorAPIPrivateKeyFailed
 	}
 
 	// in page js event must match with page url
-	if r.Mode == recordModeEventJSInPageView && !projectsManager.validateIDAndURL(r.PublicInstaceID, r.PURL) {
+	if r.Mode == recordModeEventJSInPageView && !projectsManager.validateIDAndURL(r.PublicInstanceID, r.PURL) {
 		return &errorProjectPublicIDAndURLDidNotMatched
 	}
 
-	if r.Mode == recordModeClientError && r.PURL != nil && !projectsManager.validateIDAndURL(r.PublicInstaceID, r.PURL) {
+	if r.Mode == recordModeClientError && r.PURL != nil && !projectsManager.validateIDAndURL(r.PublicInstanceID, r.PURL) {
 		return &errorProjectPublicIDAndURLDidNotMatched
 	}
 
@@ -398,7 +398,7 @@ func (r *record) setPostRequest(
 		}
 	} else if r.Mode == recordModePageViewAMP && postRequest.CIDAmp != "" {
 		r.CID = clientIDFromAMP(postRequest.CIDAmp)
-	} else if r.Mode == recordModeClientError && r.IP != nil {
+	} else if r.IP != nil {
 		r.CID = clientIDFromOther([]string{r.IP.String(), r.UserAgentResult.UaFull})
 	}
 }
