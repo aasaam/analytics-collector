@@ -3,6 +3,7 @@ INSERT INTO ClientErrors (
   Err                                         , -- String,
 
   PURL                                        , -- String,
+  PURLChecksum                                , -- String,
 
   -- geo:asn
   GeoIPAutonomousSystemNumber                 , -- UInt16,

@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS analytics.ClientErrors
   Err                                         String,
 
   PURL                                        String,
+  PURLChecksum                                FixedString(24),
 
   -- geo:asn
   GeoIPAutonomousSystemNumber                 UInt16,
@@ -28,7 +29,7 @@ CREATE TABLE IF NOT EXISTS analytics.ClientErrors
   -- user agent
 	UaType                                      LowCardinality(String),
 	UaFull                                      String,
-	UaChecksum                                  FixedString(40),
+	UaChecksum                                  FixedString(24),
 	UaBrowserName                               LowCardinality(String),
 	UaBrowserVersionMajor                       UInt64,
 	UaBrowserVersion                            String,
@@ -41,7 +42,7 @@ CREATE TABLE IF NOT EXISTS analytics.ClientErrors
 
   -- requirements
   IP                                          IPv4,
-	PublicInstanceID                             String,
+	PublicInstanceID                            String,
 	Mode                                        UInt8,
 	Created                                     Datetime
 )
@@ -57,17 +58,29 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   ECategory                                   String,
   EAction                                     String,
   ELabel                                      String,
+  EIdent                                      String,
   EValue                                      UInt64,
 
-  -- etc
-  UserIDOrName                                String,
+  -- custom segments
+  Seg1Name                                    String,
+  Seg2Name                                    String,
+  Seg3Name                                    String,
+  Seg4Name                                    String,
+  Seg5Name                                    String,
+  Seg1Value                                   String,
+  Seg2Value                                   String,
+  Seg3Value                                   String,
+  Seg4Value                                   String,
+  Seg5Value                                   String,
 
   -- page
   PIsIframe                                   UInt8, --bool
   PIsTouchSupport                             UInt8, --bool
   PURL                                        String,
+  PURLChecksum                                FixedString(24),
   PTitle                                      String,
   PCanonicalURL                               String,
+  PCanonicalURLChecksum                       FixedString(24),
   PLang                                       LowCardinality(String),
   PEntityID                                   String,
   PEntityModule                               String,
@@ -79,6 +92,7 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   PRefererURLExternalHost                     String,
   PRefererURLExternalDomain                   String,
   PRefererURLExternalName                     String,
+  PRefererURLProtocol                         LowCardinality(String),
   PRefererURLExternalType                     UInt8,
 
   -- session referer
@@ -86,6 +100,7 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   SRefererURLExternalHost                     String,
   SRefererURLExternalDomain                   String,
   SRefererURLExternalName                     String,
+  SRefererURLProtocol                         LowCardinality(String),
   SRefererURLExternalType                     UInt8,
 
   --- utm
@@ -126,7 +141,7 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   -- user agent
 	UaType                                      LowCardinality(String),
 	UaFull                                      String,
-	UaChecksum                                  FixedString(40),
+	UaChecksum                                  FixedString(24),
 	UaBrowserName                               LowCardinality(String),
 	UaBrowserVersionMajor                       UInt64,
 	UaBrowserVersion                            String,
@@ -187,14 +202,14 @@ CREATE TABLE IF NOT EXISTS analytics.Records
 
   -- client
   CidType                                     UInt8,
-  CidUserChecksum                             FixedString(40),
-  CidSessionChecksum                          FixedString(40),
+  CidUserChecksum                             FixedString(24),
+  CidSessionChecksum                          FixedString(24),
   CidStdInitTime                              Datetime,
   CidStdSessionTime                           Datetime,
 
   -- requirements
   IP                                          IPv4,
-	PublicInstanceID                             String,
+	PublicInstanceID                            String,
 	Mode                                        UInt8,
   CursorID                                    UInt64,
 	Created                                     Datetime

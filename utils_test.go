@@ -44,8 +44,13 @@ func TestSanitizeEntityTaxonomyID(t *testing.T) {
 
 func TestHash(t *testing.T) {
 	s := checksum("1")
-
-	if len(s) != 40 {
+	if len(s) != 24 {
+		t.Errorf("invalid hash")
+	}
+}
+func TestHash2(t *testing.T) {
+	s := checksum("")
+	if len(s) != 24 {
 		t.Errorf("invalid hash")
 	}
 }
@@ -115,7 +120,7 @@ func TestURLDomainParse(t *testing.T) {
 
 func TestGetCursorID(t *testing.T) {
 	c1 := getCursorID()
-	time.Sleep(time.Duration(1) * time.Millisecond)
+	time.Sleep(time.Duration(2) * time.Millisecond)
 	c2 := getCursorID()
 	if c1 == c2 {
 		t.Errorf("must not same cursor")

@@ -49,6 +49,7 @@ type postRequestEvent struct {
 	Category string `json:"c,omitempty"`
 	Action   string `json:"a,omitempty"`
 	Label    string `json:"l,omitempty"`
+	Ident    string `json:"i,omitempty"`
 	Value    uint64 `json:"v,omitempty"`
 }
 
@@ -89,6 +90,20 @@ type postRequestPerformanceData struct {
 	PerfResource           uint16 `json:"r,omitempty"`
 }
 
+type postRequestSegment struct {
+	S1N string `json:"s1n,omitempty"`
+	S2N string `json:"s2n,omitempty"`
+	S3N string `json:"s3n,omitempty"`
+	S4N string `json:"s4n,omitempty"`
+	S5N string `json:"s5n,omitempty"`
+
+	S1V string `json:"s1v,omitempty"`
+	S2V string `json:"s2v,omitempty"`
+	S3V string `json:"s3v,omitempty"`
+	S4V string `json:"s4v,omitempty"`
+	S5V string `json:"s5v,omitempty"`
+}
+
 type postRequestPage struct {
 	URL          string `json:"u,omitempty"`
 	CanonicalURL string `json:"cu,omitempty"`
@@ -114,7 +129,7 @@ type postRequestPage struct {
 	PerformanceData      *postRequestPerformanceData `json:"prf,omitempty"`
 	GeographyData        *postRequestGeographyData   `json:"geo,omitempty"`
 
-	UserIDOrName string `json:"usr,omitempty"`
+	Seg *postRequestSegment `json:"seg,omitempty"`
 }
 
 type postRequest struct {

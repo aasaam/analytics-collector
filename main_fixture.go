@@ -19,12 +19,15 @@ import (
 )
 
 type fixture struct {
-	ECategory       []string `yaml:"ECategory"`
-	EAction         []string `yaml:"EAction"`
-	Created         []bool   `yaml:"Created"`
-	PIsIframe       []bool   `yaml:"PIsIframe"`
-	PIsTouchSupport []bool   `yaml:"PIsTouchSupport"`
-	PEntityModule   []string `yaml:"PEntityModule"`
+	ECategory       []string            `yaml:"ECategory"`
+	EAction         []string            `yaml:"EAction"`
+	Created         []bool              `yaml:"Created"`
+	PIsIframe       []bool              `yaml:"PIsIframe"`
+	PIsTouchSupport []bool              `yaml:"PIsTouchSupport"`
+	PLang           []string            `yaml:"PLang"`
+	PEntityModule   []string            `yaml:"PEntityModule"`
+	Referer         []string            `yaml:"Referer"`
+	Titles          map[string][]string `yaml:"Titles"`
 	Geo             []struct {
 		Country string     `yaml:"Country"`
 		Lat     [2]float64 `yaml:"Lat"`
@@ -138,7 +141,6 @@ clickHouseInitStep:
 	userAgentParser := newUserAgentParser()
 
 	refererParser := newRefererParser()
-	refStdDomains := reflect.ValueOf(refererParser.domainMap).MapKeys()
 
 	for {
 
@@ -167,10 +169,6 @@ clickHouseInitStep:
 			ipString := fake.IPv4Address()
 			r.CID = clientIDFromAMP(ipString)
 			r.IP = net.ParseIP(ipString)
-			if fake.Number(0, 5) > 3 {
-				ref, _ := url.Parse(fake.URL())
-				r.setReferer(refererParser, ref)
-			}
 
 			r.GeoResult = fakeGeoResult(ipString, &f)
 			r.UserAgentResult = userAgentParser.parse(f.UserAgent[rand.Intn(len(f.UserAgent))])
@@ -195,16 +193,21 @@ clickHouseInitStep:
 					}
 				}
 
+				lang := f.PLang[rand.Intn(len(f.PLang))]
+				title := fake.Sentence(fake.Number(5, 30))
+				if lang != "en" {
+					Titles, foundTitles := f.Titles[lang]
+					if foundTitles {
+						title = Titles[rand.Intn(len(Titles))]
+					}
+				}
+
 				domains := f.PublicInstanceID[r.PublicInstanceID]
 				domain := domains[rand.Intn(len(domains))]
 
 				r.PIsIframe = f.PIsIframe[rand.Intn(len(f.PIsIframe))]
 				r.PIsTouchSupport = f.PIsTouchSupport[rand.Intn(len(f.PIsTouchSupport))]
-				r.PKeywords = strings.Split(fake.Sentence(5), " ")
-
-				if fake.Number(0, 5) == 5 {
-					r.UserIDOrName = fake.Username()
-				}
+				r.PKeywords = strings.Split(title, " ")
 
 				u, _ := url.Parse(fake.URL())
 				u.Host = domain
@@ -212,7 +215,7 @@ clickHouseInitStep:
 
 				cu := u.String()
 
-				if fake.Number(0, 5) == 5 {
+				if fake.Number(0, 4) == 4 {
 					values := u.Query()
 					values.Set("utm_source", fake.Noun())
 					values.Set("utm_medium", fake.Noun())
@@ -238,29 +241,33 @@ clickHouseInitStep:
 				r.setQueryParameters(
 					u.String(),
 					cu,
-					fake.Sentence(fake.Number(5, 30)),
-					"en",
+					title,
+					lang,
 					entID,
 					entMod,
 					entTID,
 				)
 
-				// refere
-				if r.PURL != nil && fake.Number(0, 3) == 3 {
-					sRefURL, _ := url.Parse(fake.URL())
-					if fake.Number(0, 5) == 5 {
-						stdrefDomain := refStdDomains[rand.Intn(len(refStdDomains))].String()
-						sRefURL.Host = stdrefDomain
-					}
-					r.SRefererURL = refererParser.parse(r.PURL, sRefURL)
+				// Referer
+				if r.PURL != nil {
 
-					if fake.Number(0, 3) == 3 {
-						refURL, _ := url.Parse(fake.URL())
-						if fake.Number(0, 5) == 5 {
-							stdrefDomain := refStdDomains[rand.Intn(len(refStdDomains))].String()
-							refURL.Host = stdrefDomain
+					// session
+					fakeReferer1 := f.Referer[rand.Intn(len(f.Referer))]
+
+					if fakeReferer1 != "" {
+						ref, refErr := url.Parse(fakeReferer1)
+						if refErr == nil {
+							r.SRefererURL = refererParser.parse(r.PURL, ref)
 						}
-						r.PRefererURL = refererParser.parse(r.PURL, refURL)
+					}
+
+					// referer
+					fakeReferer2 := f.Referer[rand.Intn(len(f.Referer))]
+					if fakeReferer2 != "" {
+						ref, refErr := url.Parse(fakeReferer2)
+						if refErr == nil {
+							r.PRefererURL = refererParser.parse(r.PURL, ref)
+						}
 					}
 				}
 			}
@@ -275,6 +282,9 @@ clickHouseInitStep:
 					}
 					if fake.Number(0, 3) == 3 {
 						ev.ELabel = fake.Noun()
+					}
+					if fake.Number(0, 3) == 3 {
+						ev.EIdent = strconv.Itoa(fake.Number(1, 1000))
 					}
 					if fake.Number(0, 3) == 3 {
 						ev.EValue = uint64(fake.Number(1, 10000))
@@ -334,7 +344,7 @@ clickHouseInitStep:
 			conf.getLogger().
 				Error().
 				Str("type", errorTypeApp).
-				Str("on", "clickhouse-connection").
+				Str("on", "batch-insert").
 				Str("error", recordsBatchErr.Error()).
 				Send()
 			time.Sleep(fixtureInterval)
@@ -349,8 +359,9 @@ clickHouseInitStep:
 					ECategory := rec.Events[i].ECategory
 					EAction := rec.Events[i].EAction
 					ELabel := rec.Events[i].ELabel
+					EIdent := rec.Events[i].EIdent
 					EValue := rec.Events[i].EValue
-					insertErr := insertRecordBatch(recordsBatch, rec, ECategory, EAction, ELabel, EValue)
+					insertErr := insertRecordBatch(recordsBatch, rec, ECategory, EAction, ELabel, EIdent, EValue)
 					if insertErr != nil {
 						conf.getLogger().
 							Error().
@@ -362,7 +373,7 @@ clickHouseInitStep:
 					inserts += 1
 				}
 			} else {
-				insertErr := insertRecordBatch(recordsBatch, rec, "", "", "", 0)
+				insertErr := insertRecordBatch(recordsBatch, rec, "", "", "", "", 0)
 				if insertErr != nil {
 					conf.getLogger().
 						Error().

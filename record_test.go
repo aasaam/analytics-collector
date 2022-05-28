@@ -181,12 +181,14 @@ func TestRecord10(t *testing.T) {
 		Category: "cat",
 		Action:   "act",
 		Label:    "lab",
+		Ident:    "100",
 		Value:    1,
 	}
 	ev2 := postRequestEvent{
 		Category: "!@#",
 		Action:   "!@#",
 		Label:    "lab",
+		Ident:    "100",
 		Value:    1,
 	}
 
@@ -239,12 +241,14 @@ func TestRecord11(t *testing.T) {
 		Category: "cat",
 		Action:   "act",
 		Label:    "lab",
+		Ident:    "100",
 		Value:    1,
 	}
 	ev2 := postRequestEvent{
 		Category: "!@#",
 		Action:   "!@#",
 		Label:    "lab",
+		Ident:    "100",
 		Value:    1,
 	}
 
@@ -312,12 +316,14 @@ func TestRecord12(t *testing.T) {
 		Category: "cat",
 		Action:   "act",
 		Label:    "lab",
+		Ident:    "100",
 		Value:    1,
 	}
 	ev2 := postRequestEvent{
 		Category: "!@#",
 		Action:   "!@#",
 		Label:    "lab",
+		Ident:    "100",
 		Value:    1,
 	}
 

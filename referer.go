@@ -28,6 +28,7 @@ type refererData struct {
 	RefName           string
 	RefExternalHost   string
 	RefExternalDomain string
+	RefProtocol       string
 	RefType           uint8
 }
 
@@ -93,6 +94,7 @@ func (rp *refererParser) parse(currentURL *url.URL, refererURL *url.URL) referer
 	}
 
 	result.RefURL = refererURL
+	result.RefProtocol = refererURL.Scheme
 
 	rHost := getDomain(refererURL)
 	cHost := getDomain(currentURL)
@@ -109,6 +111,7 @@ func (rp *refererParser) parse(currentURL *url.URL, refererURL *url.URL) referer
 
 		result.RefExternalHost = rHost
 		result.RefType = refererTypeOther
+		result.RefName = rDomain
 		if val, ok := rp.domainMap[rHost]; ok {
 			result.RefName = val.RefName
 			result.RefType = val.RefType

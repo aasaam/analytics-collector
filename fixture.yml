@@ -15,6 +15,53 @@ Created:
   - false
   - false
 
+Referer:
+  - https://www.google.com/
+  - https://www.google.com/
+  - https://www.google.com/
+  - android-app://com.google.android.googlequicksearchbox/
+  - android-app://com.google.android.googlequicksearchbox/
+  - android-app://com.google.android.gm/
+  - https://www.sample.com/
+  - https://t.co/Sample1
+  - https://t.co/Sample2
+  - https://reddit.com/Sample2
+  - https://www.bing.com/
+  - https://mail.live.com/Path1
+  - http://www.sample.com/
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+  -
+
+Titles:
+  fa:
+    - لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم
+    - از صنعت چاپ، و با استفاده از طراحان گرافیک است
+    - چاپگرها و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که لازم است
+    - و برای شرایط فعلی تکنولوژی مورد نیاز، و کاربردهای متنوع با هدف بهبود
+    - ابزارهای کاربردی می باشد
+    - درصد گذشته حال و آینده، شناخت فراوان جامعه و متخصصان را می طلبد
+    - تا با نرم افزارها شناخت بیشتری را برای طراحان رایانه ای علی الخصوص
+
+  # other langs if not found append ans english titles so `en` not needed
+
+
+PLang:
+  - en
+  - en
+  - en
+  - fa
+  - fa
+  - fa
+  - fa
+  - fa
+
 PublicInstanceID:
   0123456789ab:
     - example.com

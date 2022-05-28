@@ -2,7 +2,7 @@ package main
 
 import (
 	"crypto/sha1"
-	"encoding/hex"
+	"encoding/base64"
 	"net"
 	"net/url"
 	"regexp"
@@ -20,6 +20,8 @@ var sanitizeTitleMoreSpaceRegex = regexp.MustCompile(`[\s]+`)
 var sanitizeNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{1,31}$`)
 var entityIDRegex = regexp.MustCompile(`^[a-zA-Z0-9-_\/]{1,63}$`)
 var entityTaxonomyIDRegex = regexp.MustCompile(`^[A-Z]{1}[0-9a-z]{4}$`)
+var checksumReplaceRegex = regexp.MustCompile(`[^a-zA-Z0-9]`)
+var cursorTimeLayout = "20060102030405.000"
 
 func uint16FromString(s string) uint16 {
 	i, err := strconv.Atoi(s)
@@ -80,9 +82,12 @@ func getURL(urlString string) *url.URL {
 }
 
 func checksum(str string) string {
+	if strings.TrimSpace(str) == "" {
+		return "000000000000000000000000"
+	}
 	h := sha1.New()
 	h.Write([]byte(str))
-	return hex.EncodeToString(h.Sum(nil))
+	return checksumReplaceRegex.ReplaceAllString(base64.StdEncoding.EncodeToString(h.Sum(nil)), "0")[0:24]
 }
 
 func sanitizeTitle(str string) string {
@@ -183,6 +188,11 @@ func parseKeywords(inpKeywords string) []string {
 }
 
 func getCursorID() uint64 {
-	// current unix minus 2022-01-01 00:00:00 for lower uint
-	return uint64(time.Now().UnixMicro() - 1640995200000000)
+	n := time.Now().Format(cursorTimeLayout)
+	n = strings.ReplaceAll(n, ".", "")
+	ui, err := strconv.ParseUint(n, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	return ui
 }

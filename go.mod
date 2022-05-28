@@ -5,17 +5,17 @@ go 1.17
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.0.14
 	github.com/brianvoe/gofakeit/v6 v6.16.0
-	github.com/gofiber/adaptor/v2 v2.1.23
-	github.com/gofiber/fiber/v2 v2.33.0
+	github.com/gofiber/adaptor/v2 v2.1.24
+	github.com/gofiber/fiber/v2 v2.34.0
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/mileusna/useragent v1.0.2
 	github.com/oschwald/geoip2-golang v1.7.0
-	github.com/paulmach/orb v0.7.0
+	github.com/paulmach/orb v0.7.1
 	github.com/prometheus/client_golang v1.12.2
 	github.com/rs/zerolog v1.26.1
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
-	github.com/urfave/cli/v2 v2.6.0
-	golang.org/x/net v0.0.0-20220513224357-95641704303c
+	github.com/urfave/cli/v2 v2.8.1
+	golang.org/x/net v0.0.0-20220526153639-5463443f8c37
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -45,11 +45,12 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.35.0 // indirect
+	github.com/valyala/fasthttp v1.37.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
+	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opentelemetry.io/otel v1.7.0 // indirect
 	go.opentelemetry.io/otel/trace v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
-	golang.org/x/sys v0.0.0-20220429233432-b5fbb4746d32 // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 )

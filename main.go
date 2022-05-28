@@ -246,8 +246,9 @@ clickHouseInitStep:
 								ECategory := rec.Events[i].ECategory
 								EAction := rec.Events[i].EAction
 								ELabel := rec.Events[i].ELabel
+								EIdent := rec.Events[i].EIdent
 								EValue := rec.Events[i].EValue
-								insertErr := insertRecordBatch(recordsBatch, rec, ECategory, EAction, ELabel, EValue)
+								insertErr := insertRecordBatch(recordsBatch, rec, ECategory, EAction, ELabel, EIdent, EValue)
 								if insertErr != nil {
 									conf.getLogger().
 										Error().
@@ -259,7 +260,7 @@ clickHouseInitStep:
 								inserts += 1
 							}
 						} else {
-							insertErr := insertRecordBatch(recordsBatch, rec, "", "", "", 0)
+							insertErr := insertRecordBatch(recordsBatch, rec, "", "", "", "", 0)
 							if insertErr != nil {
 								conf.getLogger().
 									Error().

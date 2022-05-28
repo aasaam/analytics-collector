@@ -80,11 +80,11 @@ func TestClientIdFromStd7(t *testing.T) {
 }
 func TestClientIdFromNotStd1(t *testing.T) {
 	c1 := clientIDFromAMP("amp-xyz")
-	if len(c1.CidSessionChecksum) != 40 {
+	if len(c1.CidSessionChecksum) != 24 {
 		t.Errorf("invalid cid")
 	}
 	c2 := clientIDFromOther([]string{"1"})
-	if len(c2.CidSessionChecksum) != 40 {
+	if len(c2.CidSessionChecksum) != 24 {
 		t.Errorf("invalid cid")
 	}
 }

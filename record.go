@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -22,6 +23,20 @@ type breadCrumb struct {
 	BCP3          string
 	BCP4          string
 	BCP5          string
+}
+
+type segment struct {
+	S1N string
+	S2N string
+	S3N string
+	S4N string
+	S5N string
+
+	S1V string
+	S2V string
+	S3V string
+	S4V string
+	S5V string
 }
 
 type performance struct {
@@ -41,6 +56,7 @@ type recordEvent struct {
 	ECategory string
 	EAction   string
 	ELabel    string
+	EIdent    string
 	EValue    uint64
 }
 
@@ -78,8 +94,7 @@ type record struct {
 	ScreenInfo      screenInfo
 	BreadCrumb      breadCrumb
 	Performance     performance
-
-	UserIDOrName string
+	Segments        segment
 }
 
 const (
@@ -278,7 +293,6 @@ func (r *record) setPostRequest(
 
 	if postRequest.Page != nil {
 		r.PURL = getURL(postRequest.Page.URL)
-		r.UserIDOrName = postRequest.Page.UserIDOrName
 		r.PCanonicalURL = getURL(postRequest.Page.CanonicalURL)
 		r.PTitle = postRequest.Page.Title
 		r.PLang = sanitizeLanguage(postRequest.Page.Lang)
@@ -365,6 +379,43 @@ func (r *record) setPostRequest(
 			)
 		}
 
+		if postRequest.Page.Seg != nil {
+			S1Name := sanitizeName(postRequest.Page.Seg.S1N)
+			S1Value := strings.TrimSpace(postRequest.Page.Seg.S1V)
+			if S1Name != "" && S1Value != "" {
+				r.Segments.S1N = S1Name
+				r.Segments.S1V = S1Value
+			}
+
+			S2Name := sanitizeName(postRequest.Page.Seg.S2N)
+			S2Value := strings.TrimSpace(postRequest.Page.Seg.S2V)
+			if S2Name != "" && S2Value != "" {
+				r.Segments.S2N = S2Name
+				r.Segments.S2V = S2Value
+			}
+
+			S3Name := sanitizeName(postRequest.Page.Seg.S3N)
+			S3Value := strings.TrimSpace(postRequest.Page.Seg.S3V)
+			if S3Name != "" && S3Value != "" {
+				r.Segments.S3N = S3Name
+				r.Segments.S3V = S3Value
+			}
+
+			S4Name := sanitizeName(postRequest.Page.Seg.S4N)
+			S4Value := strings.TrimSpace(postRequest.Page.Seg.S4V)
+			if S4Name != "" && S4Value != "" {
+				r.Segments.S4N = S4Name
+				r.Segments.S4V = S4Value
+			}
+
+			S5Name := sanitizeName(postRequest.Page.Seg.S5N)
+			S5Value := strings.TrimSpace(postRequest.Page.Seg.S5V)
+			if S5Name != "" && S5Value != "" {
+				r.Segments.S5N = S5Name
+				r.Segments.S5V = S5Value
+			}
+		}
+
 		r.PKeywords = parseKeywords(postRequest.Page.PageKeywords)
 		r.PIsIframe = postRequest.Page.IsIframe
 		r.PIsTouchSupport = postRequest.Page.IsTouchSupport
@@ -381,11 +432,11 @@ func (r *record) setPostRequest(
 					ECategory: category,
 					EAction:   action,
 					ELabel:    ev.Label,
+					EIdent:    sanitizeEntityID(ev.Ident),
 					EValue:    ev.Value,
 				}
 				events = append(events, re)
 			}
-
 		}
 		r.Events = events
 		r.EventCount = len(events)

@@ -33,7 +33,7 @@ type clientID struct {
 func clientIDFromAMP(ampCidString string) clientID {
 	t := time.Now()
 	timestamp := t.Unix()
-	sessionEach30Minutes := math.Round(float64(timestamp) / 1800)
+	sessionEach30Minutes := math.Floor(float64(timestamp) / 1800)
 	sessionEach30MinutesString := fmt.Sprint(sessionEach30Minutes)
 
 	userChecksum := checksum(ampCidString)
@@ -53,7 +53,7 @@ func clientIDFromAMP(ampCidString string) clientID {
 func clientIDFromOther(parts []string) clientID {
 	t := time.Now()
 	timestamp := t.Unix()
-	sessionEach30Minutes := math.Round(float64(timestamp) / 1800)
+	sessionEach30Minutes := math.Floor(float64(timestamp) / 1800)
 	sessionEach30MinutesString := fmt.Sprint(sessionEach30Minutes)
 
 	userChecksum := checksum(strings.Join(parts, ":"))

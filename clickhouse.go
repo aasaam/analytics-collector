@@ -118,6 +118,7 @@ func insertRecordBatch(
 	ECategory string,
 	EAction string,
 	ELabel string,
+	EIdent string,
 	EValue uint64,
 ) error {
 	geoIPPoint := orb.Point{rec.GeoResult.GeoIPLocationLongitude, rec.GeoResult.GeoIPLocationLatitude}
@@ -130,17 +131,29 @@ func insertRecordBatch(
 		ECategory,
 		EAction,
 		ELabel,
+		EIdent,
 		EValue,
 
-		// etc
-		rec.UserIDOrName,
+		// custom segments
+		rec.Segments.S1N,
+		rec.Segments.S2N,
+		rec.Segments.S3N,
+		rec.Segments.S4N,
+		rec.Segments.S5N,
+		rec.Segments.S1V,
+		rec.Segments.S2V,
+		rec.Segments.S3V,
+		rec.Segments.S4V,
+		rec.Segments.S5V,
 
 		// page
 		boolUint8(rec.PIsIframe),
 		boolUint8(rec.PIsTouchSupport),
 		getURLString(rec.PURL),
+		checksum(getURLString(rec.PURL)),
 		rec.PTitle,
 		getURLString(rec.PCanonicalURL),
+		checksum(getURLString(rec.PCanonicalURL)),
 		rec.PLang,
 		rec.PEntityID,
 		rec.PEntityModule,
@@ -152,6 +165,7 @@ func insertRecordBatch(
 		rec.PRefererURL.RefExternalHost,
 		rec.PRefererURL.RefExternalDomain,
 		rec.PRefererURL.RefName,
+		rec.PRefererURL.RefProtocol,
 		rec.PRefererURL.RefType,
 
 		// session referer
@@ -159,6 +173,7 @@ func insertRecordBatch(
 		rec.SRefererURL.RefExternalHost,
 		rec.SRefererURL.RefExternalDomain,
 		rec.SRefererURL.RefName,
+		rec.SRefererURL.RefProtocol,
 		rec.SRefererURL.RefType,
 
 		// utm
