@@ -78,6 +78,7 @@ func insertClientErrBatch(
 		rec.ClientErrorObject,
 
 		getURLString(rec.PURL),
+		checksum(getURLString(rec.PURL)),
 
 		// geo:asn
 		rec.GeoResult.GeoIPAutonomousSystemNumber,
