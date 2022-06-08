@@ -12,7 +12,7 @@ require (
 	github.com/oschwald/geoip2-golang v1.7.0
 	github.com/paulmach/orb v0.7.1
 	github.com/prometheus/client_golang v1.12.2
-	github.com/rs/zerolog v1.26.1
+	github.com/rs/zerolog v1.27.0
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
 	github.com/urfave/cli/v2 v2.8.1
 	golang.org/x/net v0.0.0-20220526153639-5463443f8c37
@@ -36,6 +36,8 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.11.0 // indirect
 	github.com/klauspost/compress v1.15.0 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/oschwald/maxminddb-golang v1.9.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
