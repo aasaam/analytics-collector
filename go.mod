@@ -3,19 +3,19 @@ module github.com/aasaam/analytics-collector
 go 1.17
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.0.14
+	github.com/ClickHouse/clickhouse-go/v2 v2.0.15
 	github.com/brianvoe/gofakeit/v6 v6.16.0
 	github.com/gofiber/adaptor/v2 v2.1.24
-	github.com/gofiber/fiber/v2 v2.34.0
+	github.com/gofiber/fiber/v2 v2.34.1
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/mileusna/useragent v1.0.2
 	github.com/oschwald/geoip2-golang v1.7.0
 	github.com/paulmach/orb v0.7.1
 	github.com/prometheus/client_golang v1.12.2
-	github.com/rs/zerolog v1.26.1
+	github.com/rs/zerolog v1.27.0
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
 	github.com/urfave/cli/v2 v2.8.1
-	golang.org/x/net v0.0.0-20220526153639-5463443f8c37
+	golang.org/x/net v0.0.0-20220614195744-fb05da6f9022
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -25,6 +25,9 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/evanw/esbuild v0.14.43 // indirect
+	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/gofiber/utils v0.1.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -36,6 +39,8 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.11.0 // indirect
 	github.com/klauspost/compress v1.15.0 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/oschwald/maxminddb-golang v1.9.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect

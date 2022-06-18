@@ -167,7 +167,7 @@ clickHouseInitStep:
 
 			// geo
 			ipString := fake.IPv4Address()
-			r.CID = clientIDFromAMP(ipString)
+			r.CID = clientIDNoneSTD([]string{ipString}, clientIDTypeOther)
 			r.IP = net.ParseIP(ipString)
 
 			r.GeoResult = fakeGeoResult(ipString, &f)
@@ -249,7 +249,7 @@ clickHouseInitStep:
 				)
 
 				// Referer
-				if r.PURL != nil {
+				if r.PURL != "" {
 
 					// session
 					fakeReferer1 := f.Referer[rand.Intn(len(f.Referer))]
@@ -257,7 +257,7 @@ clickHouseInitStep:
 					if fakeReferer1 != "" {
 						ref, refErr := url.Parse(fakeReferer1)
 						if refErr == nil {
-							r.SRefererURL = refererParser.parse(r.PURL, ref)
+							r.SRefererURL = refererParser.parse(getURL(r.PURL), ref)
 						}
 					}
 
@@ -266,7 +266,7 @@ clickHouseInitStep:
 					if fakeReferer2 != "" {
 						ref, refErr := url.Parse(fakeReferer2)
 						if refErr == nil {
-							r.PRefererURL = refererParser.parse(r.PURL, ref)
+							r.PRefererURL = refererParser.parse(getURL(r.PURL), ref)
 						}
 					}
 				}
@@ -296,8 +296,8 @@ clickHouseInitStep:
 			}
 
 			// finalize
-			if r.PURL != nil {
-				r.Utm = parseUTM(r.PURL)
+			if r.PURL != "" {
+				r.Utm = parseUTM(getURL(r.PURL))
 			}
 
 			// finalize

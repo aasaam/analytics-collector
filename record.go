@@ -64,6 +64,7 @@ type record struct {
 	ClientErrorMessage string
 	ClientErrorObject  string
 	Created            time.Time
+	CreatedInt         int64
 	CursorID           uint64
 	Mode               uint8
 	modeString         string
@@ -73,8 +74,8 @@ type record struct {
 	PEntityID         string
 	PEntityModule     string
 	PEntityTaxonomyID string
-	PURL              *url.URL
-	PCanonicalURL     *url.URL
+	PURL              string
+	PCanonicalURL     string
 	PTitle            string
 	PLang             string
 	PIsIframe         bool
@@ -149,8 +150,10 @@ func validateMode(m string) (uint8, error) {
 }
 
 func newRecord(modeQuery string, publicInstanceIDQuery string) (*record, error) {
+	t := time.Now()
 	r := record{
-		Created: time.Now(),
+		Created:    t,
+		CreatedInt: t.UnixNano(),
 	}
 
 	mode, err := validateMode(modeQuery)
@@ -193,7 +196,7 @@ func (r *record) setAPI(
 		return &errorAPIClientUserAgentNotValid
 	}
 
-	r.CID = clientIDFromOther([]string{r.IP.String(), postData.API.ClientUserAgent})
+	r.CID = clientIDNoneSTD([]string{r.IP.String(), postData.API.ClientUserAgent}, clientIDTypeOther)
 
 	return nil
 }
@@ -224,15 +227,15 @@ func (r *record) verify(
 ) *errorMessage {
 	// initialize
 	if r.Mode < 1 || r.IP == nil {
-		return &errorRecordNotProccessedYet
+		return &errorRecordNotProcessedYet
 	}
 
 	// page view require matched project id and url of page view
 	if r.isPageView() {
-		if r.PURL == nil {
+		if r.PURL == "" {
 			return &errorURLRequiredAndMustBeValid
 		}
-		if !projectsManager.validateIDAndURL(r.PublicInstanceID, r.PURL) {
+		if !projectsManager.validateIDAndURL(r.PublicInstanceID, getURL(r.PURL)) {
 			return &errorProjectPublicIDAndURLDidNotMatched
 		}
 		return nil
@@ -244,11 +247,11 @@ func (r *record) verify(
 	}
 
 	// in page js event must match with page url
-	if r.Mode == recordModeEventJSInPageView && !projectsManager.validateIDAndURL(r.PublicInstanceID, r.PURL) {
+	if r.Mode == recordModeEventJSInPageView && !projectsManager.validateIDAndURL(r.PublicInstanceID, getURL(r.PURL)) {
 		return &errorProjectPublicIDAndURLDidNotMatched
 	}
 
-	if r.Mode == recordModeClientError && r.PURL != nil && !projectsManager.validateIDAndURL(r.PublicInstanceID, r.PURL) {
+	if r.Mode == recordModeClientError && r.PURL != "" && !projectsManager.validateIDAndURL(r.PublicInstanceID, getURL(r.PURL)) {
 		return &errorProjectPublicIDAndURLDidNotMatched
 	}
 
@@ -260,7 +263,7 @@ func (r *record) verify(
 }
 
 func (r *record) setReferer(refererParser *refererParser, refererURL *url.URL) {
-	r.PRefererURL = refererParser.parse(r.PURL, refererURL)
+	r.PRefererURL = refererParser.parse(getURL(r.PURL), refererURL)
 }
 
 func (r *record) setQueryParameters(
@@ -272,8 +275,8 @@ func (r *record) setQueryParameters(
 	qEntityModule string,
 	qEntityTaxonomyID string,
 ) {
-	r.PURL = getURL(qURL)
-	r.PCanonicalURL = getURL(qCanonical)
+	r.PURL = sanitizeURL(qURL)
+	r.PCanonicalURL = sanitizeURL(qCanonical)
 	r.PTitle = qTitle
 	r.PLang = sanitizeLanguage(qLang)
 	r.PEntityID = sanitizeEntityID(qEntityID)
@@ -292,8 +295,8 @@ func (r *record) setPostRequest(
 	}
 
 	if postRequest.Page != nil {
-		r.PURL = getURL(postRequest.Page.URL)
-		r.PCanonicalURL = getURL(postRequest.Page.CanonicalURL)
+		r.PURL = sanitizeURL(postRequest.Page.URL)
+		r.PCanonicalURL = sanitizeURL(postRequest.Page.CanonicalURL)
 		r.PTitle = postRequest.Page.Title
 		r.PLang = sanitizeLanguage(postRequest.Page.Lang)
 		r.PEntityID = sanitizeEntityID(postRequest.Page.MainEntityID)
@@ -312,11 +315,11 @@ func (r *record) setPostRequest(
 		}
 
 		if postRequest.Page.RefererURL != "" {
-			r.PRefererURL = refererParser.parse(r.PURL, getURL(postRequest.Page.RefererURL))
+			r.PRefererURL = refererParser.parse(getURL(r.PURL), getURL(postRequest.Page.RefererURL))
 		}
 
 		if postRequest.Page.RefererSessionURL != "" {
-			r.SRefererURL = refererParser.parse(r.PURL, getURL(postRequest.Page.RefererSessionURL))
+			r.SRefererURL = refererParser.parse(getURL(r.PURL), getURL(postRequest.Page.RefererSessionURL))
 		}
 
 		if postRequest.Page.PerformanceData != nil {
@@ -332,34 +335,35 @@ func (r *record) setPostRequest(
 			r.Performance.PerfResource = postRequest.Page.PerformanceData.PerfResource
 		}
 
-		if postRequest.Page.PageBreadcrumbObject != nil && r.PURL != nil {
+		if postRequest.Page.PageBreadcrumbObject != nil && r.PURL != "" {
 			u1 := getURL(postRequest.Page.PageBreadcrumbObject.U1)
-			if u1 != nil && u1.Host == r.PURL.Host && postRequest.Page.PageBreadcrumbObject.N1 != "" {
+			pu := getURL(r.PURL)
+			if u1 != nil && u1.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N1 != "" {
 				r.BreadCrumb.BCIsProcessed = true
 				r.BreadCrumb.BCLevel = 1
 				r.BreadCrumb.BCN1 = postRequest.Page.PageBreadcrumbObject.N1
 				r.BreadCrumb.BCP1 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U1))
 
 				u2 := getURL(postRequest.Page.PageBreadcrumbObject.U2)
-				if u2 != nil && u2.Host == r.PURL.Host && postRequest.Page.PageBreadcrumbObject.N2 != "" {
+				if u2 != nil && u2.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N2 != "" {
 					r.BreadCrumb.BCLevel = 2
 					r.BreadCrumb.BCN2 = postRequest.Page.PageBreadcrumbObject.N2
 					r.BreadCrumb.BCP2 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U2))
 
 					u3 := getURL(postRequest.Page.PageBreadcrumbObject.U3)
-					if u3 != nil && u3.Host == r.PURL.Host && postRequest.Page.PageBreadcrumbObject.N3 != "" {
+					if u3 != nil && u3.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N3 != "" {
 						r.BreadCrumb.BCLevel = 3
 						r.BreadCrumb.BCN3 = postRequest.Page.PageBreadcrumbObject.N3
 						r.BreadCrumb.BCP3 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U3))
 
 						u4 := getURL(postRequest.Page.PageBreadcrumbObject.U4)
-						if u4 != nil && u4.Host == r.PURL.Host && postRequest.Page.PageBreadcrumbObject.N4 != "" {
+						if u4 != nil && u4.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N4 != "" {
 							r.BreadCrumb.BCLevel = 4
 							r.BreadCrumb.BCN4 = postRequest.Page.PageBreadcrumbObject.N4
 							r.BreadCrumb.BCP4 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U4))
 
 							u5 := getURL(postRequest.Page.PageBreadcrumbObject.U5)
-							if u5 != nil && u5.Host == r.PURL.Host && postRequest.Page.PageBreadcrumbObject.N5 != "" {
+							if u5 != nil && u5.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N5 != "" {
 								r.BreadCrumb.BCLevel = 5
 								r.BreadCrumb.BCN5 = postRequest.Page.PageBreadcrumbObject.N5
 								r.BreadCrumb.BCP5 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U5))
@@ -448,9 +452,9 @@ func (r *record) setPostRequest(
 			r.CID = cid
 		}
 	} else if r.Mode == recordModePageViewAMP && postRequest.CIDAmp != "" {
-		r.CID = clientIDFromAMP(postRequest.CIDAmp)
+		r.CID = clientIDNoneSTD([]string{postRequest.CIDAmp}, clientIDTypeAmp)
 	} else if r.IP != nil {
-		r.CID = clientIDFromOther([]string{r.IP.String(), r.UserAgentResult.UaFull})
+		r.CID = clientIDNoneSTD([]string{r.IP.String(), r.UserAgentResult.UaFull}, clientIDTypeOther)
 	}
 }
 
@@ -459,8 +463,8 @@ func (r *record) finalize() ([]byte, error) {
 		return nil, errors.New("mode not processed or missing cid")
 	}
 
-	if r.PURL != nil {
-		r.Utm = parseUTM(r.PURL)
+	if r.PURL != "" {
+		r.Utm = parseUTM(getURL(r.PURL))
 	}
 
 	if r.isPageView() {

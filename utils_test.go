@@ -126,6 +126,7 @@ func TestGetCursorID(t *testing.T) {
 		t.Errorf("must not same cursor")
 	}
 }
+
 func TestGetURLPath(t *testing.T) {
 	urls := []string{
 		"https://www.google.com/path/تست/file.html?",

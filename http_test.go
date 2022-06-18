@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -53,9 +52,9 @@ func TestHTTP11(t *testing.T) {
 
 	statics := []string{
 		"/a.js",
-		"/l.js",
+		"/a.src.js",
+		"/l.src.js",
 		"/amp.json",
-		"/robots.txt",
 	}
 
 	for _, p := range statics {
@@ -67,6 +66,35 @@ func TestHTTP11(t *testing.T) {
 		}
 	}
 }
+
+func TestHTTP110(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
+
+	c1 := newConfig("error", 0, true, "http://127.0.0.1", "")
+	geoParser := getGeoParser()
+	projectsManager := newProjectsManager()
+	storage := newStorage()
+	app := newHTTPServer(c1, geoParser, projectsManager, storage)
+
+	statics := []string{
+		"/a.js?q",
+		"/a.src.js?q",
+		"/l.src.js?foo=1",
+		"/amp.json?q",
+	}
+
+	for _, p := range statics {
+		r := httptest.NewRequest("GET", p, nil)
+		rs, _ := app.Test(r)
+		if rs.StatusCode != fiber.StatusForbidden {
+			t.Errorf("invalid response")
+		}
+	}
+}
+
 func TestHTTP2(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
@@ -376,8 +404,6 @@ func TestHTTP40(t *testing.T) {
 	r1.Header.Set(fiber.HeaderUserAgent, sampleUserAgent)
 	r1.Header.Set(fiber.HeaderContentType, "text/plain;charset=UTF-8")
 	rs1, _ := app.Test(r1)
-
-	fmt.Println(rs1.StatusCode)
 
 	if rs1.StatusCode != fiber.StatusOK {
 		t.Errorf("invalid response")

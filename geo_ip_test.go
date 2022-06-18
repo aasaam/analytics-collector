@@ -89,4 +89,5 @@ func TestGeoIPParser2(t *testing.T) {
 	if parsedIP1.GeoResultCountry != "IR" {
 		t.Errorf("invalid parsed data")
 	}
+
 }

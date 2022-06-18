@@ -14,21 +14,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// ineffassign: ignore
-//go:embed embed/build/a.js
-var embedADotJS []byte
-
-// ineffassign: ignore
-//go:embed embed/build/l.js
-var embedLDotJS []byte
-
-// ineffassign: ignore
-//go:embed embed/build/amp.json
-var embedAmpDotJSON []byte
-
-//go:embed embed/robots.txt
-var embedRobotsDotTXT []byte
-
 func replaceCollectorURL(in []byte, collectorURL *url.URL) []byte {
 	str := string(in)
 	str = strings.ReplaceAll(str, collectorURLReplacement, collectorURL.String())
@@ -43,7 +28,7 @@ func httpErrorResponse(c *fiber.Ctx, errMsg errorMessage) error {
 
 func staticCache(c *fiber.Ctx, staticCacheTTL uint) {
 	ttlString := strconv.FormatUint(uint64(staticCacheTTL), 10)
-	c.Set(fiber.HeaderCacheControl, "public, max-age="+ttlString+", stale-while-revalidate="+ttlString)
+	c.Set(fiber.HeaderCacheControl, "public, max-age="+ttlString)
 	c.Set(nginxXAccelExpires, ttlString)
 }
 
@@ -90,8 +75,6 @@ func newHTTPServer(
 	refererParser := newRefererParser()
 	userAgentParser := newUserAgentParser()
 	promRegistry := getPrometheusRegistry()
-
-	staticCacheTTL := conf.staticCacheTTL
 
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
@@ -171,38 +154,7 @@ func newHTTPServer(
 		)
 	})
 
-	app.Get("/favicon.ico", func(c *fiber.Ctx) error {
-		staticCache(c, 86400)
-		c.Status(fiber.StatusNotFound)
-		return c.JSON("no favicon")
-	})
-
-	app.Get("/robots.txt", func(c *fiber.Ctx) error {
-		staticCache(c, staticCacheTTL)
-		c.Set(fiber.HeaderContentType, mimetypeText)
-		return c.Send(embedRobotsDotTXT)
-	})
-
-	embedADotJS = replaceCollectorURL(embedADotJS, conf.collectorURL)
-	app.Get("/a.js", func(c *fiber.Ctx) error {
-		staticCache(c, staticCacheTTL)
-		c.Set(fiber.HeaderContentType, mimetypeJS)
-		return c.Send(embedADotJS)
-	})
-
-	embedLDotJS = replaceCollectorURL(embedLDotJS, conf.collectorURL)
-	app.Get("/l.js", func(c *fiber.Ctx) error {
-		staticCache(c, staticCacheTTL)
-		c.Set(fiber.HeaderContentType, mimetypeJS)
-		return c.Send(embedLDotJS)
-	})
-
-	embedAmpDotJSON = replaceCollectorURL(embedAmpDotJSON, conf.collectorURL)
-	app.Get("/amp.json", func(c *fiber.Ctx) error {
-		staticCache(c, staticCacheTTL)
-		c.Set(fiber.HeaderContentType, mimetypeJS)
-		return c.Send(embedAmpDotJSON)
-	})
+	httpAppAssets(app, conf)
 
 	handler := promhttp.HandlerFor(promRegistry, promhttp.HandlerOpts{})
 	app.Get(metricsPath, adaptor.HTTPHandler(handler))

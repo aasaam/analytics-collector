@@ -47,8 +47,7 @@ func httpRecord(
 		record.UserAgentResult = userAgentParser.parse(userAgent)
 
 		if record.Mode == recordModeClientError {
-			cid := clientIDFromOther([]string{ip.String(), userAgent})
-			record.CID = cid
+			record.CID = clientIDNoneSTD([]string{ip.String(), userAgent}, clientIDTypeOther)
 		}
 	}
 
@@ -171,13 +170,12 @@ func httpRecord(
 		// recordModePageViewImageNoScript
 		// recordModePageViewAMPImage
 	} else if c.Method() == fiber.MethodGet {
-		cid := clientIDFromOther([]string{ip.String(), userAgent})
-		record.CID = cid
+		record.CID = clientIDNoneSTD([]string{ip.String(), userAgent}, clientIDTypeOther)
 
-		if record.PURL == nil && record.Mode == recordModePageViewImageNoScript {
+		if record.PURL == "" && record.Mode == recordModePageViewImageNoScript {
 			imgReferer := getURL(c.Get(fiber.HeaderReferer))
 			if imgReferer != nil {
-				record.PURL = imgReferer
+				record.PURL = imgReferer.String()
 			}
 		}
 

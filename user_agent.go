@@ -13,11 +13,11 @@ import (
 var userAgents []byte
 
 const (
-	uaTypeUnknown = "unknown"
-	uaTypeMobile  = "mobile"
-	uaTypeDesktop = "desktop"
-	uaTypeTablet  = "tablet"
-	uaTypeBot     = "bot"
+	uaTypeUnknown = 0
+	uaTypeMobile  = 1
+	uaTypeDesktop = 2
+	uaTypeTablet  = 3
+	uaTypeBot     = 9
 )
 
 type userAgentParser struct {
@@ -25,7 +25,7 @@ type userAgentParser struct {
 }
 
 type userAgentResult struct {
-	UaType                string
+	UaType                uint8
 	UaFull                string
 	UaChecksum            string
 	UaBrowserName         string

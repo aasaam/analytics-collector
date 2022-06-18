@@ -1,57 +1,87 @@
 version: "3"
 
 services:
-  postgis:
+  analytics-postgis:
     image: ghcr.io/aasaam/geonames-postgis:latest
-    container_name: geonames-postgis
+    container_name: analytics-postgis
+    hostname: analytics-postgis
     ports:
       - 5432:5432
     environment:
       - POSTGRES_PASSWORD=geonames
       - POSTGRES_USER=geonames
       - POSTGRES_DB=geonames
-  adminer:
+
+  analytics-adminer:
     image: adminer
+    container_name: analytics-adminer
+    hostname: analytics-adminer
     depends_on:
-      - postgis
-    container_name: adminer
+      - analytics-postgis
     ports:
       - 8080:8080
-  web-server:
-    image: ghcr.io/aasaam/web-server
-    container_name: web-server
-    network_mode: host
-    privileged: true
+
+  analytics-redis:
+    image: redis:7-alpine
+    hostname: analytics-redis
+    container_name: analytics-redis
+    command: --save 60 1 --loglevel warning
+    ports:
+      - 6379:6379
+    volumes:
+      - ./redis:/data
+
+  analytics-nginx:
+    image: nginx:1-alpine
+    container_name: analytics-nginx
+    hostname: analytics-nginx
+    ports:
+      - 443:443
+    environment:
+      ASM_NGX_WORKER_PROCESSES: ${ASM_NGX_WORKER_PROCESSES:-1}
+      ASM_NGX_WORKER_RLIMIT_NOFILE: ${ASM_NGX_WORKER_RLIMIT_NOFILE:-512}
+      ASM_NGX_ERROR_LOG_LEVEL: ${ASM_NGX_ERROR_LOG_LEVEL:-debug}
+      ASM_NGX_WORKER_CONNECTIONS: ${ASM_NGX_WORKER_CONNECTIONS:-256}
+      ASM_NGX_ACCESS_LOG_COMMENT: ${ASM_NGX_ACCESS_LOG_COMMENT:-}
+      ASM_NGX_SSL_PROF_LEG_COMMENT: ${ASM_NGX_SSL_PROF_LEG_COMMENT:-}
+      ASM_NGX_SSL_PROF_INT_COMMENT: ${ASM_NGX_SSL_PROF_INT_COMMENT:-#}
+      ASM_NGX_SSL_PROF_MOD_COMMENT: ${ASM_NGX_SSL_PROF_MOD_COMMENT:-#}
+      ASM_NGX_UPSTREAM: ${ASM_NGX_UPSTREAM:-http://127.0.0.1:4000}
+
     tmpfs:
       - /cache:rw,nodev,nosuid,noexec,noatime,size=${ASM_CACHE_SIZE_MB:-1024}m
     volumes:
-      - ./nginx/dev.nginx.conf.tmpl:/usr/local/openresty/nginx/addon/gomplates/nginx.tmpl
+      - ./nginx/.defaults:/defaults:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/template/default.conf:/etc/nginx/templates/default.conf.template:ro
+
       - ./nginx/cert:/cert:ro
-  clickhouse-single:
-      image: yandex/clickhouse-server:22
-      restart: always
-      container_name: clickhouse-single
-      hostname: clickhouse-single
-      environment:
-        # default password is `password123123`
-        CLICKOUSE_PASSWORD_SHA256_HEX: ${CLICKOUSE_PASSWORD_SHA256_HEX:-933762e2bddba897d976a4dd8fc6c78fcf8288f8be646a0816aa0c40e287b207}
-      ulimits:
-        nofile:
-          soft: 262144
-          hard: 262144
-      ports:
-        - 8123:8123
-        - 9000:9000
-        - 9009:9009
-      volumes:
-        # - ./clickhouse/logs:/var/log/clickhouse-server
-        # - ./clickhouse/db:/var/lib/clickhouse
-        - ./clickhouse/config.d.dev:/etc/clickhouse-server/config.d
-        - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml
-  clickhouse-client:
-      image: yandex/clickhouse-client:22
-      container_name: clickhouse-client
-      hostname: clickhouse-client
-      volumes:
-        - ./clickhouse/schema.sql:/tmp/schema.sql
-      entrypoint: tail -f /dev/null
+
+  analytics-clickhouse-single:
+    image: yandex/clickhouse-server:22
+    restart: always
+    container_name: analytics-clickhouse-single
+    hostname: analytics-clickhouse-single
+    environment:
+      # default password is `password123123`
+      CLICKOUSE_PASSWORD_SHA256_HEX: ${CLICKOUSE_PASSWORD_SHA256_HEX:-933762e2bddba897d976a4dd8fc6c78fcf8288f8be646a0816aa0c40e287b207}
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    ports:
+      - 8123:8123
+      - 9000:9000
+      - 9009:9009
+    volumes:
+      # - ./clickhouse/logs:/var/log/clickhouse-server
+      # - ./clickhouse/db:/var/lib/clickhouse
+      - ./clickhouse/config.d.dev:/etc/clickhouse-server/config.d
+      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml
+  analytics-clickhouse-client:
+    image: yandex/clickhouse-client:22
+    container_name: analytics-clickhouse-client
+    hostname: analytics-clickhouse-client
+    volumes:
+      - ./clickhouse/schema.sql:/tmp/schema.sql
+    entrypoint: tail -f /dev/null

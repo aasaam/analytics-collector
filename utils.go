@@ -15,6 +15,10 @@ import (
 	"golang.org/x/text/language"
 )
 
+const (
+	checksumEmpty = "000000000000000000000000"
+)
+
 var sanitizeTitleRegex = regexp.MustCompile(`[^a-zA-Z0-9]`)
 var sanitizeTitleMoreSpaceRegex = regexp.MustCompile(`[\s]+`)
 var sanitizeNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{1,31}$`)
@@ -81,9 +85,22 @@ func getURL(urlString string) *url.URL {
 	return nil
 }
 
+func sanitizeURL(urlString string) string {
+	if urlString == "" {
+		return ""
+	}
+
+	u, err := url.Parse(urlString)
+	if err == nil {
+		return u.String()
+	}
+
+	return ""
+}
+
 func checksum(str string) string {
 	if strings.TrimSpace(str) == "" {
-		return "000000000000000000000000"
+		return checksumEmpty
 	}
 	h := sha1.New()
 	h.Write([]byte(str))

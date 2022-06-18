@@ -1,5 +1,6 @@
 embed/build/
 tmp/
+redis/
 clickhouse/logs/
 clickhouse/db/
 redash/var/

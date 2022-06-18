@@ -24,11 +24,11 @@ type refererParser struct {
 
 type refererData struct {
 	RefExist          bool
-	RefURL            *url.URL
+	RefURL            string
 	RefName           string
 	RefExternalHost   string
 	RefExternalDomain string
-	RefProtocol       string
+	RefScheme         string
 	RefType           uint8
 }
 
@@ -93,8 +93,8 @@ func (rp *refererParser) parse(currentURL *url.URL, refererURL *url.URL) referer
 		return result
 	}
 
-	result.RefURL = refererURL
-	result.RefProtocol = refererURL.Scheme
+	result.RefURL = refererURL.String()
+	result.RefScheme = refererURL.Scheme
 
 	rHost := getDomain(refererURL)
 	cHost := getDomain(currentURL)

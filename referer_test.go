@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -65,7 +64,7 @@ func TestRefererParser6(t *testing.T) {
 	refererParser := newRefererParser()
 
 	data1 := refererParser.parse(getURL("https://www.example.com/path/foo/bar"), getURL("https://www.search-engine.com/path/foo/bar"))
-	fmt.Printf("%+v\n", data1)
+
 	if data1.RefExternalHost == "" || data1.RefExternalDomain == "" {
 		t.Errorf("invalid data")
 	}

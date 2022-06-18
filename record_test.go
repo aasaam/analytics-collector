@@ -37,12 +37,12 @@ func TestRecord2(t *testing.T) {
 		t.Error(e3)
 	}
 
-	recordSample.CID = clientIDFromAMP("amp")
+	recordSample.CID = clientIDNoneSTD([]string{"amp"}, clientIDTypeOther)
 
 	projects := projects{}
 
 	em1 := recordSample.verify(&projects, "")
-	if em1 != &errorRecordNotProccessedYet {
+	if em1 != &errorRecordNotProcessedYet {
 		t.Errorf("invalid verify")
 	}
 
@@ -71,7 +71,7 @@ func TestRecord3(t *testing.T) {
 		t.Error(e3)
 	}
 
-	recordSample.CID = clientIDFromAMP("amp")
+	recordSample.CID = clientIDNoneSTD([]string{"amp"}, clientIDTypeOther)
 
 	recordSample.setQueryParameters(
 		"https://www.example.com/?utm_source=source&utm_medium=medium&utm_campaign=sale1&utm_id=id&utm_term=keyword1&utm_content=content",
@@ -111,11 +111,11 @@ func TestRecord4(t *testing.T) {
 
 	pm := getTestProjects()
 
-	if recordSample.verify(pm, "") != &errorRecordNotProccessedYet {
+	if recordSample.verify(pm, "") != &errorRecordNotProcessedYet {
 		t.Errorf("invalid verify")
 	}
 
-	recordSample.CID = clientIDFromAMP("amp")
+	recordSample.CID = clientIDNoneSTD([]string{"amp"}, clientIDTypeOther)
 
 	recordSample.IP = net.ParseIP("1.1.1.1")
 
@@ -125,7 +125,7 @@ func TestRecord4(t *testing.T) {
 
 	u1, _ := url.Parse("http://not-example.com")
 
-	recordSample.PURL = u1
+	recordSample.PURL = u1.String()
 
 	if recordSample.verify(pm, "") != &errorProjectPublicIDAndURLDidNotMatched {
 		t.Errorf("invalid verify")
@@ -133,7 +133,7 @@ func TestRecord4(t *testing.T) {
 
 	u2, _ := url.Parse("http://example.com")
 
-	recordSample.PURL = u2
+	recordSample.PURL = u2.String()
 
 	if recordSample.verify(pm, "") != nil {
 		t.Errorf("invalid verify")
@@ -148,7 +148,7 @@ func TestRecord5(t *testing.T) {
 	pm := getTestProjects()
 	recordSample.IP = net.ParseIP("1.1.1.1")
 	u2, _ := url.Parse("http://example.com")
-	recordSample.PURL = u2
+	recordSample.PURL = u2.String()
 
 	if recordSample.verify(pm, "") != &errorAPIPrivateKeyFailed {
 		t.Errorf("invalid verify")
@@ -175,7 +175,7 @@ func TestRecord10(t *testing.T) {
 
 	u2, _ := url.Parse("http://example.com")
 
-	recordSample.PURL = u2
+	recordSample.PURL = u2.String()
 
 	ev1 := postRequestEvent{
 		Category: "cat",
@@ -235,7 +235,7 @@ func TestRecord11(t *testing.T) {
 
 	u2, _ := url.Parse("http://example.com")
 
-	recordSample.PURL = u2
+	recordSample.PURL = u2.String()
 
 	ev1 := postRequestEvent{
 		Category: "cat",
@@ -302,7 +302,7 @@ func TestRecord12(t *testing.T) {
 		t.Error(e3)
 	}
 
-	recordSample.CID = clientIDFromAMP("amp")
+	recordSample.CID = clientIDNoneSTD([]string{"amp"}, clientIDTypeOther)
 
 	pm := getTestProjects()
 
@@ -310,7 +310,7 @@ func TestRecord12(t *testing.T) {
 
 	u2, _ := url.Parse("http://example.com")
 
-	recordSample.PURL = u2
+	recordSample.PURL = u2.String()
 
 	ev1 := postRequestEvent{
 		Category: "cat",
@@ -362,7 +362,7 @@ func TestRecord13(t *testing.T) {
 		t.Error(e3)
 	}
 
-	recordSample.CID = clientIDFromAMP("amp")
+	recordSample.CID = clientIDNoneSTD([]string{"amp"}, clientIDTypeOther)
 
 	pm := getTestProjects()
 
@@ -370,7 +370,7 @@ func TestRecord13(t *testing.T) {
 
 	u2, _ := url.Parse("http://not-example.com")
 
-	recordSample.PURL = u2
+	recordSample.PURL = u2.String()
 
 	perf := postRequestPerformanceData{
 		PerfPageLoadTime: "100",
@@ -432,7 +432,7 @@ func TestRecord14(t *testing.T) {
 		t.Error(e3)
 	}
 
-	recordSample.CID = clientIDFromAMP("amp")
+	recordSample.CID = clientIDNoneSTD([]string{"amp"}, clientIDTypeOther)
 
 	pm := getTestProjects()
 
@@ -440,7 +440,7 @@ func TestRecord14(t *testing.T) {
 
 	u2, _ := url.Parse("http://example.com")
 
-	recordSample.PURL = u2
+	recordSample.PURL = u2.String()
 
 	perf := postRequestPerformanceData{
 		PerfPageLoadTime: "a200",

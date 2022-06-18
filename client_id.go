@@ -26,31 +26,15 @@ type clientID struct {
 	CidType            uint8
 	CidUserChecksum    string
 	CidSessionChecksum string
-	CidStdInitTime     time.Time
-	CidStdSessionTime  time.Time
+	CidStdInitTime     int64
+	CidStdSessionTime  int64
 }
 
-func clientIDFromAMP(ampCidString string) clientID {
-	t := time.Now()
-	timestamp := t.Unix()
-	sessionEach30Minutes := math.Floor(float64(timestamp) / 1800)
-	sessionEach30MinutesString := fmt.Sprint(sessionEach30Minutes)
-
-	userChecksum := checksum(ampCidString)
-
-	cid := clientID{
-		Valid:              true,
-		CidType:            clientIDTypeAmp,
-		CidUserChecksum:    userChecksum,
-		CidSessionChecksum: checksum(userChecksum + ":" + sessionEach30MinutesString),
-		CidStdInitTime:     time.Unix(0, 0),
-		CidStdSessionTime:  time.Unix(0, 0),
+func clientIDNoneSTD(parts []string, clientType uint8) clientID {
+	if clientType == clientIDTypeStd {
+		panic("none std must type none std")
 	}
 
-	return cid
-}
-
-func clientIDFromOther(parts []string) clientID {
 	t := time.Now()
 	timestamp := t.Unix()
 	sessionEach30Minutes := math.Floor(float64(timestamp) / 1800)
@@ -60,11 +44,11 @@ func clientIDFromOther(parts []string) clientID {
 
 	cid := clientID{
 		Valid:              true,
-		CidType:            clientIDTypeOther,
+		CidType:            clientType,
 		CidUserChecksum:    userChecksum,
 		CidSessionChecksum: checksum(userChecksum + ":" + sessionEach30MinutesString),
-		CidStdInitTime:     time.Unix(0, 0),
-		CidStdSessionTime:  time.Unix(0, 0),
+		CidStdInitTime:     0,
+		CidStdSessionTime:  0,
 	}
 
 	return cid
@@ -74,10 +58,12 @@ func clientIDStandardParser(cidString string) (clientID, error) {
 	cidInvalid := clientID{
 		Valid: false,
 	}
+
 	decodedByte, err := base64.StdEncoding.DecodeString(cidString)
 	if err != nil {
 		return cidInvalid, err
 	}
+
 	decoded := string(decodedByte)
 	if ok := cidStandardRegex.MatchString(decoded); ok {
 		matched := cidStandardRegex.FindStringSubmatch(decoded)
@@ -85,22 +71,26 @@ func clientIDStandardParser(cidString string) (clientID, error) {
 		if err != nil || initTime < minimumTime || initTime > time.Now().Add(time.Hour).Unix() {
 			return cidInvalid, errors.New("invalid client identifier init time")
 		}
+
 		sessionTime, err := strconv.ParseInt(matched[2], 10, 64)
 		if err != nil || sessionTime < initTime || sessionTime > time.Now().Add(time.Duration(12)*time.Hour).Unix() {
 			return cidInvalid, errors.New("invalid client identifier session time")
 		}
+
 		diffSession := sessionTime - initTime
 		if diffSession > 86400 {
 			return cidInvalid, errors.New("session time must be at least 86400 with initialize time and past 24 hours")
 		}
+
 		cidValid := clientID{}
 		cidValid.Valid = true
 		cidValid.CidType = clientIDTypeStd
-		cidValid.CidStdInitTime = time.Unix(initTime, 0)
-		cidValid.CidStdSessionTime = time.Unix(sessionTime, 0)
+		cidValid.CidStdInitTime = time.Unix(initTime, 0).Unix()
+		cidValid.CidStdSessionTime = time.Unix(sessionTime, 0).Unix()
 		cidValid.CidUserChecksum = checksum(strings.Join([]string{matched[1], matched[3]}, ":"))
 		cidValid.CidSessionChecksum = checksum(strings.Join([]string{matched[1], matched[2], matched[3]}, ":"))
 		return cidValid, nil
 	}
+
 	return cidInvalid, errors.New("invalid client identifier")
 }

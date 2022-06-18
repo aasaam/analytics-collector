@@ -77,8 +77,8 @@ func insertClientErrBatch(
 		rec.ClientErrorMessage,
 		rec.ClientErrorObject,
 
-		getURLString(rec.PURL),
-		checksum(getURLString(rec.PURL)),
+		rec.PURL,
+		checksum(rec.PURL),
 
 		// geo:asn
 		rec.GeoResult.GeoIPAutonomousSystemNumber,
@@ -150,11 +150,11 @@ func insertRecordBatch(
 		// page
 		boolUint8(rec.PIsIframe),
 		boolUint8(rec.PIsTouchSupport),
-		getURLString(rec.PURL),
-		checksum(getURLString(rec.PURL)),
+		rec.PURL,
+		checksum(rec.PURL),
 		rec.PTitle,
-		getURLString(rec.PCanonicalURL),
-		checksum(getURLString(rec.PCanonicalURL)),
+		rec.PCanonicalURL,
+		checksum(rec.PCanonicalURL),
 		rec.PLang,
 		rec.PEntityID,
 		rec.PEntityModule,
@@ -162,19 +162,19 @@ func insertRecordBatch(
 		rec.PKeywords,
 
 		// referer
-		getURLString(rec.PRefererURL.RefURL),
+		rec.PRefererURL.RefURL,
 		rec.PRefererURL.RefExternalHost,
 		rec.PRefererURL.RefExternalDomain,
 		rec.PRefererURL.RefName,
-		rec.PRefererURL.RefProtocol,
+		rec.PRefererURL.RefScheme,
 		rec.PRefererURL.RefType,
 
 		// session referer
-		getURLString(rec.SRefererURL.RefURL),
+		rec.SRefererURL.RefURL,
 		rec.SRefererURL.RefExternalHost,
 		rec.SRefererURL.RefExternalDomain,
 		rec.SRefererURL.RefName,
-		rec.SRefererURL.RefProtocol,
+		rec.SRefererURL.RefScheme,
 		rec.SRefererURL.RefType,
 
 		// utm
