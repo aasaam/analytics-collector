@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS analytics.ClientErrors
   GeoResultLocation                           Point,
 
   -- user agent
-  UaType                                      LowCardinality(String),
+  UaType                                      UInt8,
   UaFull                                      String,
   UaChecksum                                  FixedString(24),
   UaBrowserName                               LowCardinality(String),
@@ -47,9 +47,9 @@ CREATE TABLE IF NOT EXISTS analytics.ClientErrors
   Created                                     Datetime
 )
 ENGINE = MergeTree()
-ORDER BY (Created, xxHash32(PURL))
+ORDER BY (Created, xxHash32(PURLChecksum))
 PARTITION BY toYYYYMM(Created)
-SAMPLE BY (xxHash32(PURL));
+SAMPLE BY (xxHash32(PURLChecksum));
 
 -- Records
 CREATE TABLE IF NOT EXISTS analytics.Records
@@ -156,13 +156,13 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   ScrScreenOrientation                        UInt8, -- bool
   ScrScreenOrientationIsPortrait              UInt8, -- bool
   ScrScreenOrientationIsSecondary             UInt8, -- bool
-  ScrScreen                                   LowCardinality(String),
+  ScrScreen                                   String,
   ScrScreenWidth                              UInt16,
   ScrScreenHeight                             UInt16,
-  ScrViewport                                 LowCardinality(String),
+  ScrViewport                                 String,
   ScrViewportWidth                            UInt16,
   ScrViewportHeight                           UInt16,
-  ScrResoluton                                LowCardinality(String),
+  ScrResoluton                                String,
   ScrResolutonWidth                           UInt16,
   ScrResolutonHeight                          UInt16,
   ScrDevicePixelRatio                         Float64,

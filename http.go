@@ -9,7 +9,6 @@ import (
 
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -26,10 +25,14 @@ func httpErrorResponse(c *fiber.Ctx, errMsg errorMessage) error {
 	return c.JSON(errMsg.msg)
 }
 
-func staticCache(c *fiber.Ctx, staticCacheTTL uint) {
-	ttlString := strconv.FormatUint(uint64(staticCacheTTL), 10)
-	c.Set(fiber.HeaderCacheControl, "public, max-age="+ttlString)
-	c.Set(nginxXAccelExpires, ttlString)
+func staticCache(c *fiber.Ctx) {
+	c.Set(fiber.HeaderCacheControl, "public, max-age=31536000, immutable")
+	c.Set(nginxXAccelExpires, "31536000")
+}
+
+func staticCacheLimit(c *fiber.Ctx) {
+	c.Set(fiber.HeaderCacheControl, "public, max-age=86400")
+	c.Set(nginxXAccelExpires, "86400")
 }
 
 func noCache(c *fiber.Ctx) {
@@ -69,11 +72,12 @@ func getClientIP(c *fiber.Ctx) net.IP {
 func newHTTPServer(
 	conf *config,
 	geoParser *geoParser,
+	refererParser *refererParser,
+	userAgentParser *userAgentParser,
 	projectsManager *projects,
-	storage *storage,
+	redisClient *redisClient,
 ) *fiber.App {
-	refererParser := newRefererParser()
-	userAgentParser := newUserAgentParser()
+
 	promRegistry := getPrometheusRegistry()
 
 	app := fiber.New(fiber.Config{
@@ -107,28 +111,9 @@ func newHTTPServer(
 	// recover
 	app.Use(recover.New())
 
-	// cors
-	app.Use(cors.New())
-
 	// init middleware
 	app.Use(func(c *fiber.Ctx) error {
 		ip := getClientIP(c)
-
-		if c.Path() == metricsPath {
-			if !conf.canAccessMetrics(ip) {
-				code := fiber.StatusForbidden
-				defer conf.getLogger().
-					Warn().
-					Str("type", errorTypeApp).
-					Str("ip", ip.String()).
-					Str("method", c.Method()).
-					Str("path", c.Path()).
-					Int("status_code", code).
-					Send()
-				return httpErrorResponse(c, errorMetricsForbidden)
-			}
-			return c.Next()
-		}
 
 		defer promMetricHTTPTotalRequests.Inc()
 
@@ -150,7 +135,6 @@ func newHTTPServer(
 			geoParser,
 			userAgentParser,
 			projectsManager,
-			storage,
 		)
 	})
 

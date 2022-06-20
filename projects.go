@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"net/url"
 	"regexp"
 	"sync"
@@ -19,8 +22,8 @@ type projects struct {
 
 type projectData struct {
 	PrivateKey      string   `json:"p"`
-	Domains         []string `json:"d"`
-	WildcardDomains []string `json:"w"`
+	Domains         []string `json:"d,omitempty"`
+	WildcardDomains []string `json:"w,omitempty"`
 }
 
 var publicInstanceIDRegex = regexp.MustCompile(`^[a-zA-Z0-9]{12}$`)
@@ -140,4 +143,34 @@ func (p *projects) validateIDAndURL(publicInstanceID string, requestURL *url.URL
 	}
 
 	return false
+}
+
+func projectsLoadJSON(pathJSON string) (map[string]projectData, error) {
+	b, err := ioutil.ReadFile(pathJSON)
+	if err != nil {
+		return nil, err
+	}
+	var r map[string]projectData
+	errJSON := json.Unmarshal(b, &r)
+	if errJSON != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func projectsLoad(url string) (map[string]projectData, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var r map[string]projectData
+	errJSON := json.Unmarshal(body, &r)
+	if errJSON != nil {
+		return nil, err
+	}
+	return r, nil
 }

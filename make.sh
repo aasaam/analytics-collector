@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # init
 mkdir -p tmp
 rm -rf embed/build

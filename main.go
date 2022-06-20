@@ -1,379 +1,18 @@
 package main
 
 import (
-	"bytes"
-	"context"
 	_ "embed"
-	"encoding/gob"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
-	"time"
 
-	"github.com/jackc/pgx/v4"
 	"github.com/urfave/cli/v2"
 )
 
-//go:embed clickhouse/insert_records.sql
-var clickhouseInsertRecords string
+// //go:embed clickhouse/insert_records.sql
+// var clickhouseInsertRecords string
 
-//go:embed clickhouse/insert_client_errors.sql
-var clickhouseInsertClientErrors string
-
-func projectsLoadJSON(pathJSON string) (map[string]projectData, error) {
-	b, err := ioutil.ReadFile(pathJSON)
-	if err != nil {
-		return nil, err
-	}
-	var r map[string]projectData
-	errJSON := json.Unmarshal(b, &r)
-	if errJSON != nil {
-		return nil, err
-	}
-	return r, nil
-}
-
-func projectsLoad(url string) (map[string]projectData, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	var r map[string]projectData
-	errJSON := json.Unmarshal(body, &r)
-	if errJSON != nil {
-		return nil, err
-	}
-	return r, nil
-}
-
-func runServer(c *cli.Context) error {
-	conf := newConfig(
-		c.String("log-level"),
-		c.Uint("static-cache-ttl"),
-		c.Bool("test-mode"),
-		c.String("collector-url"),
-		c.String("allowed-metrics-ips"),
-	)
-
-	clickhouseInterval := time.Duration(c.Int("clickhouse-interval")) * time.Second
-
-clickHouseInitStep:
-
-	clickhouseInit, _, clickhouseInitErr := getClickhouseConnection(
-		c.String("clickhouse-servers"),
-		c.String("clickhouse-database"),
-		c.String("clickhouse-username"),
-		c.String("clickhouse-password"),
-		c.Int("clickhouse-max-execution-time"),
-		c.Int("clickhouse-dial-timeout"),
-		c.Bool("test-mode"),
-		c.Bool("clickhouse-compression-lz4"),
-		c.Int("clickhouse-max-idle-conns"),
-		c.Int("clickhouse-max-open-conns"),
-		c.Int("clickhouse-conn-max-lifetime"),
-		c.Int("clickhouse-max-block-size"),
-		nil,
-		nil,
-	)
-
-	if clickhouseInitErr != nil {
-		conf.getLogger().
-			Error().
-			Msg(clickhouseInitErr.Error())
-		time.Sleep(clickhouseInterval)
-		goto clickHouseInitStep
-	}
-
-	clickhouseInit.Close()
-	conf.getLogger().
-		Debug().
-		Msg("successfully ping to clickhouse")
-
-	storage := newStorage()
-	projectsManager := newProjectsManager()
-
-	/**
-	 * Projects
-	 */
-	projectsJSON := c.String("management-projects-json")
-
-	if projectsJSON != "" {
-		projects, projectsErr := projectsLoadJSON(c.String("management-projects-json"))
-		if projectsErr != nil {
-			return projectsErr
-		}
-		projectsManagerErr := projectsManager.load(projects)
-		if projectsManagerErr != nil {
-			return projectsErr
-		}
-	} else {
-		sleepTime := time.Duration(c.Int64("management-call-interval")) * time.Second
-		go func() {
-			for {
-				promMetricUptimeInSeconds.Set(float64(time.Now().Unix() - initTime))
-
-				projects, projectsErr := projectsLoad(c.String("management-projects-endpoint"))
-				if projectsErr != nil {
-					promMetricProjectsFetchErrors.Inc()
-					conf.getLogger().
-						Error().
-						Str("type", "projects_load").
-						Str("on", "load_from_management").
-						Str("error", projectsErr.Error()).
-						Send()
-					time.Sleep(sleepTime)
-					continue
-				}
-
-				projectsManagerErr := projectsManager.load(projects)
-				if projectsManagerErr != nil {
-					promMetricProjectsFetchErrors.Inc()
-					conf.getLogger().
-						Error().
-						Str("type", "projects_load").
-						Str("on", "load_data").
-						Str("error", projectsManagerErr.Error()).
-						Send()
-					time.Sleep(sleepTime)
-					continue
-				}
-
-				conf.getLogger().
-					Trace().
-					Str("type", "projects_load").
-					Bool("success", true).
-					Send()
-
-				promMetricProjectsFetchSuccess.Inc()
-				time.Sleep(sleepTime)
-			}
-		}()
-	}
-
-	/**
-	 * Records
-	 */
-	go func() {
-		for {
-			func() {
-				startTime := time.Now().UnixMilli()
-				inserts := 0
-
-				storage.Lock()
-				defer storage.Unlock()
-
-				// no storage data check
-				if storage.recordCount == 0 && storage.clientErrorCount == 0 {
-					conf.getLogger().
-						Debug().
-						Msg("storage is empty")
-					time.Sleep(clickhouseInterval)
-					return
-				}
-
-				clickhouseConn, clickhouseCtx, clickhouseConnErr := getClickhouseConnection(
-					c.String("clickhouse-servers"),
-					c.String("clickhouse-database"),
-					c.String("clickhouse-username"),
-					c.String("clickhouse-password"),
-					c.Int("clickhouse-max-execution-time"),
-					c.Int("clickhouse-dial-timeout"),
-					c.Bool("test-mode"),
-					c.Bool("clickhouse-compression-lz4"),
-					c.Int("clickhouse-max-idle-conns"),
-					c.Int("clickhouse-max-open-conns"),
-					c.Int("clickhouse-conn-max-lifetime"),
-					c.Int("clickhouse-max-block-size"),
-					nil,
-					nil,
-				)
-
-				if clickhouseConnErr != nil {
-					conf.getLogger().
-						Error().
-						Str("type", errorTypeApp).
-						Str("on", "clickhouse-connection").
-						Str("error", clickhouseConnErr.Error()).
-						Send()
-					time.Sleep(clickhouseInterval)
-					return
-				}
-
-				//
-				// records
-				//
-				if storage.recordCount > 0 {
-					records := storage.getRecords()
-
-					recordsBatch, recordsBatchErr := clickhouseConn.PrepareBatch(
-						clickhouseCtx, clickhouseInsertRecords,
-					)
-					if recordsBatchErr != nil {
-						conf.getLogger().
-							Error().
-							Str("type", errorTypeApp).
-							Str("on", "clickhouse-connection").
-							Str("error", recordsBatchErr.Error()).
-							Send()
-						time.Sleep(clickhouseInterval)
-						return
-					}
-
-					for _, recordByte := range records {
-						recordByteReader := bytes.NewReader(recordByte)
-
-						var rec record
-						recordDecodeErr := gob.NewDecoder(recordByteReader).Decode(&rec)
-						if recordDecodeErr != nil {
-							conf.getLogger().
-								Error().
-								Str("type", errorTypeApp).
-								Str("on", "record-decode").
-								Str("error", recordDecodeErr.Error()).
-								Send()
-							continue
-						}
-
-						if rec.EventCount > 0 {
-							for i := 0; i < rec.EventCount; i++ {
-								ECategory := rec.Events[i].ECategory
-								EAction := rec.Events[i].EAction
-								ELabel := rec.Events[i].ELabel
-								EIdent := rec.Events[i].EIdent
-								EValue := rec.Events[i].EValue
-								insertErr := insertRecordBatch(recordsBatch, rec, ECategory, EAction, ELabel, EIdent, EValue)
-								if insertErr != nil {
-									conf.getLogger().
-										Error().
-										Str("type", errorTypeApp).
-										Str("on", "record-insert").
-										Str("error", insertErr.Error()).
-										Send()
-								}
-								inserts += 1
-							}
-						} else {
-							insertErr := insertRecordBatch(recordsBatch, rec, "", "", "", "", 0)
-							if insertErr != nil {
-								conf.getLogger().
-									Error().
-									Str("type", errorTypeApp).
-									Str("on", "record-insert").
-									Str("error", insertErr.Error()).
-									Send()
-							}
-							inserts += 1
-						}
-					}
-
-					recordsBatchSendErr := recordsBatch.Send()
-					if recordsBatchSendErr != nil {
-						conf.getLogger().
-							Error().
-							Str("type", errorTypeApp).
-							Str("on", "record-batch-send").
-							Str("error", recordsBatchSendErr.Error()).
-							Send()
-					}
-
-					storage.cleanRecords()
-				}
-
-				//
-				// client errors
-				//
-				if storage.clientErrorCount > 0 {
-					clientErrors := storage.getClientErrors()
-
-					clientErrorsBatch, clientErrorsBatchErr := clickhouseConn.PrepareBatch(
-						clickhouseCtx, clickhouseInsertClientErrors,
-					)
-					if clientErrorsBatchErr != nil {
-						conf.getLogger().
-							Error().
-							Str("type", errorTypeApp).
-							Str("on", "clickhouse-connection").
-							Str("error", clientErrorsBatchErr.Error()).
-							Send()
-						time.Sleep(clickhouseInterval)
-						return
-					}
-
-					for _, clientErrorByte := range clientErrors {
-						clientErrorByteReader := bytes.NewReader(clientErrorByte)
-
-						var ce record
-						clientErrorDecodeErr := gob.NewDecoder(clientErrorByteReader).Decode(&ce)
-						if clientErrorDecodeErr != nil {
-							conf.getLogger().
-								Error().
-								Str("type", errorTypeApp).
-								Str("on", "client-error-decode").
-								Str("error", clientErrorDecodeErr.Error()).
-								Send()
-							continue
-						}
-
-						insertErr := insertClientErrBatch(clientErrorsBatch, ce)
-
-						if insertErr != nil {
-							conf.getLogger().
-								Error().
-								Str("type", errorTypeApp).
-								Str("on", "client-error-insert").
-								Str("error", insertErr.Error()).
-								Send()
-						}
-						inserts += 1
-					}
-
-					clientErrorsBatchSendErr := clientErrorsBatch.Send()
-					if clientErrorsBatchSendErr != nil {
-						conf.getLogger().
-							Error().
-							Str("type", errorTypeApp).
-							Str("on", "client-error-batch-send").
-							Str("error", clientErrorsBatchSendErr.Error()).
-							Send()
-					}
-
-					storage.cleanRecords()
-				}
-
-				if inserts > 0 {
-					endTime := time.Now().UnixMilli()
-					inSeconds := (float64(endTime) - float64(startTime)) / 1000
-					conf.getLogger().
-						Debug().
-						Msg(fmt.Sprintf("Insert %d item(s) in %.2f seconds(s)", inserts, inSeconds))
-				}
-			}()
-			time.Sleep(clickhouseInterval)
-		}
-	}()
-
-	conn, connErr := pgx.Connect(context.Background(), c.String("postgis-uri"))
-	if connErr != nil {
-		return connErr
-	}
-
-	defer conn.Close(context.Background())
-
-	geoParser, geoParserErr := newGeoParser(conn, c.String("mmdb-city-path"), c.String("mmdb-asn-path"))
-	if geoParserErr != nil {
-		return geoParserErr
-	}
-
-	app := newHTTPServer(conf, geoParser, projectsManager, storage)
-	return app.Listen(c.String("listen"))
-}
+// //go:embed clickhouse/insert_client_errors.sql
+// var clickhouseInsertClientErrors string
 
 func main() {
 	app := cli.NewApp()
@@ -381,115 +20,16 @@ func main() {
 	app.EnableBashCompletion = true
 	app.Commands = []*cli.Command{
 		{
-			Name:   "fixture",
-			Usage:  "Run fixture",
-			Action: runFixture,
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:     "fixture-yaml-path",
-					Usage:    "YAML fixture path for generate data",
-					Value:    "./fixture.yml",
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_FIXTURE_YAML_PATH"},
-				},
-				&cli.IntFlag{
-					Name:     "fixture-interval",
-					Usage:    "Interval fixture in seconds",
-					Value:    3,
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_FIXTURE_INTERVAL"},
-				},
-				&cli.StringFlag{
-					Name:     "clickhouse-servers",
-					Usage:    "Comma separeted clickhouse ip:port",
-					Value:    "127.0.0.1:9000",
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_SERVERS"},
-				},
-
-				&cli.StringFlag{
-					Name:     "clickhouse-database",
-					Usage:    "Clickhouse database name",
-					Value:    "analytics",
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_DATABASE"},
-				},
-				&cli.StringFlag{
-					Name:     "clickhouse-username",
-					Usage:    "Clickhouse username",
-					Value:    "analytics",
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_USERNAME"},
-				},
-				&cli.StringFlag{
-					Name:     "clickhouse-password",
-					Usage:    "Clickhouse password",
-					Value:    "password123123",
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_PASSWORD"},
-				},
-				&cli.IntFlag{
-					Name:     "clickhouse-max-execution-time",
-					Usage:    "Clickhouse max execution time",
-					Value:    60,
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_MAX_EXECUTION_TIME"},
-				},
-				&cli.IntFlag{
-					Name:     "clickhouse-dial-timeout",
-					Usage:    "Clickhouse dial timeout in seconds",
-					Value:    5,
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_DIAL_TIMEOUT"},
-				},
-				&cli.IntFlag{
-					Name:     "clickhouse-max-idle-conns",
-					Usage:    "Clickhouse max idle connections",
-					Value:    5,
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_MAX_IDLE_CONNS"},
-				},
-				&cli.IntFlag{
-					Name:     "clickhouse-max-open-conns",
-					Usage:    "Clickhouse max open connections",
-					Value:    10,
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_MAX_OPEN_CONNS"},
-				},
-				&cli.IntFlag{
-					Name:     "clickhouse-conn-max-lifetime",
-					Usage:    "Clickhouse connection max lifetime in seconds",
-					Value:    3600,
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_CONN_MAX_LIFETIME"},
-				},
-				&cli.IntFlag{
-					Name:     "clickhouse-max-block-size",
-					Usage:    "Clickhouse max block size",
-					Value:    10,
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_MAX_BLOCK_SIZE"},
-				},
-				&cli.BoolFlag{
-					Name:     "clickhouse-compression-lz4",
-					Usage:    "Clickhouse compression LZ4",
-					Value:    false,
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_COMPRESSION_LZ4"},
-				},
-			},
-		},
-		{
 			Name:   "run",
-			Usage:  "Run server",
-			Action: runServer,
+			Usage:  "Run collect server",
+			Action: mainRun,
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:     "listen",
 					Usage:    "Application listen http ip:port address",
 					Value:    "0.0.0.0:4000",
 					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_LISTEN_ADDRESS"},
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_LISTEN"},
 				},
 				&cli.StringFlag{
 					Name:     "collector-url",
@@ -497,13 +37,6 @@ func main() {
 					Value:    "http://127.0.0.1:4000",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_COLLECTOR_URL"},
-				},
-				&cli.StringFlag{
-					Name:     "allowed-metrics-ips",
-					Usage:    "Comma seprated ips that can access /metrics for prometheus exporter",
-					Value:    "127.0.0.1",
-					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_ALLOWED_METRICS_IPS"},
 				},
 				&cli.Int64Flag{
 					Name:     "static-cache-ttl",
@@ -555,19 +88,27 @@ func main() {
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_MANAGEMENT_PROJECTS_JSON"},
 				},
 				&cli.Int64Flag{
+					Name:     "redis-queue-size",
+					Usage:    "Max redis queue size for each insert",
+					Value:    1000,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_REDIS_QUEUE_SIZE"},
+				},
+				&cli.Int64Flag{
 					Name:     "management-call-interval",
 					Usage:    "Call update for projects in seconds",
 					Value:    10,
 					Required: false,
-					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_MMDB_MANAGEMENT_CALL_INTERVAL"},
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_MANAGEMENT_CALL_INTERVAL"},
 				},
 				&cli.StringFlag{
 					Name:     "log-level",
 					Usage:    "Could be one of `panic`, `fatal`, `error`, `warn`, `info`, `debug` or `trace`",
-					Value:    "warn",
+					Value:    "debug",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_LOG_LEVEL"},
 				},
+				// clickhouse
 				&cli.IntFlag{
 					Name:     "clickhouse-interval",
 					Usage:    "Clickhouse interval in seconds",
@@ -582,7 +123,6 @@ func main() {
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_SERVERS"},
 				},
-
 				&cli.StringFlag{
 					Name:     "clickhouse-database",
 					Usage:    "Clickhouse database name",

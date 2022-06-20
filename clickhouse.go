@@ -10,41 +10,44 @@ import (
 	"github.com/paulmach/orb"
 )
 
-func getClickhouseConnection(
-	servers string,
-	database string,
-	username string,
-	password string,
-	maxExecutionTime int,
-	dialTimeout int,
-	debug bool,
-	compressionLZ4 bool,
-	maxIdleConns int,
-	maxOpenConns int,
-	connMaxLifetime int,
-	maxBlockSize int,
-	progress func(p *clickhouse.Progress),
-	profile func(p *clickhouse.ProfileInfo),
-) (driver.Conn, context.Context, error) {
+type clickhouseConfig struct {
+	servers          string
+	database         string
+	username         string
+	password         string
+	maxExecutionTime int
+	dialTimeout      int
+	debug            bool
+	compressionLZ4   bool
+	maxIdleConns     int
+	maxOpenConns     int
+	connMaxLifetime  int
+	maxBlockSize     int
+
+	progress func(p *clickhouse.Progress)
+	profile  func(p *clickhouse.ProfileInfo)
+}
+
+func clickhouseGetConnection(c *clickhouseConfig) (driver.Conn, context.Context, error) {
 
 	clickhouseOpts := clickhouse.Options{
-		Addr: strings.Split(servers, ","),
+		Addr: strings.Split(c.servers, ","),
 		Auth: clickhouse.Auth{
-			Database: database,
-			Username: username,
-			Password: password,
+			Database: c.database,
+			Username: c.username,
+			Password: c.password,
 		},
 		Settings: clickhouse.Settings{
-			"max_execution_time": maxExecutionTime,
+			"max_execution_time": c.maxExecutionTime,
 		},
-		DialTimeout:     time.Duration(dialTimeout) * time.Second,
-		Debug:           debug,
-		MaxOpenConns:    maxOpenConns,
-		MaxIdleConns:    maxIdleConns,
-		ConnMaxLifetime: time.Duration(connMaxLifetime) * time.Second,
+		DialTimeout:     time.Duration(c.dialTimeout) * time.Second,
+		Debug:           c.debug,
+		MaxOpenConns:    c.maxOpenConns,
+		MaxIdleConns:    c.maxIdleConns,
+		ConnMaxLifetime: time.Duration(c.connMaxLifetime) * time.Second,
 	}
 
-	if compressionLZ4 {
+	if c.compressionLZ4 {
 		clickhouseOpts.Compression = &clickhouse.Compression{
 			Method: clickhouse.CompressionLZ4,
 		}
@@ -57,8 +60,8 @@ func getClickhouseConnection(
 	}
 
 	ctx := clickhouse.Context(context.Background(), clickhouse.WithSettings(clickhouse.Settings{
-		"max_block_size": maxBlockSize,
-	}), clickhouse.WithProgress(progress), clickhouse.WithProfileInfo(profile))
+		"max_block_size": c.maxBlockSize,
+	}), clickhouse.WithProgress(c.progress), clickhouse.WithProfileInfo(c.profile))
 
 	if pingErr := clickhouseConn.Ping(ctx); pingErr != nil {
 		return nil, nil, pingErr
@@ -67,7 +70,7 @@ func getClickhouseConnection(
 	return clickhouseConn, ctx, nil
 }
 
-func insertClientErrBatch(
+func clickhouseInsertClientErrBatch(
 	batch driver.Batch,
 	rec record,
 ) error {
@@ -113,7 +116,7 @@ func insertClientErrBatch(
 		rec.Created,
 	)
 }
-func insertRecordBatch(
+func clickhouseInsertRecordBatch(
 	batch driver.Batch,
 	rec record,
 	ECategory string,

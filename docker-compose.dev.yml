@@ -35,8 +35,9 @@ services:
     image: nginx:1-alpine
     container_name: analytics-nginx
     hostname: analytics-nginx
-    ports:
-      - 443:443
+    network_mode: host
+    # ports:
+    #   - 443:443
     environment:
       ASM_NGX_WORKER_PROCESSES: ${ASM_NGX_WORKER_PROCESSES:-1}
       ASM_NGX_WORKER_RLIMIT_NOFILE: ${ASM_NGX_WORKER_RLIMIT_NOFILE:-512}
@@ -74,8 +75,8 @@ services:
       - 9000:9000
       - 9009:9009
     volumes:
-      # - ./clickhouse/logs:/var/log/clickhouse-server
-      # - ./clickhouse/db:/var/lib/clickhouse
+      - clickhouse-log:/var/log/clickhouse-server
+      - clickhouse-db:/var/lib/clickhouse
       - ./clickhouse/config.d.dev:/etc/clickhouse-server/config.d
       - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml
   analytics-clickhouse-client:
@@ -85,3 +86,7 @@ services:
     volumes:
       - ./clickhouse/schema.sql:/tmp/schema.sql
     entrypoint: tail -f /dev/null
+
+volumes:
+  clickhouse-db:
+  clickhouse-log:

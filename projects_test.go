@@ -91,6 +91,13 @@ func TestProjectManager2(t *testing.T) {
 		t.Errorf("project must matched")
 	}
 }
+func TestProjectManager3(t *testing.T) {
+	_, psErr := projectsLoadJSON("./projects.json")
+
+	if psErr != nil {
+		t.Error(psErr)
+	}
+}
 
 func BenchmarkValidateWildCardNoCache(b *testing.B) {
 	pm := getTestProjects()

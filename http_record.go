@@ -13,7 +13,7 @@ func httpRecord(
 	geoParser *geoParser,
 	userAgentParser *userAgentParser,
 	projectsManager *projects,
-	storage *storage,
+	// storage *storage,
 ) error {
 	// no cache at all
 	noCache(c)
@@ -79,16 +79,16 @@ func httpRecord(
 				record.ClientErrorMessage = postData.ClientErrorMessage
 				record.ClientErrorObject = postData.ClientErrorObject
 
-				finalizeByte, finalizeErr := record.finalize()
-				if finalizeErr == nil {
-					storage.addClientError(finalizeByte)
-					return
-				}
+				// finalizeByte, finalizeErr := record.finalize()
+				// if finalizeErr == nil {
+				// 	storage.addClientError(finalizeByte)
+				// 	return
+				// }
 
 				conf.getLogger().
 					Error().
 					Str("type", errorTypeApp).
-					Str("error", finalizeErr.Error()).
+					// Str("error", finalizeErr.Error()).
 					Str("ip", ip.String()).
 					Str("method", c.Method()).
 					Str("path", c.Path()).
@@ -122,15 +122,15 @@ func httpRecord(
 			}
 
 			go func() {
-				finalizeByte, finalizeErr := record.finalize()
-				if finalizeErr == nil {
-					storage.addRecord(finalizeByte)
-					return
-				}
+				// finalizeByte, finalizeErr := record.finalize()
+				// if finalizeErr == nil {
+				// 	storage.addRecord(finalizeByte)
+				// 	return
+				// }
 				conf.getLogger().
 					Error().
 					Str("type", errorTypeApp).
-					Str("error", finalizeErr.Error()).
+					// Str("error", finalizeErr.Error()).
 					Str("ip", ip.String()).
 					Str("method", c.Method()).
 					Str("path", c.Path()).
@@ -149,19 +149,19 @@ func httpRecord(
 		}
 
 		go func() {
-			finalizeByte, finalizeErr := record.finalize()
-			if finalizeErr == nil {
-				storage.addRecord(finalizeByte)
-			} else {
-				conf.getLogger().
-					Error().
-					Str("type", errorTypeApp).
-					Str("error", finalizeErr.Error()).
-					Str("ip", ip.String()).
-					Str("method", c.Method()).
-					Str("path", c.Path()).
-					Send()
-			}
+			// finalizeByte, finalizeErr := record.finalize()
+			// if finalizeErr == nil {
+			// storage.addRecord(finalizeByte)
+			// } else {
+			conf.getLogger().
+				Error().
+				Str("type", errorTypeApp).
+				// Str("error", finalizeErr.Error()).
+				Str("ip", ip.String()).
+				Str("method", c.Method()).
+				Str("path", c.Path()).
+				Send()
+			// }
 		}()
 
 		return c.JSON(1)
@@ -190,19 +190,19 @@ func httpRecord(
 		}
 
 		go func() {
-			finalizeByte, finalizeErr := record.finalize()
-			if finalizeErr == nil {
-				storage.addRecord(finalizeByte)
-			} else {
-				conf.getLogger().
-					Error().
-					Str("type", errorTypeApp).
-					Str("error", finalizeErr.Error()).
-					Str("ip", ip.String()).
-					Str("method", c.Method()).
-					Str("path", c.Path()).
-					Send()
-			}
+			// finalizeByte, finalizeErr := record.finalize()
+			// if finalizeErr == nil {
+			// 	storage.addRecord(finalizeByte)
+			// } else {
+			conf.getLogger().
+				Error().
+				Str("type", errorTypeApp).
+				// Str("error", finalizeErr.Error()).
+				Str("ip", ip.String()).
+				Str("method", c.Method()).
+				Str("path", c.Path()).
+				Send()
+			// }
 		}()
 
 		// image response single gif

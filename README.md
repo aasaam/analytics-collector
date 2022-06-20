@@ -31,11 +31,11 @@
 ./make.sh
 docker-compose -f docker-compose.dev.yml up -d
 # import clickhouse schema
-docker exec -it clickhouse-client bash
-clickhouse-client --multiquery --host clickhouse-single --user 'analytics' --password 'password123123' < /tmp/schema.sql
+docker exec -it analytics-clickhouse-client bash
+clickhouse-client --multiquery --host analytics-clickhouse-single --user 'analytics' --password 'password123123' < /tmp/schema.sql
 
 # run cli
-docker exec -it clickhouse-client /usr/bin/clickhouse-client --vertical --host clickhouse-single --user 'analytics' --password 'password123123'
+docker exec -it analytics-clickhouse-client /usr/bin/clickhouse-client --vertical --host analytics-clickhouse-single --user 'analytics' --password 'password123123'
 ```
 
 <div>

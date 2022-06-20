@@ -158,6 +158,8 @@ var (
 	errorAPIClientIPNotValid                errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "APIClientIPNotValid"}
 	errorAPIClientUserAgentNotValid         errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "APIClientUserAgentNotValid"}
 	errorQueryStringDisabled                errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "QueryStringDisabled"}
+	errorAssetsNotFound                     errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "AssetsNotFound"}
+	errorAssetsVersionFailed                errorMessage = errorMessage{code: fiber.StatusGone, msg: "AssetsVersionFailed"}
 	errorEventsAreEmpty                     errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "EventsAreEmpty"}
 	errorBadPOSTBody                        errorMessage = errorMessage{code: fiber.StatusUnprocessableEntity, msg: "BadPOSTBody"}
 )

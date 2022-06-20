@@ -1,20 +1,17 @@
 package main
 
 import (
-	"net"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/rs/zerolog"
 )
 
 type config struct {
-	logger            *zerolog.Logger
-	staticCacheTTL    uint
-	testMode          bool
-	allowedMetricsIPs []net.IP
-	collectorURL      *url.URL
+	logger         *zerolog.Logger
+	staticCacheTTL uint
+	testMode       bool
+	collectorURL   *url.URL
 }
 
 func newConfig(
@@ -22,7 +19,6 @@ func newConfig(
 	staticCacheTTL uint,
 	testMode bool,
 	collectorURL string,
-	allowedMetricsIPs string,
 ) *config {
 
 	c := config{
@@ -42,23 +38,7 @@ func newConfig(
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	c.logger = &logger
 
-	for _, ipString := range strings.Split(allowedMetricsIPs, ",") {
-		ip := net.ParseIP(strings.TrimSpace(ipString))
-		if ip != nil {
-			c.allowedMetricsIPs = append(c.allowedMetricsIPs, ip)
-		}
-	}
-
 	return &c
-}
-
-func (c *config) canAccessMetrics(ip net.IP) bool {
-	for _, ipValid := range c.allowedMetricsIPs {
-		if ipValid.Equal(ip) {
-			return true
-		}
-	}
-	return false
 }
 
 func (c *config) getLogger() *zerolog.Logger {
