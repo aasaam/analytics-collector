@@ -1,5 +1,5 @@
 
-FROM golang:1.18-buster AS builder
+FROM golang:1.17-buster AS builder
 
 ADD . /src
 
