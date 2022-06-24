@@ -75,7 +75,7 @@ func newHTTPServer(
 	refererParser *refererParser,
 	userAgentParser *userAgentParser,
 	projectsManager *projects,
-	redisClient *redisClient,
+	storage *storage,
 ) *fiber.App {
 
 	promRegistry := getPrometheusRegistry()
@@ -135,6 +135,7 @@ func newHTTPServer(
 			geoParser,
 			userAgentParser,
 			projectsManager,
+			storage,
 		)
 	})
 

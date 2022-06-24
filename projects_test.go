@@ -28,6 +28,10 @@ func getTestProjects() *projects {
 	return projectsManager
 }
 
+func TestProjectManagerJSONFile(t *testing.T) {
+	projectsLoad("./projects.json")
+}
+
 func TestProjectManager0(t *testing.T) {
 	if _, err := validatePublicInstanceID(""); err == nil {
 		t.Errorf("error must throw")

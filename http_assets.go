@@ -32,13 +32,15 @@ func httpAppAssetsHelper(c *fiber.Ctx) *errorMessage {
 	if strings.Contains(c.Request().URI().String(), "?") {
 		return &errorQueryStringDisabled
 	}
+
 	version := c.Params("version")
 	date, dateErr := time.Parse("20060102", version)
 	if dateErr != nil {
-		return &errorAssetsNotFound
+		return &errorAssetsVersionFailed
 	}
-	min := time.Now().AddDate(0, 0, -3)
-	max := time.Now().AddDate(0, 0, 3)
+
+	min := time.Now().AddDate(0, 0, -5)
+	max := time.Now().AddDate(0, 0, 5)
 
 	if date.Before(min) || date.After(max) {
 		return &errorAssetsVersionFailed
@@ -101,7 +103,17 @@ func httpAppAssets(
 			return httpErrorResponse(c, errorQueryStringDisabled)
 		}
 		staticCacheLimit(c)
-		c.Set(fiber.HeaderContentType, mimetypeJS)
+		c.Set(fiber.HeaderContentType, mimetypeJSON)
+		return c.Send(embedAmpDotJSON)
+	})
+
+	app.Get("/_/:version/amp.json", func(c *fiber.Ctx) error {
+		e := httpAppAssetsHelper(c)
+		if e != nil {
+			return httpErrorResponse(c, *e)
+		}
+		staticCache(c)
+		c.Set(fiber.HeaderContentType, mimetypeJSON)
 		return c.Send(embedAmpDotJSON)
 	})
 }

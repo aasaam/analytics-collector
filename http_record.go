@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"net"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -13,7 +14,7 @@ func httpRecord(
 	geoParser *geoParser,
 	userAgentParser *userAgentParser,
 	projectsManager *projects,
-	// storage *storage,
+	storage *storage,
 ) error {
 	// no cache at all
 	noCache(c)
@@ -79,16 +80,16 @@ func httpRecord(
 				record.ClientErrorMessage = postData.ClientErrorMessage
 				record.ClientErrorObject = postData.ClientErrorObject
 
-				// finalizeByte, finalizeErr := record.finalize()
-				// if finalizeErr == nil {
-				// 	storage.addClientError(finalizeByte)
-				// 	return
-				// }
+				finalizeByte, finalizeErr := record.finalize()
+				if finalizeErr == nil {
+					storage.addClientError(finalizeByte)
+					return
+				}
 
 				conf.getLogger().
 					Error().
 					Str("type", errorTypeApp).
-					// Str("error", finalizeErr.Error()).
+					Str("error", finalizeErr.Error()).
 					Str("ip", ip.String()).
 					Str("method", c.Method()).
 					Str("path", c.Path()).
@@ -101,7 +102,7 @@ func httpRecord(
 		if record.Mode == recordModeEventAPI && postData.API != nil {
 			// updates
 			userAgent = postData.API.ClientUserAgent
-			ip = record.IP
+			ip = net.IP(postData.API.ClientIP)
 
 			// apply updates
 			record.UserAgentResult = userAgentParser.parse(userAgent)
@@ -122,15 +123,15 @@ func httpRecord(
 			}
 
 			go func() {
-				// finalizeByte, finalizeErr := record.finalize()
-				// if finalizeErr == nil {
-				// 	storage.addRecord(finalizeByte)
-				// 	return
-				// }
+				finalizeByte, finalizeErr := record.finalize()
+				if finalizeErr == nil {
+					storage.addRecord(finalizeByte)
+					return
+				}
 				conf.getLogger().
 					Error().
 					Str("type", errorTypeApp).
-					// Str("error", finalizeErr.Error()).
+					Str("error", finalizeErr.Error()).
 					Str("ip", ip.String()).
 					Str("method", c.Method()).
 					Str("path", c.Path()).
@@ -149,19 +150,19 @@ func httpRecord(
 		}
 
 		go func() {
-			// finalizeByte, finalizeErr := record.finalize()
-			// if finalizeErr == nil {
-			// storage.addRecord(finalizeByte)
-			// } else {
-			conf.getLogger().
-				Error().
-				Str("type", errorTypeApp).
-				// Str("error", finalizeErr.Error()).
-				Str("ip", ip.String()).
-				Str("method", c.Method()).
-				Str("path", c.Path()).
-				Send()
-			// }
+			finalizeByte, finalizeErr := record.finalize()
+			if finalizeErr == nil {
+				storage.addRecord(finalizeByte)
+			} else {
+				conf.getLogger().
+					Error().
+					Str("type", errorTypeApp).
+					Str("error", finalizeErr.Error()).
+					Str("ip", ip.String()).
+					Str("method", c.Method()).
+					Str("path", c.Path()).
+					Send()
+			}
 		}()
 
 		return c.JSON(1)
@@ -169,13 +170,14 @@ func httpRecord(
 		// recordModePageViewImageLegacy
 		// recordModePageViewImageNoScript
 		// recordModePageViewAMPImage
-	} else if c.Method() == fiber.MethodGet {
+	} else if c.Method() == fiber.MethodGet && record.isImage() {
 		record.CID = clientIDNoneSTD([]string{ip.String(), userAgent}, clientIDTypeOther)
 
-		if record.PURL == "" && record.Mode == recordModePageViewImageNoScript {
+		if record.pURL == nil && record.Mode == recordModePageViewImageNoScript {
 			imgReferer := getURL(c.Get(fiber.HeaderReferer))
 			if imgReferer != nil {
 				record.PURL = imgReferer.String()
+				record.pURL = imgReferer
 			}
 		}
 
@@ -190,28 +192,23 @@ func httpRecord(
 		}
 
 		go func() {
-			// finalizeByte, finalizeErr := record.finalize()
-			// if finalizeErr == nil {
-			// 	storage.addRecord(finalizeByte)
-			// } else {
-			conf.getLogger().
-				Error().
-				Str("type", errorTypeApp).
-				// Str("error", finalizeErr.Error()).
-				Str("ip", ip.String()).
-				Str("method", c.Method()).
-				Str("path", c.Path()).
-				Send()
-			// }
+			finalizeByte, finalizeErr := record.finalize()
+			if finalizeErr == nil {
+				storage.addRecord(finalizeByte)
+			} else {
+				conf.getLogger().
+					Error().
+					Str("type", errorTypeApp).
+					Str("error", finalizeErr.Error()).
+					Str("ip", ip.String()).
+					Str("method", c.Method()).
+					Str("path", c.Path()).
+					Send()
+			}
 		}()
 
-		// image response single gif
-		if record.isImage() {
-			c.Set(fiber.HeaderContentType, mimetypeGIF)
-			return c.Send(singleGifImage)
-		}
-
-		return c.JSON(1)
+		c.Set(fiber.HeaderContentType, mimetypeGIF)
+		return c.Send(singleGifImage)
 	}
 
 	return httpErrorResponse(

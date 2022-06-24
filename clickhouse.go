@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -15,6 +18,9 @@ type clickhouseConfig struct {
 	database         string
 	username         string
 	password         string
+	rootCAPath       string
+	clientCertPath   string
+	clientKeyPath    string
 	maxExecutionTime int
 	dialTimeout      int
 	debug            bool
@@ -45,6 +51,30 @@ func clickhouseGetConnection(c *clickhouseConfig) (driver.Conn, context.Context,
 		MaxOpenConns:    c.maxOpenConns,
 		MaxIdleConns:    c.maxIdleConns,
 		ConnMaxLifetime: time.Duration(c.connMaxLifetime) * time.Second,
+	}
+
+	var chTLS *tls.Config = nil
+	if c.rootCAPath != "" {
+		caCert, caCertErr := ioutil.ReadFile(c.rootCAPath)
+		if caCertErr != nil {
+			return nil, nil, caCertErr
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		chTLS = &tls.Config{
+			RootCAs: caCertPool,
+		}
+
+		if c.clientCertPath != "" && c.clientKeyPath != "" {
+			clientCert, clientCertErr := tls.LoadX509KeyPair(c.clientCertPath, c.clientKeyPath)
+			if clientCertErr != nil {
+				return nil, nil, clientCertErr
+			}
+			chTLS.Certificates = []tls.Certificate{clientCert}
+		}
+
+		clickhouseOpts.TLS = chTLS
 	}
 
 	if c.compressionLZ4 {
@@ -280,8 +310,8 @@ func clickhouseInsertRecordBatch(
 		rec.CID.CidType,
 		rec.CID.CidUserChecksum,
 		rec.CID.CidSessionChecksum,
-		rec.CID.CidStdInitTime,
-		rec.CID.CidStdSessionTime,
+		time.Unix(rec.CID.CidStdInitTime, 0),
+		time.Unix(rec.CID.CidStdSessionTime, 0),
 
 		rec.IP,
 		rec.PublicInstanceID,

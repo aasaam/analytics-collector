@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS analytics.ClientErrors
   Mode                                        UInt8,
   Created                                     Datetime
 )
-ENGINE = MergeTree()
+ENGINE = ReplacingMergeTree()
 ORDER BY (Created, xxHash32(PURLChecksum))
 PARTITION BY toYYYYMM(Created)
 SAMPLE BY (xxHash32(PURLChecksum));
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   CursorID                                    UInt64,
   Created                                     Datetime
 )
-ENGINE = MergeTree()
+ENGINE = ReplacingMergeTree()
 ORDER BY (Created, xxHash32(CidUserChecksum))
 PARTITION BY toYYYYMM(Created)
 SAMPLE BY (xxHash32(CidUserChecksum));

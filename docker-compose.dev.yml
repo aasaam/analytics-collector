@@ -21,16 +21,6 @@ services:
     ports:
       - 8080:8080
 
-  analytics-redis:
-    image: redis:7-alpine
-    hostname: analytics-redis
-    container_name: analytics-redis
-    command: --save 60 1 --loglevel warning
-    ports:
-      - 6379:6379
-    volumes:
-      - ./redis:/data
-
   analytics-nginx:
     image: nginx:1-alpine
     container_name: analytics-nginx
@@ -71,22 +61,23 @@ services:
         soft: 262144
         hard: 262144
     ports:
-      - 8123:8123
-      - 9000:9000
-      - 9009:9009
+      - 9440:9440
+      - 9999:9999
     volumes:
-      - clickhouse-log:/var/log/clickhouse-server
+      - ./tmp/clickhouse-log:/var/log/clickhouse-server
       - clickhouse-db:/var/lib/clickhouse
-      - ./clickhouse/config.d.dev:/etc/clickhouse-server/config.d
-      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - ./clickhouse/cert:/cert:ro
+      - ./clickhouse/config.d.dev:/etc/clickhouse-server/config.d:ro
+      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml:ro
+
   analytics-clickhouse-client:
     image: yandex/clickhouse-client:22
     container_name: analytics-clickhouse-client
     hostname: analytics-clickhouse-client
     volumes:
+      - ./clickhouse/config.d.dev:/etc/clickhouse-server/config.d:ro
       - ./clickhouse/schema.sql:/tmp/schema.sql
     entrypoint: tail -f /dev/null
 
 volumes:
   clickhouse-db:
-  clickhouse-log:

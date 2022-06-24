@@ -1,0 +1,10 @@
+{
+  "CN": "clickhouse private CA",
+  "ca": {
+    "expiry": "175200h"
+  },
+  "key": {
+    "algo": "ecdsa",
+    "size": 384
+  }
+}

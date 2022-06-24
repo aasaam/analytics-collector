@@ -14,6 +14,15 @@ func TestSanitizeName(t *testing.T) {
 		t.Errorf("invalid sanitize")
 	}
 }
+
+func TestBoolUint8(t *testing.T) {
+	if boolUint8(true) != 1 {
+		t.Errorf("invalid sanitize")
+	}
+	if boolUint8(false) != 0 {
+		t.Errorf("invalid sanitize")
+	}
+}
 func TestSanitizeEntityID(t *testing.T) {
 	if sanitizeEntityID("1") != "1" {
 		t.Errorf("invalid sanitize")
@@ -25,6 +34,9 @@ func TestSanitizeEntityID(t *testing.T) {
 }
 func TestSanitizeLanguage(t *testing.T) {
 	if sanitizeLanguage("fa-IR") != "fa" {
+		t.Errorf("invalid sanitize")
+	}
+	if sanitizeLanguage("per") != "fa" {
 		t.Errorf("invalid sanitize")
 	}
 
@@ -55,6 +67,10 @@ func TestHash2(t *testing.T) {
 	}
 }
 func TestIsValidURL(t *testing.T) {
+	if sanitizeURL("\x18") != "" {
+		t.Errorf("invalid url")
+	}
+
 	if isValidURL("\x18") {
 		t.Errorf("invalid url")
 	}
@@ -119,9 +135,9 @@ func TestURLDomainParse(t *testing.T) {
 }
 
 func TestGetCursorID(t *testing.T) {
-	c1 := getCursorID()
+	c1, _ := getCursorID()
 	time.Sleep(time.Duration(2) * time.Millisecond)
-	c2 := getCursorID()
+	c2, _ := getCursorID()
 	if c1 == c2 {
 		t.Errorf("must not same cursor")
 	}
@@ -138,10 +154,12 @@ func TestGetURLPath(t *testing.T) {
 
 	for _, u := range urls {
 		p := getURLPath(getURL(u))
-		if p == "" {
+		s := getURLString(getURL(u))
+		if p == "" || s == "" {
 			t.Errorf("invalid url path")
 		}
 	}
+
 }
 
 func BenchmarkChecksum(b *testing.B) {

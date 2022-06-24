@@ -2,10 +2,18 @@ package main
 
 func workerProjects(
 	managementProjectsEndpoint string,
-) (map[string]projectData, error) {
+	projectsManager *projects,
+) error {
 	projects, projectsErr := projectsLoad(managementProjectsEndpoint)
 	if projectsErr != nil {
-		return nil, projectsErr
+		promMetricProjectsFetchErrors.Inc()
+		return projectsErr
 	}
-	return projects, nil
+
+	projectsManagerErr := projectsManager.load(projects)
+	if projectsManagerErr != nil {
+		return projectsManagerErr
+	}
+
+	return nil
 }

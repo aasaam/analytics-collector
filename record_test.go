@@ -126,6 +126,7 @@ func TestRecord4(t *testing.T) {
 	u1, _ := url.Parse("http://not-example.com")
 
 	recordSample.PURL = u1.String()
+	recordSample.pURL = u1
 
 	if recordSample.verify(pm, "") != &errorProjectPublicIDAndURLDidNotMatched {
 		t.Errorf("invalid verify")
@@ -134,6 +135,7 @@ func TestRecord4(t *testing.T) {
 	u2, _ := url.Parse("http://example.com")
 
 	recordSample.PURL = u2.String()
+	recordSample.pURL = u2
 
 	if recordSample.verify(pm, "") != nil {
 		t.Errorf("invalid verify")

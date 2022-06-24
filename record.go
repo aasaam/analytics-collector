@@ -64,7 +64,6 @@ type record struct {
 	ClientErrorMessage string
 	ClientErrorObject  string
 	Created            time.Time
-	CreatedInt         int64
 	CursorID           uint64
 	Mode               uint8
 	modeString         string
@@ -75,7 +74,9 @@ type record struct {
 	PEntityModule     string
 	PEntityTaxonomyID string
 	PURL              string
+	pURL              *url.URL
 	PCanonicalURL     string
+	pCanonicalURL     *url.URL
 	PTitle            string
 	PLang             string
 	PIsIframe         bool
@@ -150,10 +151,8 @@ func validateMode(m string) (uint8, error) {
 }
 
 func newRecord(modeQuery string, publicInstanceIDQuery string) (*record, error) {
-	t := time.Now()
 	r := record{
-		Created:    t,
-		CreatedInt: t.UnixNano(),
+		Created: time.Now(),
 	}
 
 	mode, err := validateMode(modeQuery)
@@ -185,7 +184,7 @@ func (r *record) setAPI(
 		r.Created = time.Unix(postData.API.ClientTime, 0)
 	}
 
-	ip := net.ParseIP(postData.API.ClientIP)
+	ip := net.ParseIP(postData.API.ClientIP).To4()
 	if ip == nil {
 		return &errorAPIClientIPNotValid
 	}
@@ -232,10 +231,10 @@ func (r *record) verify(
 
 	// page view require matched project id and url of page view
 	if r.isPageView() {
-		if r.PURL == "" {
+		if r.pURL == nil {
 			return &errorURLRequiredAndMustBeValid
 		}
-		if !projectsManager.validateIDAndURL(r.PublicInstanceID, getURL(r.PURL)) {
+		if !projectsManager.validateIDAndURL(r.PublicInstanceID, r.pURL) {
 			return &errorProjectPublicIDAndURLDidNotMatched
 		}
 		return nil
@@ -247,11 +246,11 @@ func (r *record) verify(
 	}
 
 	// in page js event must match with page url
-	if r.Mode == recordModeEventJSInPageView && !projectsManager.validateIDAndURL(r.PublicInstanceID, getURL(r.PURL)) {
+	if r.Mode == recordModeEventJSInPageView && !projectsManager.validateIDAndURL(r.PublicInstanceID, r.pURL) {
 		return &errorProjectPublicIDAndURLDidNotMatched
 	}
 
-	if r.Mode == recordModeClientError && r.PURL != "" && !projectsManager.validateIDAndURL(r.PublicInstanceID, getURL(r.PURL)) {
+	if r.Mode == recordModeClientError && r.PURL != "" && !projectsManager.validateIDAndURL(r.PublicInstanceID, r.pURL) {
 		return &errorProjectPublicIDAndURLDidNotMatched
 	}
 
@@ -282,6 +281,9 @@ func (r *record) setQueryParameters(
 	r.PEntityID = sanitizeEntityID(qEntityID)
 	r.PEntityModule = sanitizeName(qEntityModule)
 	r.PEntityTaxonomyID = sanitizeEntityTaxonomyID(qEntityTaxonomyID)
+
+	r.pURL = getURL(r.PURL)
+	r.pCanonicalURL = getURL(r.PCanonicalURL)
 }
 
 func (r *record) setPostRequest(
@@ -303,6 +305,9 @@ func (r *record) setPostRequest(
 		r.PEntityModule = sanitizeName(postRequest.Page.MainEntityModule)
 		r.PEntityTaxonomyID = sanitizeEntityTaxonomyID(postRequest.Page.MainEntityTaxonomyID)
 
+		r.pURL = getURL(r.PURL)
+		r.pCanonicalURL = getURL(r.PCanonicalURL)
+
 		if postRequest.Page.ScreenSize != "" &&
 			postRequest.Page.ViewportSize != "" {
 			r.ScreenInfo = parseScreenSize(
@@ -315,11 +320,11 @@ func (r *record) setPostRequest(
 		}
 
 		if postRequest.Page.RefererURL != "" {
-			r.PRefererURL = refererParser.parse(getURL(r.PURL), getURL(postRequest.Page.RefererURL))
+			r.PRefererURL = refererParser.parse(r.pURL, getURL(postRequest.Page.RefererURL))
 		}
 
 		if postRequest.Page.RefererSessionURL != "" {
-			r.SRefererURL = refererParser.parse(getURL(r.PURL), getURL(postRequest.Page.RefererSessionURL))
+			r.SRefererURL = refererParser.parse(r.pURL, getURL(postRequest.Page.RefererSessionURL))
 		}
 
 		if postRequest.Page.PerformanceData != nil {
@@ -335,9 +340,9 @@ func (r *record) setPostRequest(
 			r.Performance.PerfResource = postRequest.Page.PerformanceData.PerfResource
 		}
 
-		if postRequest.Page.PageBreadcrumbObject != nil && r.PURL != "" {
+		if postRequest.Page.PageBreadcrumbObject != nil && r.pURL != nil {
 			u1 := getURL(postRequest.Page.PageBreadcrumbObject.U1)
-			pu := getURL(r.PURL)
+			pu := r.pURL
 			if u1 != nil && u1.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N1 != "" {
 				r.BreadCrumb.BCIsProcessed = true
 				r.BreadCrumb.BCLevel = 1
@@ -437,7 +442,7 @@ func (r *record) setPostRequest(
 					EAction:   action,
 					ELabel:    ev.Label,
 					EIdent:    sanitizeEntityID(ev.Ident),
-					EValue:    ev.Value,
+					EValue:    uint64(ev.Value),
 				}
 				events = append(events, re)
 			}
@@ -463,12 +468,16 @@ func (r *record) finalize() ([]byte, error) {
 		return nil, errors.New("mode not processed or missing cid")
 	}
 
-	if r.PURL != "" {
-		r.Utm = parseUTM(getURL(r.PURL))
+	if r.pURL != nil {
+		r.Utm = parseUTM(r.pURL)
 	}
 
 	if r.isPageView() {
-		r.CursorID = getCursorID()
+		cursorID, cursorIDErr := getCursorID()
+		if cursorIDErr != nil {
+			return nil, cursorIDErr
+		}
+		r.CursorID = cursorID
 	}
 
 	buf := &bytes.Buffer{}

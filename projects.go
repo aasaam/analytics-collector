@@ -88,6 +88,9 @@ func (p *projects) load(data map[string]projectData) error {
 }
 
 func (p *projects) validateIDAndPrivate(publicInstanceID string, privateKey string) bool {
+	p.Lock()
+	defer p.Unlock()
+
 	if publicInstanceIDFromPrivate, ok := p.privateKeys[privateKey]; ok && privateKey != "" && publicInstanceIDFromPrivate == publicInstanceID {
 		return true
 	}
@@ -96,6 +99,9 @@ func (p *projects) validateIDAndPrivate(publicInstanceID string, privateKey stri
 }
 
 func (p *projects) validateID(publicInstanceID string) bool {
+	p.Lock()
+	defer p.Unlock()
+
 	return p.publicIDs[publicInstanceID]
 }
 

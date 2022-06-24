@@ -18,6 +18,7 @@ const (
 
 const (
 	mimetypeJS   = "text/javascript"
+	mimetypeJSON = "application/json"
 	mimetypeText = "text/plain"
 	mimetypeGIF  = "image/gif"
 )
@@ -49,8 +50,8 @@ type postRequestEvent struct {
 	Category string `json:"c,omitempty"`
 	Action   string `json:"a,omitempty"`
 	Label    string `json:"l,omitempty"`
-	Ident    string `json:"i,omitempty"`
-	Value    uint64 `json:"v,omitempty"`
+	Ident    string `json:"id,omitempty"`
+	Value    int64  `json:"v,omitempty"`
 }
 
 type postRequestAPI struct {
@@ -146,19 +147,17 @@ var singleGifImage, _ = base64.StdEncoding.DecodeString("R0lGODlhAQABAIAAAAAAAP/
 
 var (
 	errorInternalServerError                errorMessage = errorMessage{code: fiber.StatusInternalServerError, msg: "InternalServerError"}
-	errorMetricsForbidden                   errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "MetricsForbidden"}
 	errorRecordNotProcessedYet              errorMessage = errorMessage{code: fiber.StatusConflict, msg: "RecordNotProcessedYet"}
-	errorRecordNotValid                     errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "RecordNotValid"}
+	errorRecordNotValid                     errorMessage = errorMessage{code: fiber.StatusMethodNotAllowed, msg: "RecordNotValid"}
 	errorRecordCIDNotProcessed              errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "RecordCIDNotProcessed"}
 	errorProjectPublicIDAndURLDidNotMatched errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "ProjectPublicIDAndURLDidNotMatched"}
-	errorInvalidModeOrProjectPublicID       errorMessage = errorMessage{code: fiber.StatusUnprocessableEntity, msg: "InvalidModeOrProjectPublicID"}
+	errorInvalidModeOrProjectPublicID       errorMessage = errorMessage{code: fiber.StatusTeapot, msg: "InvalidModeOrProjectPublicID"}
 	errorURLRequiredAndMustBeValid          errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "URLRequiredAndMustBeValid"}
 	errorAPIFieldsAreMissing                errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "APIFieldsAreMissing"}
-	errorAPIPrivateKeyFailed                errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "APIPrivateKeyFailed"}
-	errorAPIClientIPNotValid                errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "APIClientIPNotValid"}
-	errorAPIClientUserAgentNotValid         errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "APIClientUserAgentNotValid"}
+	errorAPIPrivateKeyFailed                errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "APIPrivateKeyFailed"}
+	errorAPIClientIPNotValid                errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "APIClientIPNotValid"}
+	errorAPIClientUserAgentNotValid         errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "APIClientUserAgentNotValid"}
 	errorQueryStringDisabled                errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "QueryStringDisabled"}
-	errorAssetsNotFound                     errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "AssetsNotFound"}
 	errorAssetsVersionFailed                errorMessage = errorMessage{code: fiber.StatusGone, msg: "AssetsVersionFailed"}
 	errorEventsAreEmpty                     errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "EventsAreEmpty"}
 	errorBadPOSTBody                        errorMessage = errorMessage{code: fiber.StatusUnprocessableEntity, msg: "BadPOSTBody"}

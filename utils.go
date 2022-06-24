@@ -20,7 +20,7 @@ const (
 )
 
 var sanitizeTitleRegex = regexp.MustCompile(`[^a-zA-Z0-9]`)
-var sanitizeTitleMoreSpaceRegex = regexp.MustCompile(`[\s]+`)
+var sanitizeMoreSpaceRegex = regexp.MustCompile(`[\s]+`)
 var sanitizeNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{1,31}$`)
 var entityIDRegex = regexp.MustCompile(`^[a-zA-Z0-9-_\/]{1,63}$`)
 var entityTaxonomyIDRegex = regexp.MustCompile(`^[A-Z]{1}[0-9a-z]{4}$`)
@@ -109,7 +109,7 @@ func checksum(str string) string {
 
 func sanitizeTitle(str string) string {
 	s := sanitizeTitleRegex.ReplaceAllString(str, " ")
-	s = sanitizeTitleMoreSpaceRegex.ReplaceAllString(s, " ")
+	s = sanitizeMoreSpaceRegex.ReplaceAllString(s, " ")
 	return strings.ToLower(strings.TrimSpace(s))
 }
 
@@ -204,12 +204,12 @@ func parseKeywords(inpKeywords string) []string {
 	return r
 }
 
-func getCursorID() uint64 {
-	n := time.Now().Format(cursorTimeLayout)
+func getCursorID() (uint64, error) {
+	n := time.Now().UTC().Format(cursorTimeLayout)
 	n = strings.ReplaceAll(n, ".", "")
 	ui, err := strconv.ParseUint(n, 10, 64)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
-	return ui
+	return ui, nil
 }

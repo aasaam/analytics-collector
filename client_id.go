@@ -35,8 +35,7 @@ func clientIDNoneSTD(parts []string, clientType uint8) clientID {
 		panic("none std must type none std")
 	}
 
-	t := time.Now()
-	timestamp := t.Unix()
+	timestamp := time.Now().Unix()
 	sessionEach30Minutes := math.Floor(float64(timestamp) / 1800)
 	sessionEach30MinutesString := fmt.Sprint(sessionEach30Minutes)
 

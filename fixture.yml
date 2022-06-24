@@ -63,10 +63,9 @@ PLang:
   - fa
 
 PublicInstanceID:
-  0123456789ab:
+  "000000000000":
     - example.com
-    - subdomain.example.com
-  abcdef012345:
+    - example.org
     - example.net
     - www.example.net
 
@@ -172,6 +171,15 @@ EAction:
   - cancel
   - play
   - pause
+EIdent:
+  - "1000"
+  - "1000"
+  - "1001"
+  - "1002"
+  - "1003"
+  - "1004"
+  - "1005"
+  - "1006"
 
 UserAgent:
   - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36

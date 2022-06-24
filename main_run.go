@@ -29,17 +29,12 @@ func mainRun(c *cli.Context) error {
 		maxOpenConns:     c.Int("clickhouse-max-open-conns"),
 		connMaxLifetime:  c.Int("clickhouse-conn-max-lifetime"),
 		maxBlockSize:     c.Int("clickhouse-max-block-size"),
+		rootCAPath:       c.String("clickhouse-root-ca"),
+		clientCertPath:   c.String("clickhouse-client-cert"),
+		clientKeyPath:    c.String("clickhouse-client-key"),
 	}
 
 	managementCallInterval := time.Duration(c.Int64("management-call-interval")) * time.Second
-
-	/**
-	 * Redis
-	 */
-	redisClient, redisClientErr := redisClientNew(c.String("redis-uri"), c.Int64("redis-queue-size"))
-	if redisClientErr != nil {
-		return redisClientErr
-	}
 
 	clickhouseInterval := time.Duration(c.Int("clickhouse-interval")) * time.Second
 
@@ -55,24 +50,33 @@ clickHouseInitStep:
 		goto clickHouseInitStep
 	}
 
+	go func() {
+		for {
+			promMetricUptimeInSeconds.Set(float64(time.Now().Unix() - initTime))
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
 	clickhouseInit.Close()
 	conf.getLogger().
 		Debug().
 		Msg("successfully ping to clickhouse")
 
 	/**
-	 * Projects
+	 * storage
 	 */
-	var projects map[string]projectData
-	var projectsErr error
+	storage := newStorage()
 
+	/**
+	 * projects
+	 */
 	projectsManager := newProjectsManager()
 	projectsJSON := c.String("management-projects-json")
 
 	// it's static from json file
 	if projectsJSON != "" {
 
-		projects, projectsErr = projectsLoadJSON(c.String("management-projects-json"))
+		projects, projectsErr := projectsLoadJSON(c.String("management-projects-json"))
 		if projectsErr != nil {
 			return projectsErr
 		}
@@ -84,7 +88,7 @@ clickHouseInitStep:
 
 	} else { // from management
 
-		projects, projectsErr = workerProjects(c.String("management-projects-endpoint"))
+		projects, projectsErr := projectsLoad(c.String("management-projects-endpoint"))
 		if projectsErr != nil {
 			return projectsErr
 		}
@@ -96,31 +100,17 @@ clickHouseInitStep:
 
 		go func() {
 			for {
-				promMetricUptimeInSeconds.Set(float64(time.Now().Unix() - initTime))
+				time.Sleep(managementCallInterval)
 
-				projects, projectsErr := projectsLoad(c.String("management-projects-endpoint"))
-				if projectsErr != nil {
+				e := workerProjects(c.String("management-projects-endpoint"), projectsManager)
+				if e != nil {
 					promMetricProjectsFetchErrors.Inc()
 					conf.getLogger().
 						Error().
 						Str("type", "projects_load").
-						Str("on", "load_from_management").
-						Str("error", projectsErr.Error()).
+						Str("e", e.Error()).
+						Bool("success", false).
 						Send()
-					time.Sleep(managementCallInterval)
-					continue
-				}
-
-				projectsManagerErr := projectsManager.load(projects)
-				if projectsManagerErr != nil {
-					promMetricProjectsFetchErrors.Inc()
-					conf.getLogger().
-						Error().
-						Str("type", "projects_load").
-						Str("on", "load_data").
-						Str("error", projectsManagerErr.Error()).
-						Send()
-					time.Sleep(managementCallInterval)
 					continue
 				}
 
@@ -131,216 +121,34 @@ clickHouseInitStep:
 					Send()
 
 				promMetricProjectsFetchSuccess.Inc()
-				time.Sleep(managementCallInterval)
 			}
 		}()
 	}
 
-	// mainRecordRoutine(
-	// 	c,
-	// 	conf,
-	// 	redisClient,
-	// 	clickhouseInterval,
-	// )
+	go func() {
+		for {
 
-	// /**
-	//  * Records
-	//  */
-	// go func() {
-	// 	for {
-	// 		func() {
-	// 			startTime := time.Now().UnixMilli()
-	// 			inserts := 0
-
-	// 			// no storage data check
-	// 			if storage.recordCount == 0 && storage.clientErrorCount == 0 {
-	// 				conf.getLogger().
-	// 					Debug().
-	// 					Msg("storage is empty")
-	// 				time.Sleep(clickhouseInterval)
-	// 				return
-	// 			}
-
-	// 			clickhouseConn, clickhouseCtx, clickhouseConnErr := getClickhouseConnection(
-	// 				c.String("clickhouse-servers"),
-	// 				c.String("clickhouse-database"),
-	// 				c.String("clickhouse-username"),
-	// 				c.String("clickhouse-password"),
-	// 				c.Int("clickhouse-max-execution-time"),
-	// 				c.Int("clickhouse-dial-timeout"),
-	// 				c.Bool("test-mode"),
-	// 				c.Bool("clickhouse-compression-lz4"),
-	// 				c.Int("clickhouse-max-idle-conns"),
-	// 				c.Int("clickhouse-max-open-conns"),
-	// 				c.Int("clickhouse-conn-max-lifetime"),
-	// 				c.Int("clickhouse-max-block-size"),
-	// 				nil,
-	// 				nil,
-	// 			)
-
-	// 			if clickhouseConnErr != nil {
-	// 				conf.getLogger().
-	// 					Error().
-	// 					Str("type", errorTypeApp).
-	// 					Str("on", "clickhouse-connection").
-	// 					Str("error", clickhouseConnErr.Error()).
-	// 					Send()
-	// 				time.Sleep(clickhouseInterval)
-	// 				return
-	// 			}
-
-	// 			//
-	// 			// records
-	// 			//
-	// 			if storage.recordCount > 0 {
-	// 				records := storage.getRecords()
-
-	// 				recordsBatch, recordsBatchErr := clickhouseConn.PrepareBatch(
-	// 					clickhouseCtx, clickhouseInsertRecords,
-	// 				)
-	// 				if recordsBatchErr != nil {
-	// 					conf.getLogger().
-	// 						Error().
-	// 						Str("type", errorTypeApp).
-	// 						Str("on", "clickhouse-connection").
-	// 						Str("error", recordsBatchErr.Error()).
-	// 						Send()
-	// 					time.Sleep(clickhouseInterval)
-	// 					return
-	// 				}
-
-	// 				for _, recordByte := range records {
-	// 					recordByteReader := bytes.NewReader(recordByte)
-
-	// 					var rec record
-	// 					recordDecodeErr := gob.NewDecoder(recordByteReader).Decode(&rec)
-	// 					if recordDecodeErr != nil {
-	// 						conf.getLogger().
-	// 							Error().
-	// 							Str("type", errorTypeApp).
-	// 							Str("on", "record-decode").
-	// 							Str("error", recordDecodeErr.Error()).
-	// 							Send()
-	// 						continue
-	// 					}
-
-	// 					if rec.EventCount > 0 {
-	// 						for i := 0; i < rec.EventCount; i++ {
-	// 							ECategory := rec.Events[i].ECategory
-	// 							EAction := rec.Events[i].EAction
-	// 							ELabel := rec.Events[i].ELabel
-	// 							EIdent := rec.Events[i].EIdent
-	// 							EValue := rec.Events[i].EValue
-	// 							insertErr := insertRecordBatch(recordsBatch, rec, ECategory, EAction, ELabel, EIdent, EValue)
-	// 							if insertErr != nil {
-	// 								conf.getLogger().
-	// 									Error().
-	// 									Str("type", errorTypeApp).
-	// 									Str("on", "record-insert").
-	// 									Str("error", insertErr.Error()).
-	// 									Send()
-	// 							}
-	// 							inserts += 1
-	// 						}
-	// 					} else {
-	// 						insertErr := insertRecordBatch(recordsBatch, rec, "", "", "", "", 0)
-	// 						if insertErr != nil {
-	// 							conf.getLogger().
-	// 								Error().
-	// 								Str("type", errorTypeApp).
-	// 								Str("on", "record-insert").
-	// 								Str("error", insertErr.Error()).
-	// 								Send()
-	// 						}
-	// 						inserts += 1
-	// 					}
-	// 				}
-
-	// 				recordsBatchSendErr := recordsBatch.Send()
-	// 				if recordsBatchSendErr != nil {
-	// 					conf.getLogger().
-	// 						Error().
-	// 						Str("type", errorTypeApp).
-	// 						Str("on", "record-batch-send").
-	// 						Str("error", recordsBatchSendErr.Error()).
-	// 						Send()
-	// 				}
-
-	// 				storage.cleanRecords()
-	// 			}
-
-	// 			//
-	// 			// client errors
-	// 			//
-	// 			if storage.clientErrorCount > 0 {
-	// 				clientErrors := storage.getClientErrors()
-
-	// 				clientErrorsBatch, clientErrorsBatchErr := clickhouseConn.PrepareBatch(
-	// 					clickhouseCtx, clickhouseInsertClientErrors,
-	// 				)
-	// 				if clientErrorsBatchErr != nil {
-	// 					conf.getLogger().
-	// 						Error().
-	// 						Str("type", errorTypeApp).
-	// 						Str("on", "clickhouse-connection").
-	// 						Str("error", clientErrorsBatchErr.Error()).
-	// 						Send()
-	// 					time.Sleep(clickhouseInterval)
-	// 					return
-	// 				}
-
-	// 				for _, clientErrorByte := range clientErrors {
-	// 					clientErrorByteReader := bytes.NewReader(clientErrorByte)
-
-	// 					var ce record
-	// 					clientErrorDecodeErr := gob.NewDecoder(clientErrorByteReader).Decode(&ce)
-	// 					if clientErrorDecodeErr != nil {
-	// 						conf.getLogger().
-	// 							Error().
-	// 							Str("type", errorTypeApp).
-	// 							Str("on", "client-error-decode").
-	// 							Str("error", clientErrorDecodeErr.Error()).
-	// 							Send()
-	// 						continue
-	// 					}
-
-	// 					insertErr := insertClientErrBatch(clientErrorsBatch, ce)
-
-	// 					if insertErr != nil {
-	// 						conf.getLogger().
-	// 							Error().
-	// 							Str("type", errorTypeApp).
-	// 							Str("on", "client-error-insert").
-	// 							Str("error", insertErr.Error()).
-	// 							Send()
-	// 					}
-	// 					inserts += 1
-	// 				}
-
-	// 				clientErrorsBatchSendErr := clientErrorsBatch.Send()
-	// 				if clientErrorsBatchSendErr != nil {
-	// 					conf.getLogger().
-	// 						Error().
-	// 						Str("type", errorTypeApp).
-	// 						Str("on", "client-error-batch-send").
-	// 						Str("error", clientErrorsBatchSendErr.Error()).
-	// 						Send()
-	// 				}
-
-	// 				storage.cleanRecords()
-	// 			}
-
-	// 			if inserts > 0 {
-	// 				endTime := time.Now().UnixMilli()
-	// 				inSeconds := (float64(endTime) - float64(startTime)) / 1000
-	// 				conf.getLogger().
-	// 					Debug().
-	// 					Msg(fmt.Sprintf("Insert %d item(s) in %.2f seconds(s)", inserts, inSeconds))
-	// 			}
-	// 		}()
-	// 		time.Sleep(clickhouseInterval)
-	// 	}
-	// }()
+			time.Sleep(clickhouseInterval)
+			func() {
+				r := workerRun(&clickhouseConfig, conf, storage)
+				if r.e != nil {
+					conf.getLogger().
+						Error().
+						Str("type", errorTypeApp).
+						Str("state", r.errorState).
+						Str("error", r.e.Error()).
+						Send()
+				} else {
+					conf.getLogger().
+						Info().
+						Int64("records", r.records).
+						Int64("clientErrors", r.clientErrors).
+						Int64("timeTaken", r.timeTaken).
+						Send()
+				}
+			}()
+		}
+	}()
 
 	conn, connErr := pgx.Connect(context.Background(), c.String("postgis-uri"))
 	if connErr != nil {
@@ -357,6 +165,14 @@ clickHouseInitStep:
 	refererParser := newRefererParser()
 	userAgentParser := newUserAgentParser()
 
-	app := newHTTPServer(conf, geoParser, refererParser, userAgentParser, projectsManager, redisClient)
+	app := newHTTPServer(
+		conf,
+		geoParser,
+		refererParser,
+		userAgentParser,
+		projectsManager,
+		storage,
+	)
+
 	return app.Listen(c.String("listen"))
 }

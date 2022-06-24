@@ -10,14 +10,6 @@ services:
       - POSTGRES_USER=geonames
       - POSTGRES_DB=geonames
 
-  analytics-redis:
-    image: redis:7-alpine
-    hostname: analytics-redis
-    container_name: analytics-redis
-    command: --save 60 1 --loglevel warning
-    volumes:
-      - ./redis:/data
-
   analytics-nginx:
     image: nginx:1-alpine
     container_name: analytics-nginx
