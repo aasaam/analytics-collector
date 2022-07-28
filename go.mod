@@ -8,7 +8,7 @@ require (
 	github.com/gofiber/adaptor/v2 v2.1.24
 	github.com/gofiber/fiber/v2 v2.34.1
 	github.com/jackc/pgx/v4 v4.16.1
-	github.com/mileusna/useragent v1.0.2
+	github.com/mileusna/useragent v1.2.0
 	github.com/oschwald/geoip2-golang v1.7.0
 	github.com/paulmach/orb v0.7.1
 	github.com/prometheus/client_golang v1.12.2
