@@ -12,7 +12,7 @@ require (
 	github.com/oschwald/geoip2-golang v1.7.0
 	github.com/paulmach/orb v0.7.1
 	github.com/prometheus/client_golang v1.12.2
-	github.com/rs/zerolog v1.27.0
+	github.com/rs/zerolog v1.28.0
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
 	github.com/urfave/cli/v2 v2.10.2
 	golang.org/x/net v0.0.0-20220617184016-355a448f1bc9
