@@ -1,0 +1,27 @@
+<clickhouse>
+  <macros>
+    <shard>01</shard>
+    <replica>cho1-01</replica>
+  </macros>
+  <default_replica_path>/clickhouse/tables/{shard}/{database}/{table}</default_replica_path>
+  <default_replica_name>{replica}</default_replica_name>
+  <remote_servers>
+    <events>
+      <shard>
+        <internal_replication>true</internal_replication>
+        <replica>
+          <host from_env="CH_SERVER_HOST" />
+          <port from_env="CH_SERVER_TCP_SECURE_PORT" />
+        </replica>
+        <replica>
+          <host from_env="CH_SERVER_OTHER2_HOST" />
+          <port from_env="CH_SERVER_OTHER2_TCP_SECURE_PORT" />
+        </replica>
+        <replica>
+          <host from_env="CH_SERVER_OTHER3_HOST" />
+          <port from_env="CH_SERVER_OTHER3_TCP_SECURE_PORT" />
+        </replica>
+      </shard>
+    </events>
+  </remote_servers>
+</clickhouse>
