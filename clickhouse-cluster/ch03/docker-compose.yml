@@ -1,0 +1,34 @@
+version: "3"
+services:
+  server:
+    image: clickhouse/clickhouse-server:22.3
+    hostname: ch03.${CH_MAIN_DOMAIN}
+    ports:
+      - "8443:8443" # HTTPS Port
+      - "9010:9010" # Interserver HTTPS Port
+      - "9444:9444" # Raft Port
+      - "9281:9281" # Keeper Server TCP Secure Port
+      - "9440:9440" # TCP Port Secure
+    volumes:
+      - /storage/clickhouse/data:/var/lib/clickhouse/
+      - /storage/clickhouse/logs:/var/log/clickhouse-server/
+      - ./config/certs:/certs/
+      - ./config/config.d:/etc/clickhouse-server/config.d
+      - ./config/config-client.xml:/etc/clickhouse-client/config.xml
+      - ./config/config.xml:/etc/clickhouse-server/config.xml
+      - ./config/users.xml:/etc/clickhouse-server/users.xml
+    env_file:
+      - ./.env
+    cap_add:
+      - SYS_NICE
+      - NET_ADMIN
+      - IPC_LOCK
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    extra_hosts:
+      - "ch01.${CH_MAIN_DOMAIN}:${CH_CH01_IP}"
+      - "ch02.${CH_MAIN_DOMAIN}:${CH_CH02_IP}"
+      - "ch03.${CH_MAIN_DOMAIN}:${CH_CH03_IP}"

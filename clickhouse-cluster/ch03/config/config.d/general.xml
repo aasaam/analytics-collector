@@ -1,0 +1,42 @@
+<clickhouse>
+  <https_port from_env="CH_HTTPS_PORT"></https_port>
+  <interserver_https_host from_env="CH_SERVER_HOST"></interserver_https_host>
+  <tcp_port_secure from_env="CH_SERVER_TCP_SECURE_PORT"></tcp_port_secure>
+  <interserver_https_port from_env="CH_INTERSERVER_HTTPS_PORT"></interserver_https_port>
+  <openSSL>
+    <server>
+      <caConfig>/certs/ca.pem</caConfig>
+      <certificateFile>/certs/server-fullchain.pem</certificateFile>
+      <privateKeyFile>/certs/server-key.pem</privateKeyFile>
+      <dhParamsFile>/certs/dhparam.pem</dhParamsFile>
+      <verificationMode>strict</verificationMode>
+      <loadDefaultCAFile>false</loadDefaultCAFile>
+      <disableProtocols>sslv2,sslv3</disableProtocols>
+      <cacheSessions>true</cacheSessions>
+      <preferServerCiphers>true</preferServerCiphers>
+      <requireTLSv1_2>true</requireTLSv1_2>
+      <verificationDepth>1</verificationDepth>
+      <cipherList>ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384</cipherList>
+      <invalidCertificateHandler>
+          <name>RejectCertificateHandler</name>
+      </invalidCertificateHandler>
+
+    </server>
+    <client>
+      <caConfig>/certs/ca.pem</caConfig>
+      <certificateFile>/certs/client-fullchain.pem</certificateFile>
+      <privateKeyFile>/certs/client-key.pem</privateKeyFile>
+      <dhParamsFile>/certs/dhparam.pem</dhParamsFile>
+      <verificationMode>strict</verificationMode>
+      <loadDefaultCAFile>false</loadDefaultCAFile>
+      <cacheSessions>true</cacheSessions>
+      <preferServerCiphers>true</preferServerCiphers>
+      <requireTLSv1_2>true</requireTLSv1_2>
+      <verificationDepth>1</verificationDepth>
+      <cipherList>ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384</cipherList>
+      <invalidCertificateHandler>
+        <name>RejectCertificateHandler</name>
+      </invalidCertificateHandler>
+    </client>
+  </openSSL>
+</clickhouse>
