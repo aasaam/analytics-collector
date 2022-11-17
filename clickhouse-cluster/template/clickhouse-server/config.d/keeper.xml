@@ -1,0 +1,55 @@
+<clickhouse>
+  <keeper_server>
+
+    <tcp_port_secure from_env="ASM_CH_KEEPER_TCP_PORT_SECURE"></tcp_port_secure>
+    <server_id from_env="ASM_CH_CURRENT_NODE_ID" />
+    <log_storage_path>/var/lib/clickhouse/coordination/logs</log_storage_path>
+    <snapshot_storage_path>/var/lib/clickhouse/coordination/snapshots</snapshot_storage_path>
+
+    <coordination_settings>
+      <operation_timeout_ms>10000</operation_timeout_ms>
+      <session_timeout_ms>30000</session_timeout_ms>
+      <raft_logs_level from_env="ASM_CH_RAFT_LOGS_LEVEL"></raft_logs_level>
+    </coordination_settings>
+
+    <raft_configuration>
+      <server>
+        <id from_env="ASM_CH_CURRENT_NODE_ID" />
+        <hostname from_env="ASM_CH_CURRENT_NODE_HOSTNAME" />
+        <port from_env="ASM_CH_RAFT_PORT_SECURE" />
+        <secure>1</secure>
+      </server>
+      <server>
+        <id from_env="ASM_CH_OTHER_NODE_ID_1" />
+        <hostname from_env="ASM_CH_OTHER_NODE_HOSTNAME_1" />
+        <port from_env="ASM_CH_RAFT_PORT_SECURE" />
+        <secure>1</secure>
+      </server>
+      <server>
+        <id from_env="ASM_CH_OTHER_NODE_ID_2" />
+        <hostname from_env="ASM_CH_OTHER_NODE_HOSTNAME_2" />
+        <port from_env="ASM_CH_RAFT_PORT_SECURE" />
+        <secure>1</secure>
+      </server>
+    </raft_configuration>
+  </keeper_server>
+
+  <zookeeper>
+    <node>
+      <host from_env="ASM_CH_CURRENT_NODE_HOSTNAME" />
+      <port from_env="ASM_CH_KEEPER_TCP_PORT_SECURE" />
+      <secure>1</secure>
+    </node>
+    <node>
+      <host from_env="ASM_CH_OTHER_NODE_HOSTNAME_1" />
+      <port from_env="ASM_CH_KEEPER_TCP_PORT_SECURE" />
+      <secure>1</secure>
+    </node>
+    <node>
+      <host from_env="ASM_CH_OTHER_NODE_ID_2" />
+      <port from_env="ASM_CH_KEEPER_TCP_PORT_SECURE" />
+      <secure>1</secure>
+    </node>
+  </zookeeper>
+
+</clickhouse>

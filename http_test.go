@@ -12,14 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func getFixtures() *fixture {
-	f, fe := fixtureLoad("./fixture.yml")
-	if fe != nil {
-		panic(fe)
-	}
-	return f
-}
-
 func TestHTTP1(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")

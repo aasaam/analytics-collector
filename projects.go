@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"sync"
 )
@@ -152,7 +153,7 @@ func (p *projects) validateIDAndURL(publicInstanceID string, requestURL *url.URL
 }
 
 func projectsLoadJSON(pathJSON string) (map[string]projectData, error) {
-	b, err := ioutil.ReadFile(pathJSON)
+	b, err := os.ReadFile(pathJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +170,7 @@ func projectsLoad(url string) (map[string]projectData, error) {
 	if err != nil {
 		return nil, err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

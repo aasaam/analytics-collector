@@ -1,3 +1,4 @@
 {
+  "editor.formatOnSave": true,
   "go.testFlags": ["-v", "-count=1"]
 }

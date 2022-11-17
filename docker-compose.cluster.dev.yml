@@ -19,34 +19,21 @@ services:
     depends_on:
       - analytics-postgis
     ports:
-      - 8080:8080
+      - 18080:8080
 
   analytics-nginx:
-    image: nginx:1-alpine
+    image: ghcr.io/aasaam/nginx-extra:latest
     container_name: analytics-nginx
     hostname: analytics-nginx
     network_mode: host
-    # ports:
-    #   - 443:443
+    ports:
+      - 80:80
+      - 443:443
     environment:
-      ASM_NGX_WORKER_PROCESSES: ${ASM_NGX_WORKER_PROCESSES:-1}
-      ASM_NGX_WORKER_RLIMIT_NOFILE: ${ASM_NGX_WORKER_RLIMIT_NOFILE:-512}
-      ASM_NGX_ERROR_LOG_LEVEL: ${ASM_NGX_ERROR_LOG_LEVEL:-debug}
-      ASM_NGX_WORKER_CONNECTIONS: ${ASM_NGX_WORKER_CONNECTIONS:-256}
-      ASM_NGX_ACCESS_LOG_COMMENT: ${ASM_NGX_ACCESS_LOG_COMMENT:-}
-      ASM_NGX_SSL_PROF_LEG_COMMENT: ${ASM_NGX_SSL_PROF_LEG_COMMENT:-}
-      ASM_NGX_SSL_PROF_INT_COMMENT: ${ASM_NGX_SSL_PROF_INT_COMMENT:-#}
-      ASM_NGX_SSL_PROF_MOD_COMMENT: ${ASM_NGX_SSL_PROF_MOD_COMMENT:-#}
-      ASM_NGX_UPSTREAM: ${ASM_NGX_UPSTREAM:-http://127.0.0.1:4000}
+      ASM_NGX_EXTRA_UPSTREAM: ${ASM_NGX_EXTRA_UPSTREAM:-http://127.0.0.1:4000}
 
     tmpfs:
-      - /cache:rw,nodev,nosuid,noexec,noatime,size=${ASM_CACHE_SIZE_MB:-1024}m
+      - /cache-fast:rw,nodev,nosuid,noexec,noatime,size=${ASM_NGX_EXTRA_PROXY_CACHE_FAST_SIZE:-192}m
     volumes:
-      - ./nginx/.defaults:/defaults:ro
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/template/default.conf:/etc/nginx/templates/default.conf.template:ro
-
+      - ./nginx/nginx.conf:/template/nginx.conf:ro
       - ./nginx/cert:/cert:ro
-
-volumes:
-  clickhouse-db:

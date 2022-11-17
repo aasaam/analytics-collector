@@ -1,0 +1,57 @@
+version: "3"
+services:
+  analytics-clickhouse:
+    image: clickhouse/clickhouse-server:22.3
+    container_name: analytics-clickhouse
+    hostname: ${ASM_CH_CURRENT_NODE_NAME}.${ASM_CH_DOMAIN}
+    ports:
+      - "8443:8443" # HTTPS Port
+      - "9440:9440" # TCP Port Secure
+      - "9010:9010" # Interserver HTTPS Port
+      - "9234:9234" # Raft Secure Port
+      - "9281:9281" # Keeper Server TCP Secure Port
+    volumes:
+      # storage
+      - /storage/clickhouse/data:/var/lib/clickhouse/
+      - /storage/clickhouse/logs:/var/log/clickhouse-server/
+
+      # certificates
+      - ./cert:/cert
+
+      # configuration:schema
+      - ./schema.sql:/schema.sql:ro
+
+      # configuration:client
+      - ./clickhouse-client/config.xml:/etc/clickhouse-client/config.xml:ro
+      # configuration:server
+      - ./clickhouse-server:/etc/clickhouse-server:ro
+
+    env_file:
+      - ./.env
+
+    environment:
+      - ASM_CH_CURRENT_NODE_HOSTNAME=${ASM_CH_CURRENT_NODE_NAME}.${ASM_CH_DOMAIN}
+      - ASM_CH_OTHER_NODE_HOSTNAME_1=${ASM_CH_OTHER_NODE_NAME_1}.${ASM_CH_DOMAIN}
+      - ASM_CH_OTHER_NODE_HOSTNAME_2=${ASM_CH_OTHER_NODE_NAME_2}.${ASM_CH_DOMAIN}
+      - ASM_CH_REPLICA_NAME=${ASM_CH_CURRENT_NODE_NAME}-01
+
+    cap_add:
+      - SYS_NICE
+      - NET_ADMIN
+      - IPC_LOCK
+
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=clickhouse-replica CONTAINER=clickhouse NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+
+    extra_hosts:
+      - "ch01.${ASM_CH_DOMAIN}:${ASM_CH_NODE1_IP}"
+      - "ch02.${ASM_CH_DOMAIN}:${ASM_CH_NODE2_IP}"
+      - "ch03.${ASM_CH_DOMAIN}:${ASM_CH_NODE3_IP}"

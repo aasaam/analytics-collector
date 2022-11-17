@@ -9,22 +9,27 @@ import (
 )
 
 // ineffassign: ignore
+//
 //go:embed embed/build/a.js
 var embedADotJS []byte
 
 // ineffassign: ignore
+//
 //go:embed embed/build/a.src.js
 var embedASrcDotJS []byte
 
 // ineffassign: ignore
+//
 //go:embed embed/build/l.js
 var embedLDotJS []byte
 
 // ineffassign: ignore
+//
 //go:embed embed/build/l.src.js
 var embedLSrcDotJS []byte
 
 // ineffassign: ignore
+//
 //go:embed embed/build/amp.json
 var embedAmpDotJSON []byte
 

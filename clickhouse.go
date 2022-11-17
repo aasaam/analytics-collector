@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -55,7 +55,7 @@ func clickhouseGetConnection(c *clickhouseConfig) (driver.Conn, context.Context,
 
 	var chTLS *tls.Config = nil
 	if c.rootCAPath != "" {
-		caCert, caCertErr := ioutil.ReadFile(c.rootCAPath)
+		caCert, caCertErr := os.ReadFile(c.rootCAPath)
 		if caCertErr != nil {
 			return nil, nil, caCertErr
 		}

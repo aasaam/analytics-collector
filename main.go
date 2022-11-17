@@ -134,7 +134,7 @@ func main() {
 				&cli.StringFlag{
 					Name:     "clickhouse-username",
 					Usage:    "Clickhouse username",
-					Value:    "analytics",
+					Value:    "default",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_USERNAME"},
 				},
@@ -246,6 +246,14 @@ func main() {
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_FIXTURE_PATH"},
 				},
 
+				&cli.IntFlag{
+					Name:     "fixture-number",
+					Usage:    "Number of each record try to insert",
+					Value:    30,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_FIXTURE_NUMBER"},
+				},
+
 				// clickhouse
 				&cli.IntFlag{
 					Name:     "clickhouse-interval",
@@ -271,7 +279,7 @@ func main() {
 				&cli.StringFlag{
 					Name:     "clickhouse-username",
 					Usage:    "Clickhouse username",
-					Value:    "analytics",
+					Value:    "default",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_USERNAME"},
 				},

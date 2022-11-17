@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-var sampleIPString = "1.1.1.1"
+var sampleIPString = "4.2.2.4"
 
 func getGeoParser() *geoParser {
 	postgisConnectionString := os.Getenv("POSTGIS_URI")
@@ -41,12 +41,13 @@ func TestGeoIPParser1(t *testing.T) {
 
 	parsedIP1 := geoParser.newResultFromIP(ip)
 	if len(parsedIP1.GeoIPCountry) != 2 {
-		t.Errorf("invalid parsed data")
+		t.Errorf("invalid parsed data country")
 	}
 
 	parsedIP2 := geoParser.newResultFromIP(ip)
-	if !strings.Contains(strings.ToLower(parsedIP2.GeoIPAutonomousSystemOrganization), "cloudflare") {
-		t.Errorf("invalid parsed data")
+
+	if !strings.Contains(strings.ToLower(parsedIP2.GeoIPAutonomousSystemOrganization), "level") {
+		t.Errorf("invalid parsed data isp")
 	}
 
 	parsedIP3 := geoParser.newResultFromIP(nil)

@@ -14,6 +14,18 @@ func mainFixture(c *cli.Context) error {
 		c.String("collector-url"),
 	)
 
+	numberOfFixtures := c.Int("fixture-number")
+	if numberOfFixtures < 1 {
+		numberOfFixtures = 1
+	} else if numberOfFixtures > 100 {
+		numberOfFixtures = 100
+	}
+
+	conf.getLogger().
+		Info().
+		Int("fixture-number", numberOfFixtures).
+		Msg("Number of records on each cycle")
+
 	f, fE := fixtureLoad(c.String("fixture-path"))
 	if fE != nil {
 		return fE
@@ -66,13 +78,15 @@ clickHouseInitStep:
 
 	for {
 		go func() {
-			for i := 0; i <= 30; i++ {
+
+			for i := 0; i <= numberOfFixtures; i++ {
 				r := f.record(refererParser, userAgentParser)
 				rb, rbE := r.finalize()
 				if rbE == nil {
 					storage.addRecord(rb)
 				}
 			}
+
 			r := workerRun(&clickhouseConfig, conf, storage)
 			if r.e != nil {
 				conf.getLogger().

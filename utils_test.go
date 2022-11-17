@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -138,6 +139,8 @@ func TestGetCursorID(t *testing.T) {
 	c1, _ := getCursorID()
 	time.Sleep(time.Duration(2) * time.Millisecond)
 	c2, _ := getCursorID()
+	fmt.Println(c1)
+	fmt.Println(c2)
 	if c1 == c2 {
 		t.Errorf("must not same cursor")
 	}
