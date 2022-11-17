@@ -43,8 +43,8 @@ jobs:
 
           docker build -f Dockerfile.nginx -t aasaam/analytics-collector-nginx .
           docker push aasaam/analytics-collector-nginx
-          docker tag aasaam/aasaam/analytics-collector-nginx ghcr.io/aasaam/aasaam/analytics-collector-nginx:latest
-          docker push ghcr.io/aasaam/aasaam/analytics-collector-nginx:latest
+          docker tag aasaam/analytics-collector-nginx ghcr.io/aasaam/analytics-collector-nginx:latest
+          docker push ghcr.io/aasaam/analytics-collector-nginx:latest
 
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v2

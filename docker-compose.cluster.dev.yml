@@ -26,9 +26,9 @@ services:
     container_name: analytics-nginx
     hostname: analytics-nginx
     network_mode: host
-    ports:
-      - 80:80
-      - 443:443
+    # ports:
+    #   - 80:80
+    #   - 443:443
     environment:
       ASM_NGX_EXTRA_UPSTREAM: ${ASM_NGX_EXTRA_UPSTREAM:-http://127.0.0.1:4000}
 
