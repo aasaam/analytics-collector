@@ -23,4 +23,4 @@ cp tmp/analytics-client/dist/*.json embed/build/
 
 wget -O embed/build/user_agents.yaml 'https://raw.githubusercontent.com/ua-parser/uap-core/master/regexes.yaml'
 
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o analytics-collector
+# CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o analytics-collector
