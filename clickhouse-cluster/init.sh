@@ -65,14 +65,12 @@ for i in $(seq 1 3); do
 
   sed -i "s+__ASM_COLLECTOR_DOMAIN__+$ASM_COLLECTOR_DOMAIN+g" $NODE_PATH/.env
 
-  rm -rf $NODE_PATH/nginx-exposer/acl.ch.conf
-  touch $NODE_PATH/nginx-exposer/acl.ch.conf
-  echo "allow $ASM_CH_NODE1_IP;" >> $NODE_PATH/nginx-exposer/acl.ch.conf
-  echo "allow $ASM_CH_NODE2_IP;" >> $NODE_PATH/nginx-exposer/acl.ch.conf
-  echo "allow $ASM_CH_NODE3_IP;" >> $NODE_PATH/nginx-exposer/acl.ch.conf
-
-  cat $NODE_PATH/nginx-exposer/acl.ch.conf > $NODE_PATH/nginx-exposer/acl.app.conf
-  echo "allow $ASM_CH_APP_IP;" >> $NODE_PATH/nginx-exposer/acl.app.conf
+  rm -rf $NODE_PATH/nginx-exposer/acl.conf
+  touch $NODE_PATH/nginx-exposer/acl.conf
+  echo "allow $ASM_CH_NODE1_IP;" >> $NODE_PATH/nginx-exposer/acl.conf
+  echo "allow $ASM_CH_NODE2_IP;" >> $NODE_PATH/nginx-exposer/acl.conf
+  echo "allow $ASM_CH_NODE3_IP;" >> $NODE_PATH/nginx-exposer/acl.conf
+  echo "allow $ASM_CH_APP_IP;" >> $NODE_PATH/nginx-exposer/acl.conf
 
   sed -i "s+__ASM_COLLECTOR_DOMAIN__+$ASM_COLLECTOR_DOMAIN+g" $NODE_PATH/get-public-cert.sh
   chmod 500 $NODE_PATH/get-public-cert.sh

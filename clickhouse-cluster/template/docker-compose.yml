@@ -56,15 +56,20 @@ services:
     depends_on:
       - analytics-clickhouse
     ports:
-      - "8443:8443" # HTTPS Port
-      - "9440:9440" # TCP Port Secure
-      - "9010:9010" # Interserver HTTPS Port
-      - "9234:9234" # Raft Secure Port
-      - "9281:9281" # Keeper Server TCP Secure Port
+      - "0.0.0.0:8443:8443" # HTTPS Port
+      - "0.0.0.0:9440:9440" # TCP Port Secure
+      - "0.0.0.0:9010:9010" # Interserver HTTPS Port
+      - "0.0.0.0:9234:9234" # Raft Secure Port
+      - "0.0.0.0:9234:9234/udp" # Raft Secure Port (UDP)
+      - "0.0.0.0:9281:9281" # Keeper Server TCP Secure Port
 
     volumes:
       - ./nginx-exposer/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx-exposer/default.conf:/etc/nginx/templates/default.conf:ro
+      - ./nginx-exposer/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx-exposer/acl.conf:/acl.conf:ro
+
+    env_file:
+      - ./.env
 
     logging:
       driver: "journald"
@@ -92,8 +97,18 @@ services:
       - analytics-postgis
     container_name: analytics-collector
     hostname: analytics-collector
+    command: run
+
+    volumes:
+      - ./cert:/cert:ro
+
     env_file:
       - ./.env
+
+    extra_hosts:
+      - "ch01.${ASM_CH_DOMAIN}:${ASM_CH_NODE1_IP}"
+      - "ch02.${ASM_CH_DOMAIN}:${ASM_CH_NODE2_IP}"
+      - "ch03.${ASM_CH_DOMAIN}:${ASM_CH_NODE3_IP}"
 
     logging:
       driver: "journald"
@@ -107,10 +122,10 @@ services:
     depends_on:
       - analytics-collector
     ports:
-      - 80:80
-      - 443:443
+      - 0.0.0.0:80:80
+      - 0.0.0.0:443:443
     volumes:
-      - ./public-cert:/public-cert:ro
+      - ./public-cert:/cert:ro
     env_file:
       - ./.env
 
