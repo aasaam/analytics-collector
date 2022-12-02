@@ -4,12 +4,12 @@ set -e
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-if [ -n "CLOUDFLARE_DNS_API_TOKEN" ]; then
+if [ -z "CLOUDFLARE_DNS_API_TOKEN" ]; then
   echo "CLOUDFLARE_DNS_API_TOKEN not defined"
   exit 1
 fi
 
-if [ -n "EMAIL" ]; then
+if [ -z "EMAIL" ]; then
   echo "EMAIL not defined"
   exit 1
 fi
@@ -28,7 +28,7 @@ fi
 
 cd $SCRIPT_DIR
 
-CLOUDFLARE_DNS_API_TOKEN="$CLOUDFLARE_DNS_API_TOKEN" ./lego --email "$EMAIL" --dns cloudflare --domains __ASM_COLLECTOR_DOMAIN__ --domains *.__ASM_COLLECTOR_DOMAIN__ run
+CLOUDFLARE_DNS_API_TOKEN="$CLOUDFLARE_DNS_API_TOKEN" ./lego --email "$EMAIL" --dns cloudflare --key-type rsa2048 --domains __ASM_COLLECTOR_DOMAIN__ --domains *.__ASM_COLLECTOR_DOMAIN__ run
 cp ./.lego/certificates/__ASM_COLLECTOR_DOMAIN__.crt ./public-cert/fullchain.pem
 cp ./.lego/certificates/__ASM_COLLECTOR_DOMAIN__.issuer.crt ./public-cert/chain.pem
 cp ./.lego/certificates/__ASM_COLLECTOR_DOMAIN__.key ./public-cert/privkey.pem
