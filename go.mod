@@ -3,7 +3,7 @@ module github.com/aasaam/analytics-collector
 go 1.19
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.4.2
+	github.com/ClickHouse/clickhouse-go/v2 v2.4.3
 	github.com/brianvoe/gofakeit/v6 v6.19.0
 	github.com/gofiber/adaptor/v2 v2.1.30
 	github.com/gofiber/fiber/v2 v2.40.1
