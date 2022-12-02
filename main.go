@@ -34,7 +34,7 @@ func main() {
 				&cli.StringFlag{
 					Name:     "log-level",
 					Usage:    "Could be one of `panic`, `fatal`, `error`, `warn`, `info`, `debug` or `trace`",
-					Value:    "debug",
+					Value:    "warn",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_LOG_LEVEL"},
 				},
@@ -57,8 +57,8 @@ func main() {
 
 				&cli.Int64Flag{
 					Name:     "static-cache-ttl",
-					Usage:    "Application listen http ip:port address",
-					Value:    4 * 3600,
+					Usage:    "Static cache max age for none versioning assets",
+					Value:    8 * 3600,
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_STATIC_CACHE_TTL"},
 				},
@@ -94,6 +94,7 @@ func main() {
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_MANAGEMENT_PROJECTS_ENDPOINT"},
 				},
+
 				&cli.StringFlag{
 					Name:     "management-projects-json",
 					Usage:    "Path of JSON file of projects",
@@ -101,6 +102,7 @@ func main() {
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_MANAGEMENT_PROJECTS_JSON"},
 				},
+
 				&cli.Int64Flag{
 					Name:     "management-call-interval",
 					Usage:    "Call update for projects in seconds",
@@ -119,7 +121,7 @@ func main() {
 				},
 				&cli.StringFlag{
 					Name:     "clickhouse-servers",
-					Usage:    "Comma separeted clickhouse ip:port",
+					Usage:    "Comma separated clickhouse ip:port",
 					Value:    "127.0.0.1:9440",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_SERVERS"},
@@ -197,21 +199,21 @@ func main() {
 				&cli.StringFlag{
 					Name:     "clickhouse-root-ca",
 					Usage:    "Clickhouse Root CA path",
-					Value:    "./clickhouse/cert/ca.pem",
+					Value:    "./cert/ca.pem",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_ROOT_CA"},
 				},
 				&cli.StringFlag{
 					Name:     "clickhouse-client-cert",
 					Usage:    "Clickhouse Client certificate path",
-					Value:    "./clickhouse/cert/client-fullchain.pem",
+					Value:    "./cert/client-fullchain.pem",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_CLIENT_CERT"},
 				},
 				&cli.StringFlag{
 					Name:     "clickhouse-client-key",
 					Usage:    "Clickhouse Client key path",
-					Value:    "./clickhouse/cert/client-key.pem",
+					Value:    "./cert/client-key.pem",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_CLIENT_KEY"},
 				},
@@ -233,7 +235,7 @@ func main() {
 				&cli.StringFlag{
 					Name:     "log-level",
 					Usage:    "Could be one of `panic`, `fatal`, `error`, `warn`, `info`, `debug` or `trace`",
-					Value:    "debug",
+					Value:    "warn",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_LOG_LEVEL"},
 				},
@@ -264,7 +266,7 @@ func main() {
 				},
 				&cli.StringFlag{
 					Name:     "clickhouse-servers",
-					Usage:    "Comma separeted clickhouse ip:port",
+					Usage:    "Comma separated clickhouse ip:port",
 					Value:    "127.0.0.1:9440",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_SERVERS"},
@@ -342,21 +344,21 @@ func main() {
 				&cli.StringFlag{
 					Name:     "clickhouse-root-ca",
 					Usage:    "Clickhouse Root CA path",
-					Value:    "./clickhouse/cert/ca.pem",
+					Value:    "./cert/ca.pem",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_ROOT_CA"},
 				},
 				&cli.StringFlag{
 					Name:     "clickhouse-client-cert",
 					Usage:    "Clickhouse Client certificate path",
-					Value:    "./clickhouse/cert/client-fullchain.pem",
+					Value:    "./cert/client-fullchain.pem",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_CLIENT_CERT"},
 				},
 				&cli.StringFlag{
 					Name:     "clickhouse-client-key",
 					Usage:    "Clickhouse Client key path",
-					Value:    "./clickhouse/cert/client-key.pem",
+					Value:    "./cert/client-key.pem",
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_CLIENT_KEY"},
 				},

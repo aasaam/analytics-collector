@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<clickhouse>
-  <users>
-    <default remove="remove"></default>
-    <analytics>
-      <password_sha256_hex from_env="CLICKOUSE_PASSWORD_SHA256_HEX" />
-    </analytics>
-  </users>
-</clickhouse>

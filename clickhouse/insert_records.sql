@@ -29,7 +29,7 @@ INSERT INTO Records (
   PLang                                       , -- LowCardinality(String),
   PEntityID                                   , -- String,
   PEntityModule                               , -- String,
-  PEntityTaxonomyID                           , -- LowCardinality(String),
+  PEntityTaxonomyID                           , -- UInt16,
   PKeywords                                   , -- Array(String),
 
   -- referer

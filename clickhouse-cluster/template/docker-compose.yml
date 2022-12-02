@@ -4,16 +4,10 @@ services:
     image: clickhouse/clickhouse-server:22.3
     container_name: analytics-clickhouse
     hostname: ${ASM_CH_CURRENT_NODE_NAME}.${ASM_CH_DOMAIN}
-    ports:
-      - "8443:8443" # HTTPS Port
-      - "9440:9440" # TCP Port Secure
-      - "9010:9010" # Interserver HTTPS Port
-      - "9234:9234" # Raft Secure Port
-      - "9281:9281" # Keeper Server TCP Secure Port
     volumes:
       # storage
-      - /storage/clickhouse/data:/var/lib/clickhouse/
-      - /storage/clickhouse/logs:/var/log/clickhouse-server/
+      - /data/persist/analytics-clickhouse/data:/var/lib/clickhouse/
+      - /data/persist/analytics-clickhouse/logs:/var/log/clickhouse-server/
 
       # certificates
       - ./cert:/cert
@@ -46,12 +40,81 @@ services:
         soft: 262144
         hard: 262144
 
-    logging:
-      driver: "journald"
-      options:
-        tag: "container:APP=analytics-clickhouse TYPE=clickhouse-replica CONTAINER=clickhouse NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
-
     extra_hosts:
       - "ch01.${ASM_CH_DOMAIN}:${ASM_CH_NODE1_IP}"
       - "ch02.${ASM_CH_DOMAIN}:${ASM_CH_NODE2_IP}"
       - "ch03.${ASM_CH_DOMAIN}:${ASM_CH_NODE3_IP}"
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=clickhouse-replica NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+
+  analytics-nginx-exposer:
+    image: nginx:1-alpine
+    container_name: analytics-nginx-exposer
+    depends_on:
+      - analytics-clickhouse
+    ports:
+      - "8443:8443" # HTTPS Port
+      - "9440:9440" # TCP Port Secure
+      - "9010:9010" # Interserver HTTPS Port
+      - "9234:9234" # Raft Secure Port
+      - "9281:9281" # Keeper Server TCP Secure Port
+
+    volumes:
+      - ./nginx-exposer/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-exposer/default.conf:/etc/nginx/templates/default.conf:ro
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=nginx-exposer NODE_ID=${ASM_CH_CURRENT_NODE_ID} NGINX_STREAM_DOCKER_EXPOSER=1"
+
+  analytics-postgis:
+    image: ghcr.io/aasaam/geonames-postgis:latest
+    container_name: analytics-postgis
+    hostname: analytics-postgis
+
+    environment:
+      - POSTGRES_PASSWORD=geonames
+      - POSTGRES_USER=geonames
+      - POSTGRES_DB=geonames
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=postgres NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+
+  analytics-collector:
+    image: ghcr.io/aasaam/analytics-collector:latest
+    depends_on:
+      - analytics-postgis
+    container_name: analytics-collector
+    hostname: analytics-collector
+    env_file:
+      - ./.env
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=golang NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+
+  analytics-collector-nginx:
+    image: ghcr.io/aasaam/analytics-collector-nginx:latest
+    container_name: analytics-collector
+    hostname: analytics-collector
+    depends_on:
+      - analytics-collector
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./public-cert:/public-cert:ro
+    env_file:
+      - ./.env
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=nginx NODE_ID=${ASM_CH_CURRENT_NODE_ID}"

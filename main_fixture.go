@@ -14,12 +14,7 @@ func mainFixture(c *cli.Context) error {
 		c.String("collector-url"),
 	)
 
-	numberOfFixtures := c.Int("fixture-number")
-	if numberOfFixtures < 1 {
-		numberOfFixtures = 1
-	} else if numberOfFixtures > 100 {
-		numberOfFixtures = 100
-	}
+	numberOfFixtures := intMinMax(c.Int("fixture-number"), 1, 100)
 
 	conf.getLogger().
 		Info().
@@ -100,7 +95,7 @@ clickHouseInitStep:
 					Info().
 					Int64("records", r.records).
 					Int64("clientErrors", r.clientErrors).
-					Int64("timeTaken", r.timeTaken).
+					Int64("timeTakenMS", r.timeTakenMS).
 					Send()
 			}
 

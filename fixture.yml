@@ -1,5 +1,4 @@
 ---
-
 # true: now
 # false: date random between `Fri, 01 Jan 2020 00:00:00 UTC` until now
 Created:
@@ -51,7 +50,6 @@ Titles:
 
   # other langs if not found append ans english titles so `en` not needed
 
-
 PLang:
   - en
   - en
@@ -70,37 +68,38 @@ PublicInstanceID:
     - www.example.net
 
 PEntityTaxonomyID:
-  - A0001
-  - A0002
-  - G0001
-  -
+  - 3
+  - 19
+  - 16
+  - 16
+  - 16
+  - 0
+  - 0
+  - 0
+  - 0
 
 Geo:
-  -
-    Country: IR
+  - Country: IR
     Lat:
       - 30
       - 36
     Lon:
       - 48
       - 59
-  -
-    Country: DE
+  - Country: DE
     Lat:
       - 50
       - 53
     Lon:
       - 8
       - 13
-  -
-    Country: US
+  - Country: US
     Lat:
       - 34
       - 45
     Lon:
       - -116
       - -84
-
 
 PIsIframe:
   - true

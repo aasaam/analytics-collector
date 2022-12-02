@@ -12,7 +12,10 @@ RUN cd /src \
   && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o analytics-collector \
   && ls -lah /src/analytics-collector
 
-FROM scratch
+FROM alpine:latest
+USER root
+RUN apk --no-cache add ca-certificates \
+  && update-ca-certificates
 
 ENV ASM_ANALYTICS_COLLECTOR_MMDB_ASN_PATH="/GeoLite2-ASN.mmdb" \
   ASM_ANALYTICS_COLLECTOR_MMDB_CITY_PATH="/GeoLite2-City.mmdb" \

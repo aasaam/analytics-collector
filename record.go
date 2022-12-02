@@ -72,7 +72,7 @@ type record struct {
 
 	PEntityID         string
 	PEntityModule     string
-	PEntityTaxonomyID string
+	PEntityTaxonomyID uint16
 	PURL              string
 	pURL              *url.URL
 	PCanonicalURL     string
@@ -201,14 +201,7 @@ func (r *record) setAPI(
 }
 
 func (r *record) isPageView() bool {
-	if r.Mode == recordModePageViewJavaScript ||
-		r.Mode == recordModePageViewAMP ||
-		r.Mode == recordModePageViewImageLegacy ||
-		r.Mode == recordModePageViewImageNoScript ||
-		r.Mode == recordModePageViewAMPImage {
-		return true
-	}
-	return false
+	return r.Mode < 100
 }
 
 func (r *record) isImage() bool {

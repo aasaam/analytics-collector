@@ -46,11 +46,11 @@ func TestSanitizeLanguage(t *testing.T) {
 	}
 }
 func TestSanitizeEntityTaxonomyID(t *testing.T) {
-	if sanitizeEntityTaxonomyID("G0000") != "G0000" {
+	if sanitizeEntityTaxonomyID("100") != 100 {
 		t.Errorf("invalid sanitize")
 	}
 
-	if sanitizeEntityTaxonomyID("!!!") != "" {
+	if sanitizeEntityTaxonomyID("!!!") != 0 {
 		t.Errorf("invalid sanitize")
 	}
 }

@@ -30,7 +30,7 @@ func staticCache(c *fiber.Ctx) {
 	c.Set(nginxXAccelExpires, "31536000")
 }
 
-func staticCacheLimit(c *fiber.Ctx) {
+func staticCacheLimit(c *fiber.Ctx, ttl uint) {
 	c.Set(fiber.HeaderCacheControl, "public, max-age=86400")
 	c.Set(nginxXAccelExpires, "86400")
 }

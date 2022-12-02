@@ -1,6 +1,7 @@
 FROM ghcr.io/aasaam/nginx-extra:latest
 
 ENV ASM_NGX_EXTRA_UPSTREAM=http://analytics-collector:4000
+ENV ASM_NGX_EXTRA_SSL_PROFILE=legacy
 
 ADD nginx/nginx.conf /template/nginx.conf
 ADD nginx/cert /cert

@@ -47,9 +47,9 @@ CREATE TABLE IF NOT EXISTS analytics.ClientErrors
   Created                                     Datetime
 )
 ENGINE = ReplicatedMergeTree('/clickhouse/tables/{shard}/analytics/ClientErrors', '{replica}')
-ORDER BY (Created, xxHash32(PURLChecksum))
+ORDER BY (Created, xxHash32(PublicInstanceID))
 PARTITION BY toYYYYMM(Created)
-SAMPLE BY (xxHash32(PURLChecksum));
+TTL Created + INTERVAL 1 WEEK;
 
 -- Records
 CREATE TABLE IF NOT EXISTS analytics.Records
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   PLang                                       LowCardinality(String),
   PEntityID                                   String,
   PEntityModule                               String,
-  PEntityTaxonomyID                           LowCardinality(String),
+  PEntityTaxonomyID                           UInt16,
   PKeywords                                   Array(String),
 
   -- referer
@@ -215,6 +215,6 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   Created                                     Datetime
 )
 ENGINE = ReplicatedMergeTree('/clickhouse/tables/{shard}/analytics/Records', '{replica}')
-ORDER BY (Created, xxHash32(CidUserChecksum))
+ORDER BY (Created, Mode, xxHash32(PublicInstanceID))
 PARTITION BY toYYYYMM(Created)
-SAMPLE BY (xxHash32(CidUserChecksum));
+SAMPLE BY (xxHash32(PublicInstanceID));

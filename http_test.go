@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http/httptest"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -187,7 +188,7 @@ func TestHTTP2(t *testing.T) {
 			url.QueryEscape(r.PLang),
 			url.QueryEscape(r.PEntityID),
 			url.QueryEscape(r.PEntityModule),
-			url.QueryEscape(r.PEntityTaxonomyID),
+			url.QueryEscape(strconv.Itoa(int(r.PEntityTaxonomyID))),
 		), nil)
 
 		rq3.Header.Set(fiber.HeaderXForwardedFor, r.IP.String())

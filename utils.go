@@ -23,9 +23,17 @@ var sanitizeTitleRegex = regexp.MustCompile(`[^a-zA-Z0-9]`)
 var sanitizeMoreSpaceRegex = regexp.MustCompile(`[\s]+`)
 var sanitizeNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{1,31}$`)
 var entityIDRegex = regexp.MustCompile(`^[a-zA-Z0-9-_\/]{1,63}$`)
-var entityTaxonomyIDRegex = regexp.MustCompile(`^[A-Z]{1}[0-9a-z]{4}$`)
 var checksumReplaceRegex = regexp.MustCompile(`[^a-zA-Z0-9]`)
 var cursorTimeLayout = "20060102030405.000"
+
+func intMinMax(v int, min int, max int) int {
+	if v < min {
+		return min
+	} else if v > max {
+		return max
+	}
+	return v
+}
 
 func uint16FromString(s string) uint16 {
 	i, err := strconv.Atoi(s)
@@ -180,11 +188,12 @@ func sanitizeLanguage(locale string) string {
 	return base.String()
 }
 
-func sanitizeEntityTaxonomyID(id string) string {
-	if ok := entityTaxonomyIDRegex.MatchString(id); ok {
-		return id
+func sanitizeEntityTaxonomyID(id string) uint16 {
+	v, vErr := strconv.ParseUint(id, 10, 16)
+	if vErr == nil {
+		return uint16(v)
 	}
-	return ""
+	return 0
 }
 
 func parseKeywords(inpKeywords string) []string {

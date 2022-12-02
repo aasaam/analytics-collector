@@ -1,0 +1,32 @@
+<config>
+  <openSSL>
+    <client>
+      <caConfig>/cert/ca.pem</caConfig>
+      <certificateFile>/cert/client-fullchain.pem</certificateFile>
+      <privateKeyFile>/cert/client-key.pem</privateKeyFile>
+      <dhParamsFile>/cert/dhparam.pem</dhParamsFile>
+      <verificationMode>strict</verificationMode>
+      <loadDefaultCAFile>false</loadDefaultCAFile>
+      <cacheSessions>true</cacheSessions>
+      <preferServerCiphers>true</preferServerCiphers>
+      <requireTLSv1_2>true</requireTLSv1_2>
+      <verificationDepth>1</verificationDepth>
+      <cipherList>ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384</cipherList>
+      <invalidCertificateHandler>
+        <name>RejectCertificateHandler</name>
+      </invalidCertificateHandler>
+    </client>
+  </openSSL>
+
+  <prompt_by_server_display_name>
+    <default>{display_name} :) </default>
+    <test>{display_name} \x01\e[1;32m\x02:)\x01\e[0m\x02 </test>
+    <production>{display_name} \x01\e[1;31m\x02:)\x01\e[0m\x02 </production>
+  </prompt_by_server_display_name>
+
+  <host>127.0.0.1</host>
+  <port from_env="ASM_CH_TCP_PORT_SECURE"></port>
+  <password from_env="ASM_CH_PASSWORD"></password>
+  <secure>1</secure>
+
+</config>

@@ -4,7 +4,7 @@
 
 Using following steps:
 
-1. Go to `clickhouse/cert`
+1. Go to `cert`
 2. Download latest [cfssl](https://github.com/cloudflare/cfssl):
 
    ```bash

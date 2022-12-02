@@ -143,7 +143,7 @@ clickHouseInitStep:
 						Info().
 						Int64("records", r.records).
 						Int64("clientErrors", r.clientErrors).
-						Int64("timeTaken", r.timeTaken).
+						Int64("timeTakenMS", r.timeTakenMS).
 						Send()
 				}
 			}()

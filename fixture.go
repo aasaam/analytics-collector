@@ -34,7 +34,7 @@ type fixture struct {
 	} `yaml:"Geo"`
 	Mode              []string            `yaml:"Mode"`
 	UserAgent         []string            `yaml:"UserAgent"`
-	PEntityTaxonomyID []string            `yaml:"PEntityTaxonomyID"`
+	PEntityTaxonomyID []uint16            `yaml:"PEntityTaxonomyID"`
 	PublicInstanceID  map[string][]string `yaml:"PublicInstanceID"`
 }
 
@@ -170,7 +170,7 @@ func (f *fixture) record(
 		}
 		entID := ""
 		entMod := ""
-		entTID := ""
+		var entTID uint16 = 0
 		if fake.Number(0, 5) == 5 {
 			entID = strconv.Itoa(fake.Number(1, 100000))
 			entMod = f.PEntityModule[rand.Intn(len(f.PEntityModule))]
@@ -184,7 +184,7 @@ func (f *fixture) record(
 			lang,
 			entID,
 			entMod,
-			entTID,
+			strconv.Itoa(int(entTID)),
 		)
 
 		// Referer

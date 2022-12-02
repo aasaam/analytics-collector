@@ -19,7 +19,7 @@ services:
     depends_on:
       - analytics-postgis
     ports:
-      - 8080:8080
+      - 18080:8080
 
   analytics-nginx:
     image: ghcr.io/aasaam/nginx-extra:latest
@@ -38,36 +38,31 @@ services:
       - ./nginx/nginx.conf:/template/nginx.conf:ro
       - ./nginx/cert:/cert:ro
 
-  analytics-clickhouse-single:
+  analytics-clickhouse:
     image: clickhouse/clickhouse-server:22.3
     restart: always
-    container_name: analytics-clickhouse-single
-    hostname: analytics-clickhouse-single
+    container_name: analytics-clickhouse
+    hostname: analytics-clickhouse
     environment:
-      # default password is `password123123`
-      CLICKOUSE_PASSWORD_SHA256_HEX: ${CLICKOUSE_PASSWORD_SHA256_HEX:-933762e2bddba897d976a4dd8fc6c78fcf8288f8be646a0816aa0c40e287b207}
+      - ASM_CH_HTTPS_PORT=${ASM_CH_HTTPS_PORT:-8443}
+      - ASM_CH_TCP_PORT_SECURE=${ASM_CH_TCP_PORT_SECURE:-9440}
+      - ASM_CH_PASSWORD=${ASM_CH_PASSWORD:-password123123}
+      - ASM_CH_LOGGER_LEVEL=${ASM_CH_LOGGER_LEVEL:-debug}
     ulimits:
       nofile:
         soft: 262144
         hard: 262144
     ports:
+      - 8443:8443
       - 9440:9440
-      - 9999:9999
     volumes:
-      - ./tmp/clickhouse-log:/var/log/clickhouse-server
-      - clickhouse-db:/var/lib/clickhouse
-      - ./clickhouse/cert:/cert:ro
-      - ./clickhouse/config.d.dev:/etc/clickhouse-server/config.d:ro
-      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml:ro
+      - ./tmp/storage/clickhouse-server:/var/log/clickhouse-server
+      - ./cert:/cert:ro
 
-  analytics-clickhouse-client:
-    image: clickhouse/clickhouse-server:22.3
-    container_name: analytics-clickhouse-client
-    hostname: analytics-clickhouse-client
-    volumes:
-      - ./clickhouse/config.d.dev:/etc/clickhouse-server/config.d:ro
-      - ./clickhouse/schema.sql:/tmp/schema.sql
-    entrypoint: tail -f /dev/null
+      # configuration:schema
+      - ./clickhouse/schema.sql:/schema.sql:ro
 
-volumes:
-  clickhouse-db:
+      # configuration:client
+      - ./clickhouse/clickhouse-client/config.xml:/etc/clickhouse-client/config.xml:ro
+      # configuration:server
+      - ./clickhouse/clickhouse-server:/etc/clickhouse-server:ro

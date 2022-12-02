@@ -1,6 +1,6 @@
 {
   "CN": "clickhouse private node",
-  "hosts": ["127.0.0.1", "*.analytics-clickhouse.net.private"],
+  "hosts": ["127.0.0.1", "localhost", "*.analytics-clickhouse.net.private"],
   "key": {
     "algo": "ecdsa",
     "size": 256

@@ -9,7 +9,7 @@ import (
 type workerRunResult struct {
 	e            error
 	errorState   string
-	timeTaken    int64
+	timeTakenMS  int64
 	records      int64
 	clientErrors int64
 }
@@ -23,7 +23,7 @@ func workerRun(
 	startTime := time.Now().UnixMilli()
 	r := workerRunResult{
 		e:            nil,
-		timeTaken:    0,
+		timeTakenMS:  0,
 		records:      0,
 		clientErrors: 0,
 	}
@@ -149,6 +149,6 @@ func workerRun(
 		r.clientErrors = insertClientErrors
 	}
 
-	r.timeTaken = time.Now().UnixMilli() - startTime
+	r.timeTakenMS = time.Now().UnixMilli() - startTime
 	return &r
 }
