@@ -77,6 +77,8 @@ for i in $(seq 1 3); do
   sed -i "s+__ASM_COLLECTOR_DOMAIN__+$ASM_COLLECTOR_DOMAIN+g" $NODE_PATH/get-public-cert.sh
   chmod 500 $NODE_PATH/get-public-cert.sh
 
+  rm -rf $NODE_PATH/tmp
+
   __NODE_ID__=$i
   __OTHER_NODE_1__="2"
   __OTHER_NODE_2__="3"

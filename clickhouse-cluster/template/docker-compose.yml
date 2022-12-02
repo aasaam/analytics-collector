@@ -102,8 +102,8 @@ services:
 
   analytics-collector-nginx:
     image: ghcr.io/aasaam/analytics-collector-nginx:latest
-    container_name: analytics-collector
-    hostname: analytics-collector
+    container_name: analytics-collector-nginx
+    hostname: analytics-collector-nginx
     depends_on:
       - analytics-collector
     ports:
