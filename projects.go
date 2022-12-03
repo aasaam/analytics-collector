@@ -14,6 +14,7 @@ import (
 
 type projects struct {
 	sync.Mutex
+	total             int
 	publicIDs         map[string]bool
 	privateKeys       map[string]string
 	cached            map[string]string
@@ -63,6 +64,7 @@ func (p *projects) load(data map[string]projectData) error {
 	wildcardDomainMap := make(map[string]string)
 	privateKeys := make(map[string]string)
 	publicIDs := make(map[string]bool)
+	total := 0
 
 	for publicID, projectData := range data {
 		publicIDs[publicID] = true
@@ -77,8 +79,10 @@ func (p *projects) load(data map[string]projectData) error {
 				wildcardDomainMap[wildcardDomain] = publicID
 			}
 		}
+		total += 1
 	}
 
+	p.total = total
 	p.cached = cached
 	p.domainMap = domainMap
 	p.wildcardDomainMap = wildcardDomainMap

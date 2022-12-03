@@ -115,8 +115,9 @@ clickHouseInitStep:
 				}
 
 				conf.getLogger().
-					Trace().
+					Info().
 					Str("type", "projects_load").
+					Int("number", projectsManager.total).
 					Bool("success", true).
 					Send()
 

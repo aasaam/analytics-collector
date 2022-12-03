@@ -14,7 +14,7 @@
   <!-- <http_port>8123</http_port> -->
 
   <!-- Not expose -->
-  <!-- <tcp_port>9000</tcp_port> -->
+  <tcp_port>9000</tcp_port>
 
   <!-- Not expose -->
   <!-- <mysql_port>9004</mysql_port> -->
@@ -36,6 +36,11 @@
   <listen_host>0.0.0.0</listen_host>
   <listen_try>0</listen_try>
 
+  <compression incl="clickhouse_compression">
+    <case>
+      <method>zstd</method>
+    </case>
+  </compression>
 
   <!-- Not expose -->
   <!-- <grpc_port>9100</grpc_port> -->
@@ -200,6 +205,12 @@
   <top_level_domains_lists></top_level_domains_lists>
   <dictionaries_config>*_dictionary.xml</dictionaries_config>
   <user_defined_executable_functions_config>*_function.xml</user_defined_executable_functions_config>
+
+  <compression>
+    <case>
+      <method>zstd</method>
+    </case>
+  </compression>
 
   <encryption_codecs></encryption_codecs>
 
