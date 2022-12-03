@@ -66,6 +66,8 @@ for i in $(seq 1 3); do
   sed -i "s+__ASM_CH_NODE3_IP__+$ASM_CH_NODE3_IP+g" $NODE_PATH/.env
 
   htpasswd -b -c $NODE_PATH/grafana.htpasswd $GRAFANA_BASIC_AUTH_USERNAME $GRAFANA_BASIC_AUTH_PASSWORD
+  echo "Username: $GRAFANA_BASIC_AUTH_USERNAME" > $NODE_PATH/grafana.README
+  echo "Password: $GRAFANA_BASIC_AUTH_PASSWORD" >> $NODE_PATH/grafana.README
 
   sed -i "s+__ASM_COLLECTOR_DOMAIN__+$ASM_COLLECTOR_DOMAIN+g" $NODE_PATH/.env
 
