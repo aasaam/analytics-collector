@@ -48,6 +48,8 @@ echo "Node 2 IP: $ASM_CH_NODE2_IP"
 echo "Node 3 IP: $ASM_CH_NODE3_IP"
 
 RANDOM_PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 32)
+GRAFANA_BASIC_AUTH_USERNAME=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 32)
+GRAFANA_BASIC_AUTH_PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 32)
 
 for i in $(seq 1 3); do
   declare "NODE_PATH"=$CURRENT_DIR/ready/ch0$i
@@ -62,6 +64,8 @@ for i in $(seq 1 3); do
   sed -i "s+__ASM_CH_NODE1_IP__+$ASM_CH_NODE1_IP+g" $NODE_PATH/.env
   sed -i "s+__ASM_CH_NODE2_IP__+$ASM_CH_NODE2_IP+g" $NODE_PATH/.env
   sed -i "s+__ASM_CH_NODE3_IP__+$ASM_CH_NODE3_IP+g" $NODE_PATH/.env
+
+  htpasswd -b -c $NODE_PATH/grafana.htpasswd $GRAFANA_BASIC_AUTH_USERNAME $GRAFANA_BASIC_AUTH_PASSWORD
 
   sed -i "s+__ASM_COLLECTOR_DOMAIN__+$ASM_COLLECTOR_DOMAIN+g" $NODE_PATH/.env
 

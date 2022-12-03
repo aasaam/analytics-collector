@@ -37,6 +37,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/template/nginx.conf:ro
       - ./nginx/cert:/cert:ro
+      - ./nginx/grafana.htpasswd:/grafana.htpasswd:ro
 
   analytics-clickhouse:
     image: clickhouse/clickhouse-server:22.3

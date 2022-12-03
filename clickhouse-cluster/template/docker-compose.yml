@@ -126,6 +126,7 @@ services:
       - 0.0.0.0:443:443
     volumes:
       - ./public-cert:/cert:ro
+      - ./grafana.htpasswd:/grafana.htpasswd:ro
     env_file:
       - ./.env
 
@@ -133,3 +134,17 @@ services:
       driver: "journald"
       options:
         tag: "container:APP=analytics-clickhouse TYPE=nginx NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+
+  analytics-grafana:
+    image: ghcr.io/aasaam/grafana:latest
+    container_name: analytics-grafana
+    hostname: analytics-grafana
+    depends_on:
+      - analytics-collector-nginx
+    entrypoint:
+      - GF_SERVER_ROOT_URL=https://${ASM_COLLECTOR_DOMAIN}/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=grafana NODE_ID=${ASM_CH_CURRENT_NODE_ID}"

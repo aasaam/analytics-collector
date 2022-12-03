@@ -19,4 +19,5 @@ ENV ASM_NGX_EXTRA_WORKER_PROCESSES="auto" \
   ASM_NGX_EXTRA_UPSTREAM="http://analytics-collector:4000"
 
 ADD nginx/nginx.conf /template/nginx.conf
+ADD nginx/grafana.htpasswd /grafana.htpasswd
 ADD nginx/cert /cert
