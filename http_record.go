@@ -25,19 +25,6 @@ func httpRecord(
 	userAgent := c.Get(fiber.HeaderUserAgent)
 
 	if recordErr != nil {
-		conf.getLogger().
-			Error().
-			Str("type", "recordError").
-			Str("error", recordErr.Error()).
-			Str("ip", ip.String()).
-			Str("contentType", c.Get(fiber.HeaderContentType)).
-			Str("method", c.Method()).
-			Str("userAgent", userAgent).
-			Str("GET", c.Request().URI().String()).
-			Str("POST", string(c.Request().Body())).
-			Str("path", c.Path()).
-			Send()
-
 		return httpErrorResponse(
 			c,
 			errorInvalidModeOrProjectPublicID,
@@ -59,10 +46,7 @@ func httpRecord(
 		record.IP = ip
 		record.GeoResult = geoParser.newResultFromIP(ip)
 		record.UserAgentResult = userAgentParser.parse(userAgent)
-
-		if record.Mode == recordModeClientError || record.Mode == recordModeClientErrorLegacy {
-			record.CID = clientIDNoneSTD([]string{ip.String(), userAgent}, clientIDTypeOther)
-		}
+		record.CID = clientIDNoneSTD([]string{ip.String(), userAgent}, clientIDTypeOther)
 	}
 
 	// recordModePageViewJavaScript
@@ -183,12 +167,13 @@ func httpRecord(
 		// recordModePageViewImageLegacy
 		// recordModePageViewImageNoScript
 		// recordModePageViewAMPImage
+		// recordModeClientErrorLegacy
 	} else if c.Method() == fiber.MethodGet && record.isImage() {
 		if record.Mode == recordModeClientErrorLegacy {
 
 			go func() {
 				record.ClientErrorMessage = "legacy"
-				record.ClientErrorObject = c.Get("err")
+				record.ClientErrorObject = c.Query("err")
 
 				finalizeByte, finalizeErr := record.finalize()
 				if finalizeErr == nil {
@@ -207,7 +192,6 @@ func httpRecord(
 			}()
 
 		} else {
-			record.CID = clientIDNoneSTD([]string{ip.String(), userAgent}, clientIDTypeOther)
 
 			if record.pURL == nil && record.Mode == recordModePageViewImageNoScript {
 				imgReferer := getURL(c.Get(fiber.HeaderReferer))

@@ -37,7 +37,6 @@ services:
     volumes:
       - ./nginx/nginx.conf:/template/nginx.conf:ro
       - ./nginx/cert:/cert:ro
-      - ./nginx/grafana.htpasswd:/grafana.htpasswd:ro
 
   analytics-clickhouse:
     image: clickhouse/clickhouse-server:22.3
@@ -55,6 +54,7 @@ services:
         hard: 262144
     ports:
       - 8443:8443
+      - 9000:9000
       - 9440:9440
     volumes:
       - ./tmp/storage/clickhouse-server:/var/log/clickhouse-server
