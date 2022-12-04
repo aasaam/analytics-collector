@@ -21,15 +21,27 @@ func httpRecord(
 
 	record, recordErr := newRecord(c.Query(recordQueryMode), c.Query(recordQueryPublicInstanceID))
 
+	ip := getClientIP(c)
+	userAgent := c.Get(fiber.HeaderUserAgent)
+
 	if recordErr != nil {
+		conf.getLogger().
+			Error().
+			Str("type", "recordError").
+			Str("error", recordErr.Error()).
+			Str("ip", ip.String()).
+			Str("method", c.Method()).
+			Str("userAgent", userAgent).
+			Str("GET", c.Request().URI().String()).
+			Str("POST", string(c.Request().Body())).
+			Str("path", c.Path()).
+			Send()
+
 		return httpErrorResponse(
 			c,
 			errorInvalidModeOrProjectPublicID,
 		)
 	}
-
-	ip := getClientIP(c)
-	userAgent := c.Get(fiber.HeaderUserAgent)
 
 	record.setQueryParameters(
 		c.Query(recordQueryURL),
