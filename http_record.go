@@ -171,31 +171,18 @@ func httpRecord(
 		// recordModePageViewImageNoScript
 		// recordModePageViewAMPImage
 	} else if c.Method() == fiber.MethodGet && record.isImage() {
-		record.CID = clientIDNoneSTD([]string{ip.String(), userAgent}, clientIDTypeOther)
+		if record.Mode == recordModeClientErrorLegacy {
 
-		if record.pURL == nil && record.Mode == recordModePageViewImageNoScript {
-			imgReferer := getURL(c.Get(fiber.HeaderReferer))
-			if imgReferer != nil {
-				record.PURL = imgReferer.String()
-				record.pURL = imgReferer
-			}
-		}
+			go func() {
+				record.ClientErrorMessage = "legacy"
+				record.ClientErrorObject = c.Get("err")
 
-		record.setReferer(refererParser, getURL(c.Query(recordQueryRefererURL)))
+				finalizeByte, finalizeErr := record.finalize()
+				if finalizeErr == nil {
+					storage.addClientError(finalizeByte)
+					return
+				}
 
-		getVerifyError := record.verify(projectsManager, "")
-		if getVerifyError != nil {
-			return httpErrorResponse(
-				c,
-				*getVerifyError,
-			)
-		}
-
-		go func() {
-			finalizeByte, finalizeErr := record.finalize()
-			if finalizeErr == nil {
-				storage.addRecord(finalizeByte)
-			} else {
 				conf.getLogger().
 					Error().
 					Str("type", errorTypeApp).
@@ -204,8 +191,45 @@ func httpRecord(
 					Str("method", c.Method()).
 					Str("path", c.Path()).
 					Send()
+			}()
+
+		} else {
+			record.CID = clientIDNoneSTD([]string{ip.String(), userAgent}, clientIDTypeOther)
+
+			if record.pURL == nil && record.Mode == recordModePageViewImageNoScript {
+				imgReferer := getURL(c.Get(fiber.HeaderReferer))
+				if imgReferer != nil {
+					record.PURL = imgReferer.String()
+					record.pURL = imgReferer
+				}
 			}
-		}()
+
+			record.setReferer(refererParser, getURL(c.Query(recordQueryRefererURL)))
+
+			getVerifyError := record.verify(projectsManager, "")
+			if getVerifyError != nil {
+				return httpErrorResponse(
+					c,
+					*getVerifyError,
+				)
+			}
+
+			go func() {
+				finalizeByte, finalizeErr := record.finalize()
+				if finalizeErr == nil {
+					storage.addRecord(finalizeByte)
+				} else {
+					conf.getLogger().
+						Error().
+						Str("type", errorTypeApp).
+						Str("error", finalizeErr.Error()).
+						Str("ip", ip.String()).
+						Str("method", c.Method()).
+						Str("path", c.Path()).
+						Send()
+				}
+			}()
+		}
 
 		c.Set(fiber.HeaderContentType, mimetypeGIF)
 		return c.Send(singleGifImage)

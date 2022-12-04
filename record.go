@@ -117,7 +117,8 @@ const (
 	// rest of type must be added incremental
 
 	// client error
-	recordModeClientError uint8 = 255
+	recordModeClientErrorLegacy uint8 = 254
+	recordModeClientError       uint8 = 255
 )
 
 var recordModeMap map[string]uint8
@@ -141,6 +142,7 @@ func init() {
 
 	// etc
 	recordModeMap["err"] = recordModeClientError
+	recordModeMap["err_l"] = recordModeClientErrorLegacy
 }
 
 func validateMode(m string) (uint8, error) {
@@ -207,6 +209,7 @@ func (r *record) isPageView() bool {
 func (r *record) isImage() bool {
 	if r.Mode == recordModePageViewAMPImage ||
 		r.Mode == recordModePageViewImageLegacy ||
+		r.Mode == recordModeClientErrorLegacy ||
 		r.Mode == recordModePageViewImageNoScript {
 		return true
 	}
