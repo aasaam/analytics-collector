@@ -47,7 +47,7 @@ func httpRecord(
 		record.GeoResult = geoParser.newResultFromIP(ip)
 		record.UserAgentResult = userAgentParser.parse(userAgent)
 
-		if record.Mode == recordModeClientError {
+		if record.Mode == recordModeClientError || record.Mode == recordModeClientErrorLegacy {
 			record.CID = clientIDNoneSTD([]string{ip.String(), userAgent}, clientIDTypeOther)
 		}
 	}
