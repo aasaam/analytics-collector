@@ -30,6 +30,7 @@ func httpRecord(
 			Str("type", "recordError").
 			Str("error", recordErr.Error()).
 			Str("ip", ip.String()).
+			Str("contentType", c.Get(fiber.HeaderContentType)).
 			Str("method", c.Method()).
 			Str("userAgent", userAgent).
 			Str("GET", c.Request().URI().String()).
