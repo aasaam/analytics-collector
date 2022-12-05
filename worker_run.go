@@ -69,6 +69,11 @@ func workerRun(
 				return &r
 			}
 
+			if !validatePublicInstanceIDRegex(rec.PublicInstanceID) {
+				defer promMetricInvalidProcessData.Inc()
+				continue
+			}
+
 			if rec.EventCount > 0 {
 				for i := 0; i < rec.EventCount; i++ {
 					ECategory := rec.Events[i].ECategory
@@ -123,10 +128,16 @@ func workerRun(
 			clientErrorByteReader := bytes.NewReader(clientErrorByte)
 			var ce record
 			clientErrorDecodeErr := gob.NewDecoder(clientErrorByteReader).Decode(&ce)
+
 			if clientErrorDecodeErr != nil {
 				r.e = clientErrorDecodeErr
 				r.errorState = "clientErrorDecodeErr"
 				return &r
+			}
+
+			if !validatePublicInstanceIDRegex(ce.PublicInstanceID) {
+				defer promMetricInvalidProcessData.Inc()
+				continue
 			}
 
 			insertClientErr := clickhouseInsertClientErrBatch(clientErrorsBatch, ce)

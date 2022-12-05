@@ -185,3 +185,7 @@ func projectsLoad(url string) (map[string]projectData, error) {
 	}
 	return r, nil
 }
+
+func validatePublicInstanceIDRegex(publicInstanceID string) bool {
+	return publicInstanceIDRegex.MatchString(publicInstanceID)
+}

@@ -25,6 +25,7 @@ func httpRecord(
 	userAgent := c.Get(fiber.HeaderUserAgent)
 
 	if recordErr != nil {
+		defer promMetricInvalidRequestData.Inc()
 		return httpErrorResponse(
 			c,
 			errorInvalidModeOrProjectPublicID,
@@ -55,6 +56,7 @@ func httpRecord(
 	if c.Method() == fiber.MethodPost {
 		var postData postRequest
 		if postDataErr := json.Unmarshal(c.Body(), &postData); postDataErr != nil {
+			defer promMetricInvalidRequestData.Inc()
 			return httpErrorResponse(
 				c,
 				errorBadPOSTBody,
@@ -66,6 +68,7 @@ func httpRecord(
 			// set api parameters
 			apiErr := record.setAPI(&postData)
 			if apiErr != nil {
+				defer promMetricInvalidRequestData.Inc()
 				return httpErrorResponse(
 					c,
 					*apiErr,
@@ -82,6 +85,8 @@ func httpRecord(
 					storage.addClientError(finalizeByte)
 					return
 				}
+
+				promMetricInvalidRequestData.Inc()
 
 				conf.getLogger().
 					Error().
@@ -113,6 +118,7 @@ func httpRecord(
 			// check api key
 			apiVerifyError := record.verify(projectsManager, postData.API.PrivateInstanceKey)
 			if apiVerifyError != nil {
+				defer promMetricInvalidRequestData.Inc()
 				return httpErrorResponse(
 					c,
 					*apiVerifyError,
@@ -125,6 +131,7 @@ func httpRecord(
 					storage.addRecord(finalizeByte)
 					return
 				}
+				promMetricInvalidRequestData.Inc()
 				conf.getLogger().
 					Error().
 					Str("type", errorTypeApp).
@@ -140,6 +147,7 @@ func httpRecord(
 
 		postVerifyError := record.verify(projectsManager, "")
 		if postVerifyError != nil {
+			defer promMetricInvalidRequestData.Inc()
 			return httpErrorResponse(
 				c,
 				*postVerifyError,
@@ -151,6 +159,7 @@ func httpRecord(
 			if finalizeErr == nil {
 				storage.addRecord(finalizeByte)
 			} else {
+				promMetricInvalidRequestData.Inc()
 				conf.getLogger().
 					Error().
 					Str("type", errorTypeApp).
@@ -181,6 +190,7 @@ func httpRecord(
 					return
 				}
 
+				promMetricInvalidRequestData.Inc()
 				conf.getLogger().
 					Error().
 					Str("type", errorTypeApp).
@@ -205,6 +215,7 @@ func httpRecord(
 
 			getVerifyError := record.verify(projectsManager, "")
 			if getVerifyError != nil {
+				defer promMetricInvalidRequestData.Inc()
 				return httpErrorResponse(
 					c,
 					*getVerifyError,
@@ -216,6 +227,7 @@ func httpRecord(
 				if finalizeErr == nil {
 					storage.addRecord(finalizeByte)
 				} else {
+					promMetricInvalidRequestData.Inc()
 					conf.getLogger().
 						Error().
 						Str("type", errorTypeApp).
@@ -232,6 +244,7 @@ func httpRecord(
 		return c.Send(singleGifImage)
 	}
 
+	defer promMetricInvalidRequestData.Inc()
 	return httpErrorResponse(
 		c,
 		errorRecordNotValid,

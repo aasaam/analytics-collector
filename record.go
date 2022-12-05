@@ -481,7 +481,18 @@ func (r *record) finalize() ([]byte, error) {
 		return nil, err
 	}
 
-	defer promMetricRecordMode.WithLabelValues(r.modeString).Inc()
+	_, modErr := validateMode(r.modeString)
+	if modErr == nil {
+		defer promMetricRecordMode.WithLabelValues(r.modeString).Inc()
+	} else {
+		defer promMetricInvalidProcessData.Inc()
+		return nil, errors.New("mod is not valid")
+	}
+
+	if !validatePublicInstanceIDRegex(r.PublicInstanceID) {
+		defer promMetricInvalidProcessData.Inc()
+		return nil, errors.New("public id is not valid")
+	}
 
 	return buf.Bytes(), nil
 }

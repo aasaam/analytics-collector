@@ -44,10 +44,11 @@ func httpAppAssetsHelper(c *fiber.Ctx) *errorMessage {
 		return &errorAssetsVersionFailed
 	}
 
-	min := time.Now().AddDate(0, 0, -3)
+	min := time.Now().AddDate(0, 0, -6)
 	max := time.Now().AddDate(0, 0, 3)
 
 	if date.Before(min) || date.After(max) {
+		defer promMetricInvalidRequestData.Inc()
 		return &errorAssetsVersionFailed
 	}
 
@@ -105,6 +106,7 @@ func httpAppAssets(
 	embedAmpDotJSON = replaceCollectorURL(embedAmpDotJSON, conf.collectorURL)
 	app.Get("/amp.json", func(c *fiber.Ctx) error {
 		if strings.Contains(c.Request().URI().String(), "?") {
+			defer promMetricInvalidRequestData.Inc()
 			return httpErrorResponse(c, errorQueryStringDisabled)
 		}
 		staticCacheLimit(c, conf.staticCacheTTL)

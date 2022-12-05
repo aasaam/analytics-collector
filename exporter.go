@@ -19,6 +19,16 @@ var (
 		Help: "Storage number of records that not inserted yet",
 	})
 
+	promMetricInvalidRequestData = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "aasaam_analytics_collector_invalid_request_data",
+		Help: "Number of invalid request data",
+	})
+
+	promMetricInvalidProcessData = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "aasaam_analytics_collector_invalid_process_data",
+		Help: "Number of invalid process data",
+	})
+
 	promMetricStorageQueueClientErrors = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "aasaam_analytics_collector_storage_queue_client_errors",
 		Help: "Storage number of client errors that not inserted yet",
@@ -66,5 +76,7 @@ func getPrometheusRegistry() *prometheus.Registry {
 	promRegistry.MustRegister(promMetricClientErrors)
 	promRegistry.MustRegister(promMetricProjectsFetchErrors)
 	promRegistry.MustRegister(promMetricProjectsFetchSuccess)
+	promRegistry.MustRegister(promMetricInvalidRequestData)
+	promRegistry.MustRegister(promMetricInvalidProcessData)
 	return promRegistry
 }

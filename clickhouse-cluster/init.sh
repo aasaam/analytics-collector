@@ -47,6 +47,8 @@ echo "Node 1 IP: $ASM_CH_NODE1_IP"
 echo "Node 2 IP: $ASM_CH_NODE2_IP"
 echo "Node 3 IP: $ASM_CH_NODE3_IP"
 
+RANDOM_PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 32)
+
 for i in $(seq 1 3); do
   declare "NODE_PATH"=$CURRENT_DIR/ready/ch0$i
   mkdir -p $NODE_PATH
