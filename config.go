@@ -3,6 +3,7 @@ package main
 import (
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -10,25 +11,22 @@ import (
 type config struct {
 	logger         *zerolog.Logger
 	staticCacheTTL uint
-	testMode       bool
 	collectorURL   *url.URL
 }
 
 func newConfig(
 	logLevel string,
 	staticCacheTTL uint,
-	testMode bool,
 	collectorURL string,
 ) *config {
 
 	c := config{
 		staticCacheTTL: staticCacheTTL,
-		testMode:       testMode,
 		collectorURL:   getURL(collectorURL),
 	}
 
 	// logger config
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.TimeFieldFormat = time.RFC3339
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	logConfigLevel, errLogLevel := zerolog.ParseLevel(logLevel)

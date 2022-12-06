@@ -267,9 +267,23 @@ func TestRecord11(t *testing.T) {
 		U5: "http://example.com/path-1/path-2/path-3/path-4/path-5",
 	}
 
+	sg := postRequestSegment{
+		S1N: "home",
+		S2N: "product",
+		S3N: "top",
+		S4N: "special",
+		S5N: "camera1",
+		S1V: "fa",
+		S2V: "1",
+		S3V: "2",
+		S4V: "3",
+		S5V: "4",
+	}
+
 	postPage := postRequestPage{
 		URL:                  "http://example.com",
 		PageBreadcrumbObject: &bc,
+		Seg:                  &sg,
 	}
 
 	events := []postRequestEvent{ev1, ev2}
@@ -310,7 +324,7 @@ func TestRecord12(t *testing.T) {
 
 	recordSample.IP = net.ParseIP("1.1.1.1")
 
-	u2, _ := url.Parse("http://example.com")
+	u2, _ := url.Parse("http://example-another.com")
 
 	recordSample.PURL = u2.String()
 
@@ -350,6 +364,296 @@ func TestRecord12(t *testing.T) {
 		t.Errorf("invalid verify")
 	}
 }
+func TestRecord131(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
+
+	geoParser := getGeoParser()
+	userAgentParser := newUserAgentParser()
+	pm := getTestProjects()
+
+	recordSample, e3 := newRecord("e_api", "000000000000")
+	if e3 != nil {
+		t.Error(e3)
+	}
+
+	recordSample.IP = net.ParseIP("1.1.1.1")
+
+	u2, _ := url.Parse("http://example.net")
+
+	recordSample.PURL = u2.String()
+
+	postPage := postRequestPage{
+		URL: "http://example.net/",
+	}
+
+	events := []postRequestEvent{}
+
+	initTime := time.Now().Add(time.Duration(-60) * time.Minute).Unix()
+	sessionTime := time.Now().Add(time.Duration(-30) * time.Minute).Unix()
+	cid := strconv.Itoa(int(initTime)) + ":" + strconv.Itoa(int(sessionTime)) + ":0000000000000000"
+	validCID := base64.StdEncoding.EncodeToString([]byte(cid))
+
+	post := postRequest{
+		CIDStd: validCID,
+		Page:   &postPage,
+		Events: &events,
+		API: &postRequestAPI{
+			PrivateInstanceKey: "000000000000111111111111",
+			ClientIP:           "127.1.1.1",
+			ClientTime:         time.Now().Unix(),
+		},
+	}
+
+	e := recordSample.setAPI(pm, userAgentParser, geoParser, &post)
+
+	if e != &errorAPIClientUserAgentNotValid {
+		t.Errorf("invalid verify")
+	}
+}
+func TestRecord123(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
+
+	geoParser := getGeoParser()
+	userAgentParser := newUserAgentParser()
+	pm := getTestProjects()
+
+	recordSample, e3 := newRecord("e_api", "000000000000")
+	if e3 != nil {
+		t.Error(e3)
+	}
+
+	recordSample.IP = net.ParseIP("1.1.1.1")
+
+	u2, _ := url.Parse("http://example.net")
+
+	recordSample.PURL = u2.String()
+
+	postPage := postRequestPage{
+		URL: "http://example.net/",
+	}
+
+	events := []postRequestEvent{}
+
+	initTime := time.Now().Add(time.Duration(-60) * time.Minute).Unix()
+	sessionTime := time.Now().Add(time.Duration(-30) * time.Minute).Unix()
+	cid := strconv.Itoa(int(initTime)) + ":" + strconv.Itoa(int(sessionTime)) + ":0000000000000000"
+	validCID := base64.StdEncoding.EncodeToString([]byte(cid))
+
+	post := postRequest{
+		CIDStd: validCID,
+		Page:   &postPage,
+		Events: &events,
+		API: &postRequestAPI{
+			PrivateInstanceKey: "invalid",
+			ClientIP:           "127.1.1.1",
+			ClientUserAgent:    "AdsBot-Google (+http://www.google.com/adsbot.html)",
+			ClientTime:         time.Now().Unix(),
+		},
+	}
+
+	e := recordSample.setAPI(pm, userAgentParser, geoParser, &post)
+
+	if e != &errorAPIPrivateKeyFailed {
+		t.Errorf("invalid verify")
+	}
+}
+func TestRecord125(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
+
+	geoParser := getGeoParser()
+	userAgentParser := newUserAgentParser()
+	pm := getTestProjects()
+
+	recordSample, e3 := newRecord("e_api", "000000000000")
+	if e3 != nil {
+		t.Error(e3)
+	}
+
+	recordSample.IP = net.ParseIP("1.1.1.1")
+
+	u2, _ := url.Parse("http://example.net")
+
+	recordSample.PURL = u2.String()
+
+	postPage := postRequestPage{
+		URL: "http://example.net/",
+	}
+
+	events := []postRequestEvent{}
+
+	initTime := time.Now().Add(time.Duration(-60) * time.Minute).Unix()
+	sessionTime := time.Now().Add(time.Duration(-30) * time.Minute).Unix()
+	cid := strconv.Itoa(int(initTime)) + ":" + strconv.Itoa(int(sessionTime)) + ":0000000000000000"
+	validCID := base64.StdEncoding.EncodeToString([]byte(cid))
+
+	post := postRequest{
+		CIDStd: validCID,
+		Page:   &postPage,
+		Events: &events,
+		API: &postRequestAPI{
+			PrivateInstanceKey: "000000000000111111111111",
+			ClientUserAgent:    "AdsBot-Google (+http://www.google.com/adsbot.html)",
+			ClientTime:         time.Now().Unix(),
+		},
+	}
+
+	e := recordSample.setAPI(pm, userAgentParser, geoParser, &post)
+
+	if e != &errorAPIClientIPNotValid {
+		t.Errorf("invalid verify")
+	}
+}
+func TestRecord140(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
+
+	geoParser := getGeoParser()
+	userAgentParser := newUserAgentParser()
+	pm := getTestProjects()
+
+	recordSample, e3 := newRecord("e_api", "000000000000")
+	if e3 != nil {
+		t.Error(e3)
+	}
+
+	recordSample.IP = net.ParseIP("1.1.1.1")
+
+	u2, _ := url.Parse("http://example.net")
+
+	recordSample.PURL = u2.String()
+
+	postPage := postRequestPage{
+		URL: "http://example.net/",
+	}
+
+	events := []postRequestEvent{}
+
+	initTime := time.Now().Add(time.Duration(-60) * time.Minute).Unix()
+	sessionTime := time.Now().Add(time.Duration(-30) * time.Minute).Unix()
+	cid := strconv.Itoa(int(initTime)) + ":" + strconv.Itoa(int(sessionTime)) + ":0000000000000000"
+	validCID := base64.StdEncoding.EncodeToString([]byte(cid))
+
+	post := postRequest{
+		CIDStd: validCID,
+		Page:   &postPage,
+		Events: &events,
+		API: &postRequestAPI{
+			PrivateInstanceKey: "000000000000111111111111",
+			ClientIP:           "1.1.1.1",
+			ClientUserAgent:    "AdsBot-Google (+http://www.google.com/adsbot.html)",
+			ClientTime:         time.Now().Unix(),
+		},
+	}
+
+	e := recordSample.setAPI(pm, userAgentParser, geoParser, &post)
+
+	if e != nil {
+		t.Error(e)
+	}
+}
+func TestRecord124(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
+
+	geoParser := getGeoParser()
+	userAgentParser := newUserAgentParser()
+	pm := getTestProjects()
+
+	recordSample, e3 := newRecord("e_api", "000000000000")
+	if e3 != nil {
+		t.Error(e3)
+	}
+
+	recordSample.IP = net.ParseIP("1.1.1.1")
+
+	u2, _ := url.Parse("http://example.net")
+
+	recordSample.PURL = u2.String()
+
+	postPage := postRequestPage{
+		URL: "http://example.net/",
+	}
+
+	events := []postRequestEvent{}
+
+	initTime := time.Now().Add(time.Duration(-60) * time.Minute).Unix()
+	sessionTime := time.Now().Add(time.Duration(-30) * time.Minute).Unix()
+	cid := strconv.Itoa(int(initTime)) + ":" + strconv.Itoa(int(sessionTime)) + ":0000000000000000"
+	validCID := base64.StdEncoding.EncodeToString([]byte(cid))
+
+	post := postRequest{
+		CIDStd: validCID,
+		Page:   &postPage,
+		Events: &events,
+	}
+
+	e := recordSample.setAPI(pm, userAgentParser, geoParser, &post)
+
+	if e != &errorAPIFieldsAreMissing {
+		t.Errorf("invalid verify")
+	}
+}
+func TestRecord121(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
+
+	geoParser := getGeoParser()
+	refererParser := newRefererParser()
+
+	recordSample, e3 := newRecord("e_js_pv", "000000000000")
+	if e3 != nil {
+		t.Error(e3)
+	}
+
+	recordSample.CID = clientIDNoneSTD([]string{"amp"}, clientIDTypeOther)
+
+	pm := getTestProjects()
+
+	recordSample.IP = net.ParseIP("1.1.1.1")
+
+	u2, _ := url.Parse("http://example.net")
+
+	recordSample.PURL = u2.String()
+
+	postPage := postRequestPage{
+		URL: "http://example.net/",
+	}
+
+	events := []postRequestEvent{}
+
+	initTime := time.Now().Add(time.Duration(-60) * time.Minute).Unix()
+	sessionTime := time.Now().Add(time.Duration(-30) * time.Minute).Unix()
+	cid := strconv.Itoa(int(initTime)) + ":" + strconv.Itoa(int(sessionTime)) + ":0000000000000000"
+	validCID := base64.StdEncoding.EncodeToString([]byte(cid))
+
+	post := postRequest{
+		CIDStd: validCID,
+		Page:   &postPage,
+		Events: &events,
+	}
+
+	recordSample.setPostRequest(&post, refererParser, geoParser)
+
+	if recordSample.verify(pm, "") != &errorEventsAreEmpty {
+		t.Errorf("invalid verify")
+	}
+}
+
 func TestRecord13(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")

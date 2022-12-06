@@ -9,6 +9,7 @@ import (
 )
 
 // ineffassign: ignore
+//
 //go:embed embed/build/user_agents.yaml
 var userAgents []byte
 
@@ -25,18 +26,18 @@ type userAgentParser struct {
 }
 
 type userAgentResult struct {
-	UaType                uint8
-	UaFull                string
-	UaChecksum            string
-	UaBrowserName         string
-	UaBrowserVersionMajor uint64
-	UaBrowserVersion      string
-	UaOSName              string
-	UaOSVersionMajor      uint64
-	UaOSVersion           string
-	UaDeviceBrand         string
-	UaDeviceFamily        string
-	UaDeviceModel         string
+	UaType                uint8  `json:"t"`
+	UaFull                string `json:"f"`
+	UaChecksum            string `json:"c"`
+	UaBrowserName         string `json:"b"`
+	UaBrowserVersionMajor uint64 `json:"bvm"`
+	UaBrowserVersion      string `json:"bv"`
+	UaOSName              string `json:"o"`
+	UaOSVersionMajor      uint64 `json:"ovm"`
+	UaOSVersion           string `json:"ov"`
+	UaDeviceBrand         string `json:"db"`
+	UaDeviceFamily        string `json:"df"`
+	UaDeviceModel         string `json:"dm"`
 }
 
 func newUserAgentParser() *userAgentParser {

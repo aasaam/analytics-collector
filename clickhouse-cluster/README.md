@@ -32,9 +32,9 @@ Using following steps:
    Copy each node data to your desire path of server:
 
    ```bash
-   scp -r ready/ch01 root@192.168.56.201:/root/
-   scp -r ready/ch02 root@192.168.56.202:/root/
-   scp -r ready/ch03 root@192.168.56.203:/root/
+   scp -r ready/ch1 root@192.168.56.201:/root/
+   scp -r ready/ch2 root@192.168.56.202:/root/
+   scp -r ready/ch3 root@192.168.56.203:/root/
    ```
 
 ## Running clickhouse nodes

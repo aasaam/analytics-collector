@@ -12,60 +12,26 @@ func mainRun(c *cli.Context) error {
 	conf := newConfig(
 		c.String("log-level"),
 		c.Uint("static-cache-ttl"),
-		c.Bool("test-mode"),
 		c.String("collector-url"),
 	)
 
-	clickhouseConfig := clickhouseConfig{
-		servers:          c.String("clickhouse-servers"),
-		database:         c.String("clickhouse-database"),
-		username:         c.String("clickhouse-username"),
-		password:         c.String("clickhouse-password"),
-		maxExecutionTime: c.Int("clickhouse-max-execution-time"),
-		dialTimeout:      c.Int("clickhouse-dial-timeout"),
-		debug:            c.Bool("test-mode"),
-		compressionLZ4:   c.Bool("clickhouse-compression-lz4"),
-		maxIdleConns:     c.Int("clickhouse-max-idle-conns"),
-		maxOpenConns:     c.Int("clickhouse-max-open-conns"),
-		connMaxLifetime:  c.Int("clickhouse-conn-max-lifetime"),
-		maxBlockSize:     c.Int("clickhouse-max-block-size"),
-		rootCAPath:       c.String("clickhouse-root-ca"),
-		clientCertPath:   c.String("clickhouse-client-cert"),
-		clientKeyPath:    c.String("clickhouse-client-key"),
-	}
-
 	managementCallInterval := time.Duration(c.Int64("management-call-interval")) * time.Second
 
-	clickhouseInterval := time.Duration(c.Int("clickhouse-interval")) * time.Second
+redisStep:
 
-clickHouseInitStep:
+	red, redErr := redisGetClient(c.String("redis-uri"))
 
-	clickhouseInit, _, clickhouseInitErr := clickhouseGetConnection(&clickhouseConfig)
-
-	if clickhouseInitErr != nil {
+	if redErr != nil {
 		conf.getLogger().
 			Error().
-			Msg(clickhouseInitErr.Error())
-		time.Sleep(clickhouseInterval)
-		goto clickHouseInitStep
+			Msg(redErr.Error())
+		time.Sleep(time.Duration(1) * time.Second)
+		goto redisStep
 	}
 
-	go func() {
-		for {
-			promMetricUptimeInSeconds.Set(float64(time.Now().Unix() - initTime))
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
-	clickhouseInit.Close()
 	conf.getLogger().
 		Debug().
-		Msg("successfully ping to clickhouse")
-
-	/**
-	 * storage
-	 */
-	storage := newStorage()
+		Msg("successfully ping to redis")
 
 	/**
 	 * projects
@@ -126,31 +92,6 @@ clickHouseInitStep:
 		}()
 	}
 
-	go func() {
-		for {
-
-			time.Sleep(clickhouseInterval)
-			func() {
-				r := workerRun(&clickhouseConfig, conf, storage)
-				if r.e != nil {
-					conf.getLogger().
-						Error().
-						Str("type", errorTypeApp).
-						Str("state", r.errorState).
-						Str("error", r.e.Error()).
-						Send()
-				} else {
-					conf.getLogger().
-						Info().
-						Int64("records", r.records).
-						Int64("clientErrors", r.clientErrors).
-						Int64("timeTakenMS", r.timeTakenMS).
-						Send()
-				}
-			}()
-		}
-	}()
-
 	conn, connErr := pgx.Connect(context.Background(), c.String("postgis-uri"))
 	if connErr != nil {
 		return connErr
@@ -172,7 +113,7 @@ clickHouseInitStep:
 		refererParser,
 		userAgentParser,
 		projectsManager,
-		storage,
+		red,
 	)
 
 	return app.Listen(c.String("listen"))

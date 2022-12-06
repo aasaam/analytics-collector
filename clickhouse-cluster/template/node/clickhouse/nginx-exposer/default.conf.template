@@ -42,14 +42,6 @@ stream {
     proxy_pass analytics-clickhouse:9234;
   }
 
-  # Raft Secure Port
-  server {
-    listen 9234 udp;
-    include /acl.conf;
-    deny all;
-    proxy_pass analytics-clickhouse:9234;
-  }
-
   # Keeper Server TCP Secure Port
   server {
     listen 9281;

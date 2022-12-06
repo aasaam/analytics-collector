@@ -14,7 +14,7 @@
   <!-- <http_port>8123</http_port> -->
 
   <!-- Not expose -->
-  <tcp_port>9000</tcp_port>
+  <!-- <tcp_port>9000</tcp_port> -->
 
   <!-- Not expose -->
   <!-- <mysql_port>9004</mysql_port> -->

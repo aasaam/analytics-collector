@@ -1,0 +1,59 @@
+version: "3"
+services:
+  analytics-postgis:
+    image: ghcr.io/aasaam/geonames-postgis:latest
+    container_name: analytics-postgis
+    hostname: analytics-postgis
+
+    environment:
+      - POSTGRES_PASSWORD=geonames
+      - POSTGRES_USER=geonames
+      - POSTGRES_DB=geonames
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=postgres NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+
+  analytics-collector:
+    image: ghcr.io/aasaam/analytics-collector:latest
+    depends_on:
+      - analytics-postgis
+    container_name: analytics-collector
+    hostname: analytics-collector
+    command: run
+
+    volumes:
+      - ./cert:/cert:ro
+
+    env_file:
+      - ./.env
+
+    extra_hosts:
+      - "ch1.${ASM_CH_DOMAIN}:${ASM_CH_NODE1_IP}"
+      - "ch2.${ASM_CH_DOMAIN}:${ASM_CH_NODE2_IP}"
+      - "ch3.${ASM_CH_DOMAIN}:${ASM_CH_NODE3_IP}"
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=golang NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+
+  analytics-collector-nginx:
+    image: ghcr.io/aasaam/analytics-collector-nginx:latest
+    container_name: analytics-collector-nginx
+    hostname: analytics-collector-nginx
+    depends_on:
+      - analytics-collector
+    ports:
+      - 0.0.0.0:80:80
+      - 0.0.0.0:443:443
+    volumes:
+      - ./public-cert:/cert:ro
+    env_file:
+      - ./.env
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=nginx NODE_ID=${ASM_CH_CURRENT_NODE_ID}"

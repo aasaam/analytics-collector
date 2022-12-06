@@ -12,6 +12,13 @@ services:
       - POSTGRES_USER=geonames
       - POSTGRES_DB=geonames
 
+  analytics-redis:
+    image: redis:7-alpine
+    container_name: analytics-redis
+    hostname: analytics-redis
+    ports:
+      - 6379:6379
+
   analytics-adminer:
     image: adminer
     container_name: analytics-adminer
@@ -37,6 +44,17 @@ services:
     volumes:
       - ./nginx/nginx.conf:/template/nginx.conf:ro
       - ./nginx/cert:/cert:ro
+
+  analytics-redis-commander:
+    container_name: analytics-redis-commander
+    hostname: analytics-redis-commander
+    image: rediscommander/redis-commander:latest
+    depends_on:
+      - analytics-redis
+    environment:
+      - REDIS_HOSTS=local:analytics-redis:6379
+    ports:
+      - "8081:8081"
 
   analytics-clickhouse:
     image: clickhouse/clickhouse-server:22.3

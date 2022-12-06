@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	_ "embed"
 	"os"
 	"strings"
 	"time"
@@ -12,6 +13,12 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/paulmach/orb"
 )
+
+//go:embed clickhouse/insert_records.sql
+var clickhouseSQLInsertRecords string
+
+//go:embed clickhouse/insert_client_errors.sql
+var clickhouseSQLInsertClientErrors string
 
 type clickhouseConfig struct {
 	servers          string
@@ -269,9 +276,9 @@ func clickhouseInsertRecordBatch(
 		rec.ScreenInfo.ScrViewport,
 		rec.ScreenInfo.ScrViewportWidth,
 		rec.ScreenInfo.ScrViewportHeight,
-		rec.ScreenInfo.ScrResoluton,
-		rec.ScreenInfo.ScrResolutonWidth,
-		rec.ScreenInfo.ScrResolutonHeight,
+		rec.ScreenInfo.ScrResolution,
+		rec.ScreenInfo.ScrResolutionWidth,
+		rec.ScreenInfo.ScrResolutionHeight,
 		rec.ScreenInfo.ScrDevicePixelRatio,
 		rec.ScreenInfo.ScrColorDepth,
 

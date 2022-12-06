@@ -20,6 +20,7 @@ RUN apk --no-cache add ca-certificates \
 
 ENV ASM_ANALYTICS_COLLECTOR_MMDB_ASN_PATH="/GeoLite2-ASN.mmdb" \
   ASM_ANALYTICS_COLLECTOR_MMDB_CITY_PATH="/GeoLite2-City.mmdb" \
+  ASM_ANALYTICS_COLLECTOR_REDIS_URI="redis://analytics-redis:6379/0" \
   ASM_ANALYTICS_COLLECTOR_POSTGIS_URI="postgres://geonames:geonames@analytics-postgis:5432/geonames"
 
 ADD tmp/GeoLite2-ASN.mmdb /GeoLite2-ASN.mmdb

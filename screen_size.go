@@ -9,21 +9,21 @@ import (
 var sizeRegex = regexp.MustCompile(`^([0-9]{2,6})x([0-9]{2,6})$`)
 
 type screenInfo struct {
-	ScrIsProcessed                  bool
-	ScrScreenOrientation            bool
-	ScrScreenOrientationIsPortrait  bool
-	ScrScreenOrientationIsSecondary bool
-	ScrScreen                       string
-	ScrScreenWidth                  uint16
-	ScrScreenHeight                 uint16
-	ScrViewport                     string
-	ScrViewportWidth                uint16
-	ScrViewportHeight               uint16
-	ScrResoluton                    string
-	ScrResolutonWidth               uint16
-	ScrResolutonHeight              uint16
-	ScrDevicePixelRatio             float64
-	ScrColorDepth                   uint8
+	ScrIsProcessed                  bool    `json:"i"`
+	ScrScreenOrientation            bool    `json:"o"`
+	ScrScreenOrientationIsPortrait  bool    `json:"ip"`
+	ScrScreenOrientationIsSecondary bool    `json:"is"`
+	ScrScreen                       string  `json:"s"`
+	ScrScreenWidth                  uint16  `json:"sw"`
+	ScrScreenHeight                 uint16  `json:"sh"`
+	ScrViewport                     string  `json:"v"`
+	ScrViewportWidth                uint16  `json:"vw"`
+	ScrViewportHeight               uint16  `json:"vh"`
+	ScrResolution                   string  `json:"r"`
+	ScrResolutionWidth              uint16  `json:"rw"`
+	ScrResolutionHeight             uint16  `json:"rh"`
+	ScrDevicePixelRatio             float64 `json:"dp"`
+	ScrColorDepth                   uint8   `json:"c"`
 }
 
 func parseScreenSize(
@@ -88,9 +88,9 @@ func parseScreenSize(
 			result.ScrScreen = fmt.Sprintf("%dx%d", screenWidth, screenHeight)
 
 			if result.ScrDevicePixelRatio != 0 {
-				result.ScrResolutonWidth = uint16(float64(screenWidth) * result.ScrDevicePixelRatio)
-				result.ScrResolutonHeight = uint16(float64(screenHeight) * result.ScrDevicePixelRatio)
-				result.ScrResoluton = fmt.Sprintf("%dx%d", result.ScrResolutonWidth, result.ScrResolutonHeight)
+				result.ScrResolutionWidth = uint16(float64(screenWidth) * result.ScrDevicePixelRatio)
+				result.ScrResolutionHeight = uint16(float64(screenHeight) * result.ScrDevicePixelRatio)
+				result.ScrResolution = fmt.Sprintf("%dx%d", result.ScrResolutionWidth, result.ScrResolutionHeight)
 			}
 		}
 	}

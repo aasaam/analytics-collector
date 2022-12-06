@@ -37,7 +37,7 @@ INSERT INTO Records (
   PRefererURLExternalHost                     , -- String,
   PRefererURLExternalDomain                   , -- String,
   PRefererURLExternalName                     , -- String,
-  PRefererURLScheme                           , -- FixedString(24),
+  PRefererURLScheme                           , -- LowCardinality(String),
   PRefererURLExternalType                     , -- UInt8,
 
   -- session referer
@@ -45,7 +45,7 @@ INSERT INTO Records (
   SRefererURLExternalHost                     , -- String,
   SRefererURLExternalDomain                   , -- String,
   SRefererURLExternalName                     , -- String,
-  SRefererURLScheme                           , -- FixedString(24),
+  SRefererURLScheme                           , -- LowCardinality(String),
   SRefererURLExternalType                     , -- UInt8,
 
   --- utm
@@ -107,9 +107,9 @@ INSERT INTO Records (
   ScrViewport                                 , -- LowCardinality(String),
   ScrViewportWidth                            , -- UInt16,
   ScrViewportHeight                           , -- UInt16,
-  ScrResoluton                                , -- LowCardinality(String),
-  ScrResolutonWidth                           , -- UInt16,
-  ScrResolutonHeight                          , -- UInt16,
+  ScrResolution                               , -- LowCardinality(String),
+  ScrResolutionWidth                          , -- UInt16,
+  ScrResolutionHeight                         , -- UInt16,
   ScrDevicePixelRatio                         , -- Float64,
   ScrColorDepth                               , -- UInt8,
 

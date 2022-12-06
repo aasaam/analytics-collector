@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/net/idna"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/text/language"
@@ -25,6 +26,8 @@ var sanitizeNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{1,31}$`)
 var entityIDRegex = regexp.MustCompile(`^[a-zA-Z0-9-_\/]{1,63}$`)
 var checksumReplaceRegex = regexp.MustCompile(`[^a-zA-Z0-9]`)
 var cursorTimeLayout = "20060102030405.000"
+
+var stripTagger = bluemonday.StripTagsPolicy()
 
 func intMinMax(v int, min int, max int) int {
 	if v < min {
@@ -188,6 +191,10 @@ func sanitizeLanguage(locale string) string {
 	return base.String()
 }
 
+func sanitizeText(t string) string {
+	return stripTagger.Sanitize(t)
+}
+
 func sanitizeEntityTaxonomyID(id string) uint16 {
 	v, vErr := strconv.ParseUint(id, 10, 16)
 	if vErr == nil {
@@ -200,7 +207,7 @@ func parseKeywords(inpKeywords string) []string {
 	ks := strings.Split(inpKeywords, ",")
 	r := []string{}
 	for _, k := range ks {
-		v := strings.TrimSpace(k)
+		v := sanitizeText(strings.TrimSpace(k))
 		if len(v) >= 1 {
 			r = append(r, v)
 		}

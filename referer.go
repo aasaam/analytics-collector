@@ -23,13 +23,13 @@ type refererParser struct {
 }
 
 type refererData struct {
-	RefExist          bool
-	RefURL            string
-	RefName           string
-	RefExternalHost   string
-	RefExternalDomain string
-	RefScheme         string
-	RefType           uint8
+	RefExist          bool   `json:"e"`
+	RefURL            string `json:"u"`
+	RefName           string `json:"n"`
+	RefExternalHost   string `json:"h"`
+	RefExternalDomain string `json:"d"`
+	RefScheme         string `json:"s"`
+	RefType           uint8  `json:"t"`
 }
 
 type domainMap map[string]*refererData

@@ -6,14 +6,14 @@ import (
 )
 
 type utm struct {
-	UtmValid    bool
-	UtmExist    bool
-	UtmSource   string
-	UtmMedium   string
-	UtmCampaign string
-	UtmID       string
-	UtmTerm     string
-	UtmContent  string
+	UtmValid    bool   `json:"v"`
+	UtmExist    bool   `json:"e"`
+	UtmSource   string `json:"s"`
+	UtmMedium   string `json:"m"`
+	UtmCampaign string `json:"c"`
+	UtmID       string `json:"i"`
+	UtmTerm     string `json:"t"`
+	UtmContent  string `json:"cn"`
 }
 
 func parseUTM(u *url.URL) utm {

@@ -1,8 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
+	"encoding/json"
 	"errors"
 	"net"
 	"net/url"
@@ -11,92 +10,92 @@ import (
 )
 
 type breadCrumb struct {
-	BCIsProcessed bool
-	BCLevel       uint8
-	BCN1          string
-	BCN2          string
-	BCN3          string
-	BCN4          string
-	BCN5          string
-	BCP1          string
-	BCP2          string
-	BCP3          string
-	BCP4          string
-	BCP5          string
+	BCIsProcessed bool   `json:"b"`
+	BCLevel       uint8  `json:"l"`
+	BCN1          string `json:"n1"`
+	BCN2          string `json:"n2"`
+	BCN3          string `json:"n3"`
+	BCN4          string `json:"n4"`
+	BCN5          string `json:"n5"`
+	BCP1          string `json:"p1"`
+	BCP2          string `json:"p2"`
+	BCP3          string `json:"p3"`
+	BCP4          string `json:"p4"`
+	BCP5          string `json:"p5"`
 }
 
 type segment struct {
-	S1N string
-	S2N string
-	S3N string
-	S4N string
-	S5N string
+	S1N string `json:"n1"`
+	S2N string `json:"n2"`
+	S3N string `json:"n3"`
+	S4N string `json:"n4"`
+	S5N string `json:"n5"`
 
-	S1V string
-	S2V string
-	S3V string
-	S4V string
-	S5V string
+	S1V string `json:"v1"`
+	S2V string `json:"v2"`
+	S3V string `json:"v3"`
+	S4V string `json:"v4"`
+	S5V string `json:"v5"`
 }
 
 type performance struct {
-	PerfIsProcessed        bool
-	PerfPageLoadTime       uint16
-	PerfDomainLookupTime   uint16
-	PerfTCPConnectTime     uint16
-	PerfServerResponseTime uint16
-	PerfPageDownloadTime   uint16
-	PerfRedirectTime       uint16
-	PerfDOMInteractiveTime uint16
-	PerfContentLoadTime    uint16
-	PerfResource           uint16
+	PerfIsProcessed        bool   `json:"p"`
+	PerfPageLoadTime       uint16 `json:"pl"`
+	PerfDomainLookupTime   uint16 `json:"dl"`
+	PerfTCPConnectTime     uint16 `json:"t"`
+	PerfServerResponseTime uint16 `json:"st"`
+	PerfPageDownloadTime   uint16 `json:"pt"`
+	PerfRedirectTime       uint16 `json:"rd"`
+	PerfDOMInteractiveTime uint16 `json:"d"`
+	PerfContentLoadTime    uint16 `json:"c"`
+	PerfResource           uint16 `json:"r"`
 }
 
 type recordEvent struct {
-	ECategory string
-	EAction   string
-	ELabel    string
-	EIdent    string
-	EValue    uint64
+	ECategory string `json:"c"`
+	EAction   string `json:"a"`
+	ELabel    string `json:"l"`
+	EIdent    string `json:"i"`
+	EValue    uint64 `json:"v"`
 }
 
 type record struct {
-	ClientErrorMessage string
-	ClientErrorObject  string
-	Created            time.Time
-	CursorID           uint64
-	Mode               uint8
+	ClientErrorMessage string    `json:"cem"`
+	ClientErrorObject  string    `json:"ceo"`
+	Created            time.Time `json:"c"`
+	CursorID           uint64    `json:"cur"`
+	Mode               uint8     `json:"m"`
 	modeString         string
-	PublicInstanceID   string
-	IP                 net.IP
+	PublicInstanceID   string `json:"p"`
+	IP                 net.IP `json:"ip"`
 
-	PEntityID         string
-	PEntityModule     string
-	PEntityTaxonomyID uint16
-	PURL              string
+	PEntityID         string `json:"ei"`
+	PEntityModule     string `json:"em"`
+	PEntityTaxonomyID uint16 `json:"et"`
+	PURL              string `json:"u"`
 	pURL              *url.URL
-	PCanonicalURL     string
+	PCanonicalURL     string `json:"cu"`
 	pCanonicalURL     *url.URL
-	PTitle            string
-	PLang             string
-	PIsIframe         bool
-	PIsTouchSupport   bool
-	PKeywords         []string
-	PRefererURL       refererData
-	SRefererURL       refererData
+	PTitle            string      `json:"t"`
+	PLang             string      `json:"l"`
+	PIsIframe         bool        `json:"if"`
+	PIsTouchSupport   bool        `json:"ts"`
+	PKeywords         []string    `json:"k"`
+	PRefererURL       refererData `json:"r"`
+	SRefererURL       refererData `json:"sr"`
 
-	CID clientID
+	CID clientID `json:"cid"`
 
-	EventCount int
-	Events     []recordEvent
+	EventCount int           `json:"ec"`
+	Events     []recordEvent `json:"e"`
 
-	UserAgentResult userAgentResult
-	Utm             utm
-	GeoResult       geoResult
-	ScreenInfo      screenInfo
-	BreadCrumb      breadCrumb
-	Performance     performance
-	Segments        segment
+	UserAgentResult userAgentResult `json:"ua"`
+	Utm             utm             `json:"ut"`
+	GeoResult       geoResult       `json:"g"`
+	ScreenInfo      screenInfo      `json:"s"`
+	BreadCrumb      breadCrumb      `json:"b"`
+	Performance     performance     `json:"pr"`
+	Segments        segment         `json:"sg"`
 }
 
 const (
@@ -126,7 +125,7 @@ var recordModeMap map[string]uint8
 func init() {
 	recordModeMap = make(map[string]uint8)
 
-	// pageview
+	// page view
 	recordModeMap["pv_js"] = recordModePageViewJavaScript
 	recordModeMap["pv_il"] = recordModePageViewImageLegacy
 	recordModeMap["pv_ins"] = recordModePageViewImageNoScript
@@ -157,14 +156,16 @@ func newRecord(modeQuery string, publicInstanceIDQuery string) (*record, error) 
 		Created: time.Now(),
 	}
 
-	mode, err := validateMode(modeQuery)
-	if err != nil {
-		return &r, err
+	mode, modeErr := validateMode(modeQuery)
+
+	if modeErr != nil {
+		return nil, modeErr
 	}
 
-	publicInstanceID, err := validatePublicInstanceID(publicInstanceIDQuery)
-	if err != nil {
-		return &r, err
+	publicInstanceID, publicInstanceIDErr := validatePublicInstanceID(publicInstanceIDQuery)
+
+	if publicInstanceIDErr != nil {
+		return nil, publicInstanceIDErr
 	}
 
 	r.modeString = modeQuery
@@ -175,14 +176,22 @@ func newRecord(modeQuery string, publicInstanceIDQuery string) (*record, error) 
 }
 
 func (r *record) setAPI(
+	projectsManager *projects,
+	userAgentParser *userAgentParser,
+	geoParser *geoParser,
 	postData *postRequest,
+
 ) *errorMessage {
 	if postData.API == nil {
 		return &errorAPIFieldsAreMissing
 	}
 
+	if r.isAPI() && !projectsManager.validateIDAndPrivate(r.PublicInstanceID, postData.API.PrivateInstanceKey) {
+		return &errorAPIPrivateKeyFailed
+	}
+
 	n := time.Now().Unix()
-	if postData.API.ClientTime <= n && postData.API.ClientTime >= (n-28800) {
+	if postData.API.ClientTime <= n && postData.API.ClientTime >= (n-86400) {
 		r.Created = time.Unix(postData.API.ClientTime, 0)
 	}
 
@@ -199,11 +208,27 @@ func (r *record) setAPI(
 
 	r.CID = clientIDNoneSTD([]string{r.IP.String(), postData.API.ClientUserAgent}, clientIDTypeOther)
 
+	// apply updates
+	r.UserAgentResult = userAgentParser.parse(postData.API.ClientUserAgent)
+	r.GeoResult = geoParser.newResultFromIP(ip)
+
 	return nil
+}
+
+func (r *record) isAPI() bool {
+	return r.Mode == recordModeEventAPI
 }
 
 func (r *record) isPageView() bool {
 	return r.Mode < 100
+}
+
+func (r *record) isEvent() bool {
+	return r.Mode >= 100 && r.Mode < 200
+}
+
+func (r *record) isClientError() bool {
+	return r.Mode >= 200
 }
 
 func (r *record) isImage() bool {
@@ -233,24 +258,21 @@ func (r *record) verify(
 		if !projectsManager.validateIDAndURL(r.PublicInstanceID, r.pURL) {
 			return &errorProjectPublicIDAndURLDidNotMatched
 		}
-		return nil
 	}
 
-	// in api mode private key must matched
-	if r.Mode == recordModeEventAPI && !projectsManager.validateIDAndPrivate(r.PublicInstanceID, privateKey) {
+	if r.isAPI() && !projectsManager.validateIDAndPrivate(r.PublicInstanceID, privateKey) {
 		return &errorAPIPrivateKeyFailed
 	}
 
-	// in page js event must match with page url
+	if r.isClientError() && (r.PURL == "" || !projectsManager.validateIDAndURL(r.PublicInstanceID, r.pURL)) {
+		return &errorProjectPublicIDAndURLDidNotMatched
+	}
+
 	if r.Mode == recordModeEventJSInPageView && !projectsManager.validateIDAndURL(r.PublicInstanceID, r.pURL) {
 		return &errorProjectPublicIDAndURLDidNotMatched
 	}
 
-	if r.Mode == recordModeClientError && r.PURL != "" && !projectsManager.validateIDAndURL(r.PublicInstanceID, r.pURL) {
-		return &errorProjectPublicIDAndURLDidNotMatched
-	}
-
-	if r.Mode > 99 && r.EventCount < 1 {
+	if r.isEvent() && r.EventCount < 1 {
 		return &errorEventsAreEmpty
 	}
 
@@ -272,7 +294,7 @@ func (r *record) setQueryParameters(
 ) {
 	r.PURL = sanitizeURL(qURL)
 	r.PCanonicalURL = sanitizeURL(qCanonical)
-	r.PTitle = qTitle
+	r.PTitle = sanitizeText(qTitle)
 	r.PLang = sanitizeLanguage(qLang)
 	r.PEntityID = sanitizeEntityID(qEntityID)
 	r.PEntityModule = sanitizeName(qEntityModule)
@@ -288,14 +310,14 @@ func (r *record) setPostRequest(
 	geoParser *geoParser,
 ) {
 	if postRequest.ClientErrorMessage != "" {
-		r.ClientErrorMessage = postRequest.ClientErrorMessage
-		r.ClientErrorObject = postRequest.ClientErrorObject
+		r.ClientErrorMessage = sanitizeText(postRequest.ClientErrorMessage)
+		r.ClientErrorObject = sanitizeText(postRequest.ClientErrorObject)
 	}
 
 	if postRequest.Page != nil {
 		r.PURL = sanitizeURL(postRequest.Page.URL)
 		r.PCanonicalURL = sanitizeURL(postRequest.Page.CanonicalURL)
-		r.PTitle = postRequest.Page.Title
+		r.PTitle = sanitizeText(postRequest.Page.Title)
 		r.PLang = sanitizeLanguage(postRequest.Page.Lang)
 		r.PEntityID = sanitizeEntityID(postRequest.Page.MainEntityID)
 		r.PEntityModule = sanitizeName(postRequest.Page.MainEntityModule)
@@ -342,31 +364,31 @@ func (r *record) setPostRequest(
 			if u1 != nil && u1.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N1 != "" {
 				r.BreadCrumb.BCIsProcessed = true
 				r.BreadCrumb.BCLevel = 1
-				r.BreadCrumb.BCN1 = postRequest.Page.PageBreadcrumbObject.N1
+				r.BreadCrumb.BCN1 = sanitizeText(postRequest.Page.PageBreadcrumbObject.N1)
 				r.BreadCrumb.BCP1 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U1))
 
 				u2 := getURL(postRequest.Page.PageBreadcrumbObject.U2)
 				if u2 != nil && u2.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N2 != "" {
 					r.BreadCrumb.BCLevel = 2
-					r.BreadCrumb.BCN2 = postRequest.Page.PageBreadcrumbObject.N2
+					r.BreadCrumb.BCN2 = sanitizeText(postRequest.Page.PageBreadcrumbObject.N2)
 					r.BreadCrumb.BCP2 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U2))
 
 					u3 := getURL(postRequest.Page.PageBreadcrumbObject.U3)
 					if u3 != nil && u3.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N3 != "" {
 						r.BreadCrumb.BCLevel = 3
-						r.BreadCrumb.BCN3 = postRequest.Page.PageBreadcrumbObject.N3
+						r.BreadCrumb.BCN3 = sanitizeText(postRequest.Page.PageBreadcrumbObject.N3)
 						r.BreadCrumb.BCP3 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U3))
 
 						u4 := getURL(postRequest.Page.PageBreadcrumbObject.U4)
 						if u4 != nil && u4.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N4 != "" {
 							r.BreadCrumb.BCLevel = 4
-							r.BreadCrumb.BCN4 = postRequest.Page.PageBreadcrumbObject.N4
+							r.BreadCrumb.BCN4 = sanitizeText(postRequest.Page.PageBreadcrumbObject.N4)
 							r.BreadCrumb.BCP4 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U4))
 
 							u5 := getURL(postRequest.Page.PageBreadcrumbObject.U5)
 							if u5 != nil && u5.Host == pu.Host && postRequest.Page.PageBreadcrumbObject.N5 != "" {
 								r.BreadCrumb.BCLevel = 5
-								r.BreadCrumb.BCN5 = postRequest.Page.PageBreadcrumbObject.N5
+								r.BreadCrumb.BCN5 = sanitizeText(postRequest.Page.PageBreadcrumbObject.N5)
 								r.BreadCrumb.BCP5 = getURLPath(getURL(postRequest.Page.PageBreadcrumbObject.U5))
 							}
 						}
@@ -389,35 +411,35 @@ func (r *record) setPostRequest(
 			S1Value := strings.TrimSpace(postRequest.Page.Seg.S1V)
 			if S1Name != "" && S1Value != "" {
 				r.Segments.S1N = S1Name
-				r.Segments.S1V = S1Value
+				r.Segments.S1V = sanitizeText(S1Value)
 			}
 
 			S2Name := sanitizeName(postRequest.Page.Seg.S2N)
 			S2Value := strings.TrimSpace(postRequest.Page.Seg.S2V)
 			if S2Name != "" && S2Value != "" {
 				r.Segments.S2N = S2Name
-				r.Segments.S2V = S2Value
+				r.Segments.S2V = sanitizeText(S2Value)
 			}
 
 			S3Name := sanitizeName(postRequest.Page.Seg.S3N)
 			S3Value := strings.TrimSpace(postRequest.Page.Seg.S3V)
 			if S3Name != "" && S3Value != "" {
 				r.Segments.S3N = S3Name
-				r.Segments.S3V = S3Value
+				r.Segments.S3V = sanitizeText(S3Value)
 			}
 
 			S4Name := sanitizeName(postRequest.Page.Seg.S4N)
 			S4Value := strings.TrimSpace(postRequest.Page.Seg.S4V)
 			if S4Name != "" && S4Value != "" {
 				r.Segments.S4N = S4Name
-				r.Segments.S4V = S4Value
+				r.Segments.S4V = sanitizeText(S4Value)
 			}
 
 			S5Name := sanitizeName(postRequest.Page.Seg.S5N)
 			S5Value := strings.TrimSpace(postRequest.Page.Seg.S5V)
 			if S5Name != "" && S5Value != "" {
 				r.Segments.S5N = S5Name
-				r.Segments.S5V = S5Value
+				r.Segments.S5V = sanitizeText(S5Value)
 			}
 		}
 
@@ -454,14 +476,12 @@ func (r *record) setPostRequest(
 		}
 	} else if r.Mode == recordModePageViewAMP && postRequest.CIDAmp != "" {
 		r.CID = clientIDNoneSTD([]string{postRequest.CIDAmp}, clientIDTypeAmp)
-	} else if r.IP != nil {
-		r.CID = clientIDNoneSTD([]string{r.IP.String(), r.UserAgentResult.UaFull}, clientIDTypeOther)
 	}
 }
 
-func (r *record) finalize() ([]byte, error) {
+func (r *record) finalize() ([]byte, *errorMessage) {
 	if r.Mode < 1 || !r.CID.Valid {
-		return nil, errors.New("mode not processed or missing cid")
+		return nil, &errorInvalidModeOrProjectPublicID
 	}
 
 	if r.pURL != nil {
@@ -471,28 +491,20 @@ func (r *record) finalize() ([]byte, error) {
 	if r.isPageView() {
 		cursorID, cursorIDErr := getCursorID()
 		if cursorIDErr != nil {
-			return nil, cursorIDErr
+			e := errorInternalDependencyFailed
+			e.debug = cursorIDErr.Error()
+			return nil, &e
 		}
 		r.CursorID = cursorID
 	}
 
-	buf := &bytes.Buffer{}
-	if err := gob.NewEncoder(buf).Encode(*r); err != nil {
-		return nil, err
+	bytes, bytesErr := json.Marshal(r)
+
+	if bytesErr != nil {
+		e := errorInternalDependencyFailed
+		e.debug = "marshal: " + bytesErr.Error()
+		return nil, &e
 	}
 
-	_, modErr := validateMode(r.modeString)
-	if modErr == nil {
-		defer promMetricRecordMode.WithLabelValues(r.modeString).Inc()
-	} else {
-		defer promMetricInvalidProcessData.Inc()
-		return nil, errors.New("mod is not valid")
-	}
-
-	if !validatePublicInstanceIDRegex(r.PublicInstanceID) {
-		defer promMetricInvalidProcessData.Inc()
-		return nil, errors.New("public id is not valid")
-	}
-
-	return buf.Bytes(), nil
+	return bytes, nil
 }

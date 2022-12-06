@@ -15,12 +15,12 @@ func TestParseScreenSize(t *testing.T) {
 		t.Errorf("invalid device pixel ratio")
 	}
 
-	if scr1.ScrResoluton != "1920x1080" || !scr1.ScrScreenOrientationIsPortrait {
+	if scr1.ScrResolution != "1920x1080" || !scr1.ScrScreenOrientationIsPortrait {
 		t.Errorf("invalid screen orientation")
 	}
 
-	if scr1.ScrResoluton == "" {
-		t.Errorf("invalid resoluton")
+	if scr1.ScrResolution == "" {
+		t.Errorf("invalid Resolution")
 	}
 
 	scr11 := parseScreenSize("portrait-secondary", "1376x774", "1376x389", "1", "16")
@@ -39,8 +39,8 @@ func TestParseScreenSize(t *testing.T) {
 
 	scr12 := parseScreenSize("landscape-primary", "1376x774", "1376x389", "", "24")
 
-	if scr12.ScrResoluton != "" {
-		t.Errorf("invalid resoluton")
+	if scr12.ScrResolution != "" {
+		t.Errorf("invalid resolution")
 	}
 
 	if scr12.ScrScreenOrientationIsPortrait || scr12.ScrScreenOrientationIsSecondary {
@@ -60,12 +60,12 @@ func TestParseScreenSize2(t *testing.T) {
 		t.Errorf("invalid device pixel ratio")
 	}
 
-	if scr1.ScrResoluton != "1920x1080" || scr1.ScrScreenOrientationIsPortrait || !scr1.ScrScreenOrientationIsSecondary {
+	if scr1.ScrResolution != "1920x1080" || scr1.ScrScreenOrientationIsPortrait || !scr1.ScrScreenOrientationIsSecondary {
 		t.Errorf("invalid screen orientation")
 	}
 
-	if scr1.ScrResoluton == "" {
-		t.Errorf("invalid resoluton")
+	if scr1.ScrResolution == "" {
+		t.Errorf("invalid resolution")
 	}
 
 }

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-redis/redis/v9"
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -20,7 +21,7 @@ func replaceCollectorURL(in []byte, collectorURL *url.URL) []byte {
 }
 
 func httpErrorResponse(c *fiber.Ctx, errMsg errorMessage) error {
-	defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(errMsg.code)).Inc()
+	// promMetricHTTPErrors.WithLabelValues(strconv.Itoa(errMsg.code)).Inc()
 	c.Status(errMsg.code)
 	return c.JSON(errMsg.msg)
 }
@@ -48,24 +49,14 @@ func getClientIP(c *fiber.Ctx) net.IP {
 		return ipObjectStored.(net.IP)
 	}
 
-	ipString := ""
+	ipString := c.Get("x-real-ip")
 
 	if ipString == "" {
 		ipString = c.IP()
-		ipStrings := c.IPs()
-		if len(ipStrings) > 0 {
-			ipString = ipStrings[0]
-		}
 	}
 
-	var ipObject net.IP
-	ipObject = net.ParseIP(ipString)
-	if ipObject == nil {
-		ipObject = net.ParseIP("0.0.0.0")
-	}
-
+	ipObject := net.ParseIP(ipString)
 	c.Locals("ip", ipObject)
-
 	return ipObject
 }
 
@@ -75,7 +66,7 @@ func newHTTPServer(
 	refererParser *refererParser,
 	userAgentParser *userAgentParser,
 	projectsManager *projects,
-	storage *storage,
+	redisClient *redis.Client,
 ) *fiber.App {
 
 	promRegistry := getPrometheusRegistry()
@@ -90,13 +81,12 @@ func newHTTPServer(
 				code = e.Code
 			}
 
-			defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(code)).Inc()
-
 			ip := getClientIP(c)
+
+			defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(code)).Inc()
 
 			defer conf.getLogger().
 				Error().
-				Str("type", errorTypeApp).
 				Str("error", err.Error()).
 				Str("ip", ip.String()).
 				Str("method", c.Method()).
@@ -127,7 +117,7 @@ func newHTTPServer(
 		return c.Next()
 	})
 
-	app.All("/", func(c *fiber.Ctx) error {
+	recordHandler := func(c *fiber.Ctx) error {
 		return httpRecord(
 			c,
 			conf,
@@ -135,9 +125,12 @@ func newHTTPServer(
 			geoParser,
 			userAgentParser,
 			projectsManager,
-			storage,
+			redisClient,
 		)
-	})
+	}
+
+	app.Post("/", recordHandler)
+	app.Get("/", recordHandler)
 
 	httpAppAssets(app, conf)
 
@@ -149,8 +142,7 @@ func newHTTPServer(
 		code := fiber.StatusNotFound
 		defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(code)).Inc()
 		defer conf.getLogger().
-			Debug().
-			Str("type", errorTypeApp).
+			Trace().
 			Str("ip", getClientIP(c).String()).
 			Str("method", c.Method()).
 			Str("url", c.Context().URI().String()).

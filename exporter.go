@@ -9,31 +9,6 @@ import (
 var initTime = time.Now().Unix()
 
 var (
-	promMetricUptimeInSeconds = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "aasaam_analytics_collector_uptime_in_seconds",
-		Help: "Uptime in seconds that collector is running",
-	})
-
-	promMetricStorageQueueRecords = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "aasaam_analytics_collector_storage_queue_records",
-		Help: "Storage number of records that not inserted yet",
-	})
-
-	promMetricInvalidRequestData = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "aasaam_analytics_collector_invalid_request_data",
-		Help: "Number of invalid request data",
-	})
-
-	promMetricInvalidProcessData = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "aasaam_analytics_collector_invalid_process_data",
-		Help: "Number of invalid process data",
-	})
-
-	promMetricStorageQueueClientErrors = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "aasaam_analytics_collector_storage_queue_client_errors",
-		Help: "Storage number of client errors that not inserted yet",
-	})
-
 	promMetricHTTPTotalRequests = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "aasaam_analytics_collector_http_total_requests",
 		Help: "Total number http requests",
@@ -44,15 +19,30 @@ var (
 		Help: "Total number http response error",
 	}, []string{"status"})
 
+	promMetricInvalidRequestData = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "aasaam_analytics_collector_invalid_request_data",
+		Help: "Number of invalid request data",
+	}, []string{"on"})
+
+	// promMetricValidRequestData = prometheus.NewCounterVec(prometheus.CounterOpts{
+	// 	Name: "aasaam_analytics_collector_valid_request_data",
+	// 	Help: "Number of valid request data",
+	// }, []string{"type"})
+
+	// promMetricInvalidProcessData = prometheus.NewGauge(prometheus.GaugeOpts{
+	// 	Name: "aasaam_analytics_collector_invalid_process_data",
+	// 	Help: "Number of invalid process data",
+	// })
+
 	promMetricRecordMode = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "aasaam_analytics_collector_record_mode",
 		Help: "Total number record modes",
 	}, []string{"mode"})
 
-	promMetricClientErrors = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "aasaam_analytics_collector_client_errors",
-		Help: "Total number of client errors",
-	})
+	// promMetricClientErrors = prometheus.NewCounter(prometheus.CounterOpts{
+	// 	Name: "aasaam_analytics_collector_client_errors",
+	// 	Help: "Total number of client errors",
+	// })
 
 	promMetricProjectsFetchErrors = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "aasaam_analytics_collector_projects_fetch_errors",
@@ -67,16 +57,14 @@ var (
 
 func getPrometheusRegistry() *prometheus.Registry {
 	promRegistry := prometheus.NewRegistry()
-	promRegistry.MustRegister(promMetricUptimeInSeconds)
-	promRegistry.MustRegister(promMetricStorageQueueRecords)
-	promRegistry.MustRegister(promMetricStorageQueueClientErrors)
 	promRegistry.MustRegister(promMetricHTTPTotalRequests)
 	promRegistry.MustRegister(promMetricHTTPErrors)
 	promRegistry.MustRegister(promMetricRecordMode)
-	promRegistry.MustRegister(promMetricClientErrors)
+	// promRegistry.MustRegister(promMetricClientErrors)
 	promRegistry.MustRegister(promMetricProjectsFetchErrors)
 	promRegistry.MustRegister(promMetricProjectsFetchSuccess)
 	promRegistry.MustRegister(promMetricInvalidRequestData)
-	promRegistry.MustRegister(promMetricInvalidProcessData)
+	// promRegistry.MustRegister(promMetricInvalidProcessData)
+	// promRegistry.MustRegister(promMetricValidRequestData)
 	return promRegistry
 }

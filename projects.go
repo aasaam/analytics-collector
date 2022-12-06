@@ -111,6 +111,7 @@ func (p *projects) validateID(publicInstanceID string) bool {
 }
 
 func (p *projects) validateIDAndURL(publicInstanceID string, requestURL *url.URL) bool {
+
 	if !publicInstanceIDRegex.MatchString(publicInstanceID) {
 		return false
 	}
@@ -184,8 +185,4 @@ func projectsLoad(url string) (map[string]projectData, error) {
 		return nil, err
 	}
 	return r, nil
-}
-
-func validatePublicInstanceIDRegex(publicInstanceID string) bool {
-	return publicInstanceIDRegex.MatchString(publicInstanceID)
 }

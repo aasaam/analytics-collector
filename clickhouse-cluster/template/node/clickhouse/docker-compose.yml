@@ -48,7 +48,7 @@ services:
     logging:
       driver: "journald"
       options:
-        tag: "container:APP=analytics-clickhouse TYPE=clickhouse-replica NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+        tag: "container:APP=analytics-clickhouse TYPE=clickhouse NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
 
   analytics-nginx-exposer:
     image: nginx:1-alpine
@@ -60,7 +60,6 @@ services:
       - "0.0.0.0:9440:9440" # TCP Port Secure
       - "0.0.0.0:9010:9010" # Interserver HTTPS Port
       - "0.0.0.0:9234:9234" # Raft Secure Port
-      - "0.0.0.0:9234:9234/udp" # Raft Secure Port (UDP)
       - "0.0.0.0:9281:9281" # Keeper Server TCP Secure Port
 
     volumes:
@@ -74,62 +73,4 @@ services:
     logging:
       driver: "journald"
       options:
-        tag: "container:APP=analytics-clickhouse TYPE=nginx-exposer NODE_ID=${ASM_CH_CURRENT_NODE_ID} NGINX_STREAM_DOCKER_EXPOSER=1"
-
-  analytics-postgis:
-    image: ghcr.io/aasaam/geonames-postgis:latest
-    container_name: analytics-postgis
-    hostname: analytics-postgis
-
-    environment:
-      - POSTGRES_PASSWORD=geonames
-      - POSTGRES_USER=geonames
-      - POSTGRES_DB=geonames
-
-    logging:
-      driver: "journald"
-      options:
-        tag: "container:APP=analytics-clickhouse TYPE=postgres NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
-
-  analytics-collector:
-    image: ghcr.io/aasaam/analytics-collector:latest
-    depends_on:
-      - analytics-postgis
-    container_name: analytics-collector
-    hostname: analytics-collector
-    command: run
-
-    volumes:
-      - ./cert:/cert:ro
-
-    env_file:
-      - ./.env
-
-    extra_hosts:
-      - "ch1.${ASM_CH_DOMAIN}:${ASM_CH_NODE1_IP}"
-      - "ch2.${ASM_CH_DOMAIN}:${ASM_CH_NODE2_IP}"
-      - "ch3.${ASM_CH_DOMAIN}:${ASM_CH_NODE3_IP}"
-
-    logging:
-      driver: "journald"
-      options:
-        tag: "container:APP=analytics-clickhouse TYPE=golang NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
-
-  analytics-collector-nginx:
-    image: ghcr.io/aasaam/analytics-collector-nginx:latest
-    container_name: analytics-collector-nginx
-    hostname: analytics-collector-nginx
-    depends_on:
-      - analytics-collector
-    ports:
-      - 0.0.0.0:80:80
-      - 0.0.0.0:443:443
-    volumes:
-      - ./public-cert:/cert:ro
-    env_file:
-      - ./.env
-
-    logging:
-      driver: "journald"
-      options:
-        tag: "container:APP=analytics-clickhouse TYPE=nginx NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+        tag: "container:APP=analytics-clickhouse TYPE=nginx NODE_ID=${ASM_CH_CURRENT_NODE_ID} NGINX_STREAM_DOCKER_EXPOSER=1"

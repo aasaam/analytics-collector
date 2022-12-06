@@ -26,36 +26,36 @@ type geonameData struct {
 }
 
 type geoResult struct {
-	GeoIsProcessed bool
-	GeoIP          string
+	GeoIsProcessed bool   `json:"p"`
+	GeoIP          string `json:"ip"`
 
 	// geo:asn
-	GeoIPAutonomousSystemNumber       uint16
-	GeoIPAutonomousSystemOrganization string
+	GeoIPAutonomousSystemNumber       uint16 `json:"asn"`
+	GeoIPAutonomousSystemOrganization string `json:"aso"`
 
 	// geo:ip
-	GeoIPAdministratorArea string
-	GeoIPCity              string
-	GeoIPCityGeoNameID     uint32
-	GeoIPCountry           string
-	GeoIPLocationLatitude  float64
-	GeoIPLocationLongitude float64
+	GeoIPAdministratorArea string  `json:"ip_a"`
+	GeoIPCity              string  `json:"ip_t"`
+	GeoIPCityGeoNameID     uint32  `json:"ip_gid"`
+	GeoIPCountry           string  `json:"ip_c"`
+	GeoIPLocationLatitude  float64 `json:"ip_lat"`
+	GeoIPLocationLongitude float64 `json:"ip_lon"`
 
 	// geo:client
-	GeoClientAdministratorArea string
-	GeoClientCity              string
-	GeoClientCityGeoNameID     uint32
-	GeoClientCountry           string
-	GeoClientLocationLatitude  float64
-	GeoClientLocationLongitude float64
+	GeoClientAdministratorArea string  `json:"c_a"`
+	GeoClientCity              string  `json:"c_t"`
+	GeoClientCityGeoNameID     uint32  `json:"c_gid"`
+	GeoClientCountry           string  `json:"c_c"`
+	GeoClientLocationLatitude  float64 `json:"c_lat"`
+	GeoClientLocationLongitude float64 `json:"c_lon"`
 
-	GeoResultAdministratorArea string
-	GeoResultCity              string
-	GeoResultCityGeoNameID     uint32
-	GeoResultCountry           string
-	GeoResultFromClient        bool
-	GeoResultLocationLatitude  float64
-	GeoResultLocationLongitude float64
+	GeoResultAdministratorArea string  `json:"a"`
+	GeoResultCity              string  `json:"t"`
+	GeoResultCityGeoNameID     uint32  `json:"gid"`
+	GeoResultCountry           string  `json:"c"`
+	GeoResultFromClient        bool    `json:"ic"`
+	GeoResultLocationLatitude  float64 `json:"lat"`
+	GeoResultLocationLongitude float64 `json:"lon"`
 }
 
 func newGeoParser(

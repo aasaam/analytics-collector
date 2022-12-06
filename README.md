@@ -30,12 +30,10 @@
 # prepare dependencies
 ./make.sh
 docker-compose -f docker-compose.dev.yml up -d
-# import clickhouse schema
-docker exec -it analytics-clickhouse-client bash
-clickhouse-client --multiquery --host analytics-clickhouse-single --user 'analytics' --password 'password123123' < /tmp/schema.sql
-
-# run cli
-docker exec -it analytics-clickhouse-client /usr/bin/clickhouse-client --vertical --host analytics-clickhouse-single --user 'analytics' --password 'password123123'
+# update schema
+docker exec -it analytics-clickhouse bash -c 'clickhouse-client --multiquery < /schema.sql'
+# access the console of clickhouse
+docker exec -it analytics-clickhouse bash -c 'clickhouse-client --vertical'
 ```
 
 <div>

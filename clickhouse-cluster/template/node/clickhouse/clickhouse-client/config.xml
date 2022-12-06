@@ -27,6 +27,7 @@
   <host>127.0.0.1</host>
   <port from_env="ASM_CH_TCP_PORT_SECURE"></port>
   <password from_env="ASM_CH_PASSWORD"></password>
+  <database>analytics</database>
   <secure>1</secure>
 
 </config>

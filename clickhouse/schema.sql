@@ -162,9 +162,9 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   ScrViewport                                 String,
   ScrViewportWidth                            UInt16,
   ScrViewportHeight                           UInt16,
-  ScrResoluton                                String,
-  ScrResolutonWidth                           UInt16,
-  ScrResolutonHeight                          UInt16,
+  ScrResolution                               String,
+  ScrResolutionWidth                          UInt16,
+  ScrResolutionHeight                         UInt16,
   ScrDevicePixelRatio                         Float64,
   ScrColorDepth                               UInt8,
 
@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   GeoClientAdministratorArea                  String,
   GeoClientCity                               String,
   GeoClientCityGeoNameID                      UInt32,
-  GeoClientCountry                            String,
+  GeoClientCountry                            LowCardinality(String),
   GeoClientLocationLatitude                   Float64,
   GeoClientLocationLongitude                  Float64,
   -- geo:client+
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS analytics.Records
   GeoResultAdministratorArea                  String,
   GeoResultCity                               String,
   GeoResultCityGeoNameID                      UInt32,
-  GeoResultCountry                            String,
+  GeoResultCountry                            LowCardinality(String),
   GeoResultLocationLatitude                   Float64,
   GeoResultLocationLongitude                  Float64,
   -- geo:result+

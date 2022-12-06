@@ -22,12 +22,12 @@ const minimumTime = 1640995200 // 2022-01-01 00:00:00
 var cidStandardRegex = regexp.MustCompile(`^(?P<InitTime>[0-9]{9,11}):(?P<SessionTime>[0-9]{9,11}):(?P<Random>[a-z0-9]{16})$`)
 
 type clientID struct {
-	Valid              bool
-	CidType            uint8
-	CidUserChecksum    string
-	CidSessionChecksum string
-	CidStdInitTime     int64
-	CidStdSessionTime  int64
+	Valid              bool   `json:"v"`
+	CidType            uint8  `json:"t"`
+	CidUserChecksum    string `json:"uc"`
+	CidSessionChecksum string `json:"sc"`
+	CidStdInitTime     int64  `json:"it"`
+	CidStdSessionTime  int64  `json:"st"`
 }
 
 func clientIDNoneSTD(parts []string, clientType uint8) clientID {
