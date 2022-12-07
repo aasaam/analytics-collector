@@ -74,9 +74,11 @@ sed -i "s+__GRAFANA_PASSWORD__+$GRAFANA_PASSWORD+g" $MANEGMENT_PATH/.env
 sed -i "s+__ASM_CH_NODE1_IP__+$ASM_CH_NODE1_IP+g" $MANEGMENT_PATH/.env
 sed -i "s+__ASM_CH_NODE2_IP__+$ASM_CH_NODE2_IP+g" $MANEGMENT_PATH/.env
 sed -i "s+__ASM_CH_NODE3_IP__+$ASM_CH_NODE3_IP+g" $MANEGMENT_PATH/.env
+sed -i "s+__ASM_COLLECTOR_HOSTNAME__+$ASM_COLLECTOR_HOSTNAME+g" $MANEGMENT_PATH/.env
 
 for i in $(seq 1 3); do
-  NODE_PATH=$CURRENT_DIR/ready/node$i/aasaam-analytics
+  NODE_PATH=$CURRENT_DIR/ready/node$i
+  mkdir -p $NODE_PATH
 
   __NODE_ID__=$i
   __OTHER_NODE_1__="2"
@@ -89,7 +91,7 @@ for i in $(seq 1 3); do
     __OTHER_NODE_2__="1"
   fi
 
-  mkdir -p $NODE_PATH
+
   cp -rf $CURRENT_DIR/template/node/* $NODE_PATH/
   cp -f $PROJECT_DIR/cert/{ca.pem,dhparam.pem,client-fullchain.pem,client-key.pem,server-fullchain.pem,server-key.pem} $NODE_PATH/clickhouse/cert/
   cp -f $PROJECT_DIR/cert/{ca.pem,dhparam.pem,client-fullchain.pem,client-key.pem} $NODE_PATH/collector/cert/
@@ -112,6 +114,7 @@ for i in $(seq 1 3); do
 
 
   # collector
+  sed -i "s+__NODE_ID__+$i+g" $NODE_PATH/collector/.env
   sed -i "s+__CLICKHOUSE_PASSWORD__+$CLICKHOUSE_PASSWORD+g" $NODE_PATH/collector/.env
   sed -i "s+__ASM_CH_NODE1_IP__+$ASM_CH_NODE1_IP+g" $NODE_PATH/collector/.env
   sed -i "s+__ASM_CH_NODE2_IP__+$ASM_CH_NODE2_IP+g" $NODE_PATH/collector/.env

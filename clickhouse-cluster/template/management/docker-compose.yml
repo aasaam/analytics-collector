@@ -54,14 +54,15 @@ services:
       - 0.0.0.0:80:80
       - 0.0.0.0:443:443
     volumes:
-      - ./cert:/cert:ro
+      - ./nginx/nginx.conf:/etc/nginx/templates/default.conf.template:ro
+      - ./public-cert:/cert:ro
     env_file:
       - ./.env
 
     logging:
       driver: "journald"
       options:
-        tag: "container:APP=analytics-clickhouse TYPE=nginx NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+        tag: "container:APP=analytics-clickhouse TYPE=nginx"
 
   ###########
   # Grafana #
@@ -90,11 +91,6 @@ services:
 
     env_file:
       - ./.env
-
-    volumes:
-      - ./cert/ca.pem:/cert/ca.pem:ro
-      - ./cert/client-fullchain.pem:/cert/client-fullchain.pem:ro
-      - ./cert/client-key.pem:/cert/client-key.pem:ro
 
     extra_hosts:
       - "ch1.${ASM_CH_DOMAIN}:${ASM_CH_NODE1_IP}"
