@@ -16,6 +16,10 @@ import (
 )
 
 func TestHTTPAssets(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
 	conf := newConfig("error", 0, "http://127.0.0.1")
 	geoParser := getGeoParser()
 	projectsManager := newProjectsManager()
@@ -87,6 +91,10 @@ func TestHTTPAssets(t *testing.T) {
 
 }
 func TestHTTP003(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
 	conf := newConfig("error", 0, "http://127.0.0.1")
 	geoParser := getGeoParser()
 	projectsManager := getTestProjects()
@@ -125,6 +133,10 @@ func TestHTTP003(t *testing.T) {
 }
 
 func TestHTTP000(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
 	conf := newConfig("error", 0, "http://127.0.0.1")
 	geoParser := getGeoParser()
 	projectsManager := getTestProjects()
@@ -171,6 +183,10 @@ func TestHTTP000(t *testing.T) {
 	}
 }
 func TestHTTP001(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+		return
+	}
 	conf := newConfig("error", 0, "http://127.0.0.1")
 	geoParser := getGeoParser()
 	projectsManager := getTestProjects()
