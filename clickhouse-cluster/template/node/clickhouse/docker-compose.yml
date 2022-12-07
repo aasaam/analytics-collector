@@ -73,4 +73,4 @@ services:
     logging:
       driver: "journald"
       options:
-        tag: "container:APP=analytics-clickhouse TYPE=nginx NODE_ID=${ASM_CH_CURRENT_NODE_ID} NGINX_STREAM_DOCKER_EXPOSER=1"
+        tag: "container:APP=analytics-clickhouse TYPE=nginx-exposer NODE_ID=${ASM_CH_CURRENT_NODE_ID} NGINX_STREAM_DOCKER_EXPOSER=1"

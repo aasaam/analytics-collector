@@ -1,9 +1,5 @@
 embed/build/
 tmp/
-clickhouse/logs/
-clickhouse/db/
-redash/var/
-nginx/cert.prod/
 
 analytics-collector
 

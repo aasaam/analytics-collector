@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha1"
 	"encoding/base64"
+	"math"
 	"net"
 	"net/url"
 	"regexp"
@@ -28,6 +29,15 @@ var checksumReplaceRegex = regexp.MustCompile(`[^a-zA-Z0-9]`)
 var cursorTimeLayout = "20060102030405.000"
 
 var stripTagger = bluemonday.StripTagsPolicy()
+
+func round(num float64) int {
+	return int(num + math.Copysign(0.5, num))
+}
+
+func toFixed(num float64, precision int) float64 {
+	output := math.Pow(10, float64(precision))
+	return float64(round(num*output)) / output
+}
 
 func intMinMax(v int, min int, max int) int {
 	if v < min {
@@ -72,6 +82,9 @@ func isValidURL(urlString string) bool {
 }
 
 func getURLPath(u *url.URL) string {
+	if u == nil {
+		return ""
+	}
 	r, e := regexp.Compile(regexp.QuoteMeta(u.Host) + `(.*)$`)
 	if e != nil {
 		return ""
@@ -204,8 +217,12 @@ func sanitizeEntityTaxonomyID(id string) uint16 {
 }
 
 func parseKeywords(inpKeywords string) []string {
-	ks := strings.Split(inpKeywords, ",")
 	r := []string{}
+	if inpKeywords == "" {
+		return r
+	}
+
+	ks := strings.Split(inpKeywords, ",")
 	for _, k := range ks {
 		v := sanitizeText(strings.TrimSpace(k))
 		if len(v) >= 1 {

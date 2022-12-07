@@ -33,7 +33,7 @@ docker-compose -f docker-compose.dev.yml up -d
 # update schema
 docker exec -it analytics-clickhouse bash -c 'clickhouse-client --multiquery < /schema.sql'
 # access the console of clickhouse
-docker exec -it analytics-clickhouse bash -c 'clickhouse-client --vertical'
+docker exec -it analytics-clickhouse bash -c 'clickhouse-client --vertical --database analytics'
 ```
 
 <div>

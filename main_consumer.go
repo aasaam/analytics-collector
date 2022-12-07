@@ -6,25 +6,12 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func mainFixture(c *cli.Context) error {
+func mainStore(c *cli.Context) error {
 	conf := newConfig(
 		c.String("log-level"),
 		c.Uint("static-cache-ttl"),
-		c.Bool("test-mode"),
 		c.String("collector-url"),
 	)
-
-	numberOfFixtures := intMinMax(c.Int("fixture-number"), 1, 100)
-
-	conf.getLogger().
-		Info().
-		Int("fixture-number", numberOfFixtures).
-		Msg("Number of records on each cycle")
-
-	f, fE := fixtureLoad(c.String("fixture-path"))
-	if fE != nil {
-		return fE
-	}
 
 	clickhouseConfig := clickhouseConfig{
 		servers:          c.String("clickhouse-servers"),
@@ -44,49 +31,16 @@ func mainFixture(c *cli.Context) error {
 		clientKeyPath:    c.String("clickhouse-client-key"),
 	}
 
-	clickhouseInterval := time.Duration(c.Int("clickhouse-interval")) * time.Second
-
-clickHouseInitStep:
-
-	clickhouseInit, _, clickhouseInitErr := clickhouseGetConnection(&clickhouseConfig)
-
-	if clickhouseInitErr != nil {
-		conf.getLogger().
-			Error().
-			Msg(clickhouseInitErr.Error())
-		time.Sleep(clickhouseInterval)
-		goto clickHouseInitStep
-	}
-
-	clickhouseInit.Close()
-	conf.getLogger().
-		Debug().
-		Msg("successfully ping to clickhouse")
-
-	/**
-	 * storage
-	 */
-	storage := newStorage()
-
-	refererParser := newRefererParser()
-	userAgentParser := newUserAgentParser()
+	checkInterval := time.Duration(c.Int("check-interval")) * time.Second
 
 	for {
-		go func() {
 
-			for i := 0; i <= numberOfFixtures; i++ {
-				r := f.record(refererParser, userAgentParser)
-				rb, rbE := r.finalize()
-				if rbE == nil {
-					storage.addRecord(rb)
-				}
-			}
+		func() {
 
-			r := workerRun(&clickhouseConfig, conf, storage)
+			r := workerRun(&clickhouseConfig, conf, c.String("redis-uri"))
 			if r.e != nil {
 				conf.getLogger().
 					Error().
-					Str("type", errorTypeApp).
 					Str("state", r.errorState).
 					Str("error", r.e.Error()).
 					Send()
@@ -95,11 +49,11 @@ clickHouseInitStep:
 					Info().
 					Int64("records", r.records).
 					Int64("clientErrors", r.clientErrors).
-					Int64("timeTakenMS", r.timeTakenMS).
+					Float64("timeTaken", r.timeTaken).
 					Send()
 			}
-
 		}()
-		time.Sleep(1 * time.Second)
+
+		time.Sleep(checkInterval)
 	}
 }

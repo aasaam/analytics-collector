@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	"testing"
 )
 
@@ -14,6 +15,7 @@ func TestUserAgentParser1(t *testing.T) {
 		"curl/7.68.0",
 		"AdsBot-Google (+http://www.google.com/adsbot.html)",
 		"Wget/1.20.3 (linux-gnu)",
+		"<script>alert(1);</script>Wget/1.20.3 (linux-gnu)",
 	}
 
 	userAgentParser := newUserAgentParser()
@@ -21,6 +23,7 @@ func TestUserAgentParser1(t *testing.T) {
 	for _, uaString := range uaStrings {
 
 		parsed := userAgentParser.parse(uaString)
+		fmt.Printf("%v\n", parsed)
 		if parsed.UaBrowserName == "" {
 			t.Errorf("invalid parsed data")
 		}

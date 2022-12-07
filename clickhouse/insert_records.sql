@@ -129,7 +129,7 @@ INSERT INTO Records (
   GeoClientAdministratorArea                  , -- String,
   GeoClientCity                               , -- String,
   GeoClientCityGeoNameID                      , -- UInt32,
-  GeoClientCountry                            , -- String,
+  GeoClientCountry                            , -- LowCardinality(String),
   GeoClientLocationLatitude                   , -- Float64,
   GeoClientLocationLongitude                  , -- Float64,
   -- geo:client+
@@ -139,7 +139,7 @@ INSERT INTO Records (
   GeoResultAdministratorArea                  , -- String,
   GeoResultCity                               , -- String,
   GeoResultCityGeoNameID                      , -- UInt32,
-  GeoResultCountry                            , -- String,
+  GeoResultCountry                            , -- LowCardinality(String),
   GeoResultLocationLatitude                   , -- Float64,
   GeoResultLocationLongitude                  , -- Float64,
   -- geo:result+

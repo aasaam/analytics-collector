@@ -26,7 +26,7 @@ stream {
     proxy_pass analytics-clickhouse:9440;
   }
 
-  # Interserver HTTPS Port
+  # Inter Server HTTPS Port
   server {
     listen 9010;
     include /acl.conf;

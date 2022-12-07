@@ -16,7 +16,7 @@ ENV ASM_NGX_EXTRA_WORKER_PROCESSES="auto" \
   ASM_NGX_EXTRA_PROXY_CACHE_FAST_SIZE="128m" \
   ASM_NGX_EXTRA_ACCESS_LOG_COMMENT="#" \
   ASM_NGX_EXTRA_SSL_PROFILE="legacy" \
-  ASM_NGX_EXTRA_UPSTREAM="http://analytics-collector:4000"
+  ASM_NGX_EXTRA_UPSTREAM="http://analytics-collector-producer:4000"
 
 ADD nginx/nginx.conf /template/nginx.conf
 ADD nginx/cert /cert

@@ -15,13 +15,35 @@ services:
       options:
         tag: "container:APP=analytics-clickhouse TYPE=postgres NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
 
-  analytics-collector:
+  analytics-redis:
+    image: redis:7-alpine
+    container_name: analytics-redis
+    hostname: analytics-redis
+
+  analytics-collector-producer:
     image: ghcr.io/aasaam/analytics-collector:latest
     depends_on:
+      - analytics-redis
       - analytics-postgis
-    container_name: analytics-collector
-    hostname: analytics-collector
-    command: run
+    container_name: analytics-collector-producer
+    hostname: analytics-collector-producer
+    command: run-producer
+
+    env_file:
+      - ./.env
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=golang-zerolog NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+
+  analytics-collector-consumer:
+    image: ghcr.io/aasaam/analytics-collector:latest
+    depends_on:
+      - analytics-redis
+    container_name: analytics-collector-consumer
+    hostname: analytics-collector-consumer
+    command: run-consumer
 
     volumes:
       - ./cert:/cert:ro
@@ -37,7 +59,7 @@ services:
     logging:
       driver: "journald"
       options:
-        tag: "container:APP=analytics-clickhouse TYPE=golang NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+        tag: "container:APP=analytics-clickhouse TYPE=golang-zerolog NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
 
   analytics-collector-nginx:
     image: ghcr.io/aasaam/analytics-collector-nginx:latest
@@ -50,6 +72,7 @@ services:
       - 0.0.0.0:443:443
     volumes:
       - ./public-cert:/cert:ro
+
     env_file:
       - ./.env
 

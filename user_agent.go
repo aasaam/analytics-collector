@@ -55,7 +55,7 @@ func (uaParser *userAgentParser) parse(uaString string) userAgentResult {
 
 	result := userAgentResult{
 		UaChecksum: checksum(uaString),
-		UaFull:     uaString,
+		UaFull:     sanitizeText(uaString),
 		UaType:     uaTypeUnknown,
 	}
 

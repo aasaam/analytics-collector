@@ -9,5 +9,5 @@ docker exec -it analytics-clickhouse bash -c 'clickhouse-client --multiquery < /
 For using client:
 
 ```bash
-docker exec -it analytics-clickhouse clickhouse-client --vertical -d analytics
+docker exec -it analytics-clickhouse clickhouse-client --vertical --database analytics
 ```

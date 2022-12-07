@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS analytics.ClientErrors
   GeoResultAdministratorArea                  String,
   GeoResultCity                               String,
   GeoResultCityGeoNameID                      UInt32,
-  GeoResultCountry                            String,
+  GeoResultCountry                            LowCardinality(String),
   GeoResultLocationLatitude                   Float64,
   GeoResultLocationLongitude                  Float64,
   -- geo:result+

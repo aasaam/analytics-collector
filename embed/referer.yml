@@ -1,21 +1,131 @@
 search_engine:
   Baidu:
+    - baidu.com
+    - m.baidu.com
     - www.baidu.com
   Google:
-    - www.google.de
-    - www.google.com
-    - www.google.us
-    - www.google.com.hk
-    - www.google.cn
     - com.google.android.googlequicksearchbox
+    - discover.google.com
+    - googleapis.com
+    - google.com
+    - lens.google.com
+    - scholar.google.com
+    - search.google.com
+    - webcache.googleusercontent.com
+    - www.google.ac
+    - www.google.ae
+    - www.google.am
+    - www.googleapis.com
+    - www.google.as
+    - www.google.at
+    - www.google.az
+    - www.google.be
+    - www.google.by
+    - www.google.ca
+    - www.google.cat
+    - www.google.ch
+    - www.google.cl
+    - www.google.cm
+    - www.google.cn
+    - www.google.co.cr
+    - www.google.co.id
+    - www.google.co.il
+    - www.google.co.in
+    - www.google.co.jp
+    - www.google.co.kr
+    - www.google.com
+    - www.google.com.af
+    - www.google.com.ar
+    - www.google.com.au
+    - www.google.com.br
+    - www.google.com.co
+    - www.google.com.cu
+    - www.google.com.ec
+    - www.google.com.hk
+    - www.google.com.kw
+    - www.google.com.ly
+    - www.google.com.mt
+    - www.google.com.mx
+    - www.google.com.my
+    - www.google.com.ng
+    - www.google.com.np
+    - www.google.com.om
+    - www.google.com.pe
+    - www.google.com.ph
+    - www.google.com.pk
+    - www.google.com.pr
+    - www.google.com.qa
+    - www.google.com.sa
+    - www.google.com.sg
+    - www.google.com.tj
+    - www.google.com.tr
+    - www.google.com.tw
+    - www.google.com.ua
+    - www.google.com.uy
+    - www.google.com.vn
+    - www.google.co.nz
+    - www.google.co.th
+    - www.google.co.uk
+    - www.google.co.uz
+    - www.google.co.ve
+    - www.google.co.za
+    - www.google.cz
+    - www.google.de
+    - www.google.dk
+    - www.google.es
+    - www.google.fi
+    - www.google.fr
+    - www.google.gg
+    - www.google.gm
+    - www.google.gr
+    - www.google.hu
+    - www.google.ie
+    - www.google.iq
+    - www.google.it
+    - www.google.je
+    - www.google.kg
+    - www.google.kz
+    - www.google.lt
+    - www.google.nl
+    - www.google.no
+    - www.google.pl
+    - www.google.pt
+    - www.google.ro
+    - www.google.ru
+    - www.google.se
+    - www.google.sk
+    - www.google.sn
+    - www.google.tn
+    - www.google.us
+    - www.google.vg
   Bing:
     - global.bing.com
+    - cn.bing.com
     - www.bing.com
     - bing.com
   Yahoo:
+    - ca.search.yahoo.com
+    - de.search.yahoo.com
+    - fr.search.yahoo.com
+    - nl.search.yahoo.com
+    - r.search.yahoo.com
+    - ru.search.yahoo.com
+    - search.yahoo.co.jp
     - search.yahoo.com
+    - se.search.yahoo.com
+    - uk.search.yahoo.com
+    - us.search.yahoo.com
   Yandex:
+    - www.yandex.by
+    - www.yandex.com
+    - www.yandex.com.tr
+    - www.yandex.ru
+    - yandex.by
     - yandex.com
+    - yandex.com.tr
+    - yandex.eu
+    - yandex.kz
+    - yandex.ru
 
 social_media:
   Twitter:
@@ -23,7 +133,11 @@ social_media:
     - t.co
   Telegram:
     - org.telegram.messenger
+    - org.telegram.messenger
+    - org.telegram.messenger.web
+    - org.telegram.plus
     - telegram.org
+    - web.telegram.org
   Pinterest:
     - pinterest.com
     - pinterest.ca
@@ -53,8 +167,10 @@ social_media:
     - instagram.com
     - l.instagram.com
   LinkedIn:
+    - www.linkedin.com
     - linkedin.com
     - lnkd.in
+    - com.linkedin.android
     - linkedin.android
   GitHub:
     - github.com

@@ -1,0 +1,108 @@
+version: "3"
+
+services:
+  # backend
+  analytic-backend:
+    image: ghcr.io/aasaam/analytic-backend:latest
+    depends_on:
+      - analytic-redis
+      - analytic-rest-captcha
+      - analytic-postgres
+    container_name: analytic-backend
+    volumes:
+      - ./cert/ca.pem:/app/api/clickhouse-cert/ca.pem:ro
+      - ./cert/client-fullchain.pem:/app/api/clickhouse-cert/client-fullchain.pem:ro
+      - ./cert/client-key.pem:/app/api/clickhouse-cert/client-key.pem:ro
+
+    env_file:
+      - ./.env
+
+    extra_hosts:
+      - "ch1.${ASM_CH_DOMAIN}:${ASM_CH_NODE1_IP}"
+      - "ch2.${ASM_CH_DOMAIN}:${ASM_CH_NODE2_IP}"
+      - "ch3.${ASM_CH_DOMAIN}:${ASM_CH_NODE3_IP}"
+
+  # databases
+  analytic-redis:
+    container_name: analytic-redis
+    image: redis:6
+
+  analytic-rest-captcha:
+    container_name: analytic-captcha
+    image: ghcr.io/aasaam/rest-captcha:latest
+    command: run -return-value
+
+  analytic-postgres:
+    container_name: analytic-postgres
+    environment:
+      POSTGRES_DB: ${ASM_POSTGRES_DB:-pg-db}
+      POSTGRES_USER: ${ASM_POSTGRES_USER:-pg-user}
+      POSTGRES_PASSWORD: ${ASM_POSTGRES_PASSWORD:-pg-password}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    image: postgres:13
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  analytics-web:
+    image: ghcr.io/aasaam/analytic-web:latest
+    container_name: analytics-web
+    hostname: analytics-web
+    depends_on:
+      - analytic-backend
+      - analytic-grafana
+    ports:
+      - 0.0.0.0:80:80
+      - 0.0.0.0:443:443
+    volumes:
+      - ./cert:/cert:ro
+    env_file:
+      - ./.env
+
+    logging:
+      driver: "journald"
+      options:
+        tag: "container:APP=analytics-clickhouse TYPE=nginx NODE_ID=${ASM_CH_CURRENT_NODE_ID}"
+
+  ###########
+  # Grafana #
+  ###########
+  analytic-grafana-redis:
+    container_name: analytic-grafana-redis
+    image: redis:6
+
+  analytic-grafana-postgres:
+    container_name: analytic-grafana-postgres
+    environment:
+      POSTGRES_DB: ${ASM_POSTGRES_DB:-pg-db}
+      POSTGRES_USER: ${ASM_POSTGRES_USER:-pg-user}
+      POSTGRES_PASSWORD: ${ASM_POSTGRES_PASSWORD:-pg-password}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    image: postgres:13
+    volumes:
+      - grafana-postgres:/var/lib/postgresql/data
+
+  analytic-grafana:
+    container_name: analytic-grafana
+    image: ghcr.io/aasaam/grafana:latest
+    depends_on:
+      - analytic-grafana-redis
+      - analytic-grafana-postgres
+
+    env_file:
+      - ./.env
+
+    volumes:
+      - ./cert/ca.pem:/cert/ca.pem:ro
+      - ./cert/client-fullchain.pem:/cert/client-fullchain.pem:ro
+      - ./cert/client-key.pem:/cert/client-key.pem:ro
+
+    extra_hosts:
+      - "ch1.${ASM_CH_DOMAIN}:${ASM_CH_NODE1_IP}"
+      - "ch2.${ASM_CH_DOMAIN}:${ASM_CH_NODE2_IP}"
+      - "ch3.${ASM_CH_DOMAIN}:${ASM_CH_NODE3_IP}"
+
+volumes:
+  grafana-postgres:
+    driver: local
+  postgres:
+    driver: local

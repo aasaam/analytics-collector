@@ -458,7 +458,7 @@ func (r *record) setPostRequest(
 				re := recordEvent{
 					ECategory: category,
 					EAction:   action,
-					ELabel:    ev.Label,
+					ELabel:    sanitizeText(ev.Label),
 					EIdent:    sanitizeEntityID(ev.Ident),
 					EValue:    uint64(ev.Value),
 				}

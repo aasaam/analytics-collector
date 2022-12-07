@@ -21,7 +21,7 @@ func replaceCollectorURL(in []byte, collectorURL *url.URL) []byte {
 }
 
 func httpErrorResponse(c *fiber.Ctx, errMsg errorMessage) error {
-	// promMetricHTTPErrors.WithLabelValues(strconv.Itoa(errMsg.code)).Inc()
+	defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(errMsg.code)).Inc()
 	c.Status(errMsg.code)
 	return c.JSON(errMsg.msg)
 }

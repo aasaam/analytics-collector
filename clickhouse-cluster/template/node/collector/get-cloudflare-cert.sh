@@ -28,8 +28,8 @@ fi
 
 cd $SCRIPT_DIR
 
-CLOUDFLARE_DNS_API_TOKEN="$CLOUDFLARE_DNS_API_TOKEN" ./lego --email "$EMAIL" --dns cloudflare --domains __ASM_COLLECTOR_DOMAIN__ --domains *.__ASM_COLLECTOR_DOMAIN__ run
-cp ./.lego/certificates/__ASM_COLLECTOR_DOMAIN__.crt ./public-cert/fullchain.pem
-cp ./.lego/certificates/__ASM_COLLECTOR_DOMAIN__.issuer.crt ./public-cert/chain.pem
-cp ./.lego/certificates/__ASM_COLLECTOR_DOMAIN__.key ./public-cert/privkey.pem
+CLOUDFLARE_DNS_API_TOKEN="$CLOUDFLARE_DNS_API_TOKEN" ./lego --email "$EMAIL" --dns cloudflare --domains __ASM_COLLECTOR_HOSTNAME__ --domains *.__ASM_COLLECTOR_HOSTNAME__ run
+cp ./.lego/certificates/__ASM_COLLECTOR_HOSTNAME__.crt ./public-cert/fullchain.pem
+cp ./.lego/certificates/__ASM_COLLECTOR_HOSTNAME__.issuer.crt ./public-cert/chain.pem
+cp ./.lego/certificates/__ASM_COLLECTOR_HOSTNAME__.key ./public-cert/privkey.pem
 openssl dhparam -out ./public-cert/dhparam.pem 2048

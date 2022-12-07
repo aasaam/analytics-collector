@@ -24,25 +24,15 @@ var (
 		Help: "Number of invalid request data",
 	}, []string{"on"})
 
-	// promMetricValidRequestData = prometheus.NewCounterVec(prometheus.CounterOpts{
-	// 	Name: "aasaam_analytics_collector_valid_request_data",
-	// 	Help: "Number of valid request data",
-	// }, []string{"type"})
-
-	// promMetricInvalidProcessData = prometheus.NewGauge(prometheus.GaugeOpts{
-	// 	Name: "aasaam_analytics_collector_invalid_process_data",
-	// 	Help: "Number of invalid process data",
-	// })
-
-	promMetricRecordMode = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "aasaam_analytics_collector_record_mode",
-		Help: "Total number record modes",
+	promMetricValidRequestData = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "aasaam_analytics_collector_valid_request_data",
+		Help: "Number of valid request data",
 	}, []string{"mode"})
 
-	// promMetricClientErrors = prometheus.NewCounter(prometheus.CounterOpts{
-	// 	Name: "aasaam_analytics_collector_client_errors",
-	// 	Help: "Total number of client errors",
-	// })
+	promMetricClientErrors = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "aasaam_analytics_collector_client_errors",
+		Help: "Total number of client errors",
+	})
 
 	promMetricProjectsFetchErrors = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "aasaam_analytics_collector_projects_fetch_errors",
@@ -59,12 +49,10 @@ func getPrometheusRegistry() *prometheus.Registry {
 	promRegistry := prometheus.NewRegistry()
 	promRegistry.MustRegister(promMetricHTTPTotalRequests)
 	promRegistry.MustRegister(promMetricHTTPErrors)
-	promRegistry.MustRegister(promMetricRecordMode)
-	// promRegistry.MustRegister(promMetricClientErrors)
+	promRegistry.MustRegister(promMetricInvalidRequestData)
+	promRegistry.MustRegister(promMetricValidRequestData)
+	promRegistry.MustRegister(promMetricClientErrors)
 	promRegistry.MustRegister(promMetricProjectsFetchErrors)
 	promRegistry.MustRegister(promMetricProjectsFetchSuccess)
-	promRegistry.MustRegister(promMetricInvalidRequestData)
-	// promRegistry.MustRegister(promMetricInvalidProcessData)
-	// promRegistry.MustRegister(promMetricValidRequestData)
 	return promRegistry
 }

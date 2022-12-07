@@ -8,14 +8,12 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func mainRun(c *cli.Context) error {
+func mainProducer(c *cli.Context) error {
 	conf := newConfig(
 		c.String("log-level"),
 		c.Uint("static-cache-ttl"),
 		c.String("collector-url"),
 	)
-
-	managementCallInterval := time.Duration(c.Int64("management-call-interval")) * time.Second
 
 redisStep:
 
@@ -34,8 +32,9 @@ redisStep:
 		Msg("successfully ping to redis")
 
 	/**
-	 * projects
+	* projects
 	 */
+	managementCallInterval := time.Duration(c.Int64("management-call-interval")) * time.Second
 	projectsManager := newProjectsManager()
 	projectsJSON := c.String("management-projects-json")
 

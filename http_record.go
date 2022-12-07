@@ -227,6 +227,12 @@ func httpRecord(
 		)
 	}
 
+	if record.isClientError() {
+		defer promMetricClientErrors.Inc()
+	}
+
+	defer promMetricValidRequestData.WithLabelValues(record.modeString).Inc()
+
 	if record.isImage() {
 		return responseImage(c)
 	}
