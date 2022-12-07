@@ -1,12 +1,8 @@
 package main
 
 import (
-	"time"
-
 	"github.com/prometheus/client_golang/prometheus"
 )
-
-var initTime = time.Now().Unix()
 
 var (
 	promMetricHTTPTotalRequests = prometheus.NewCounter(prometheus.CounterOpts{
