@@ -9,7 +9,7 @@ require (
 	github.com/gofiber/adaptor/v2 v2.1.30
 	github.com/gofiber/fiber/v2 v2.40.1
 	github.com/jackc/pgx/v4 v4.17.2
-	github.com/microcosm-cc/bluemonday v1.0.21
+	github.com/microcosm-cc/bluemonday v1.0.22
 	github.com/mileusna/useragent v1.2.1
 	github.com/oschwald/geoip2-golang v1.8.0
 	github.com/paulmach/orb v0.7.1
