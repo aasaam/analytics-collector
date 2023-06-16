@@ -143,14 +143,14 @@ type postRequest struct {
 var singleGifImage, _ = base64.StdEncoding.DecodeString("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7")
 
 var (
+	// errorRecordNotValid                     errorMessage = errorMessage{code: fiber.StatusMethodNotAllowed, msg: "RecordNotValid"}
+	// errorRecordCIDNotProcessed              errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "RecordCIDNotProcessed"}
+	// errorProjectNotDefined                  errorMessage = errorMessage{code: fiber.StatusPreconditionFailed, msg: "ProjectNotDefined"}
 	errorInternalServerError                errorMessage = errorMessage{code: fiber.StatusInternalServerError, msg: "InternalServerError"}
 	errorInternalDependencyFailed           errorMessage = errorMessage{code: fiber.StatusNotImplemented, msg: "InternalDependencyFailed"}
 	errorRecordNotProcessedYet              errorMessage = errorMessage{code: fiber.StatusConflict, msg: "RecordNotProcessedYet"}
-	errorRecordNotValid                     errorMessage = errorMessage{code: fiber.StatusMethodNotAllowed, msg: "RecordNotValid"}
-	errorRecordCIDNotProcessed              errorMessage = errorMessage{code: fiber.StatusBadRequest, msg: "RecordCIDNotProcessed"}
 	errorProjectPublicIDAndURLDidNotMatched errorMessage = errorMessage{code: fiber.StatusForbidden, msg: "ProjectPublicIDAndURLDidNotMatched"}
 	errorInvalidModeOrProjectPublicID       errorMessage = errorMessage{code: fiber.StatusTeapot, msg: "InvalidModeOrProjectPublicID"}
-	errorProjectNotDefined                  errorMessage = errorMessage{code: fiber.StatusPreconditionFailed, msg: "ProjectNotDefined"}
 	errorURLRequiredAndMustBeValid          errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "URLRequiredAndMustBeValid"}
 	errorAPIFieldsAreMissing                errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "APIFieldsAreMissing"}
 	errorAPIPrivateKeyFailed                errorMessage = errorMessage{code: fiber.StatusFailedDependency, msg: "APIPrivateKeyFailed"}

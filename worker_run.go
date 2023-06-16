@@ -148,6 +148,7 @@ func workerRun(
 	} else {
 		recordsBatch.Abort()
 	}
+
 	if insertClientErrors > 0 {
 		clientErrorsBatchSendErr := clientErrorsBatch.Send()
 		if clientErrorsBatchSendErr != nil {
