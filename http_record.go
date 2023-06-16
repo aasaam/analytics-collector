@@ -208,30 +208,27 @@ func httpRecord(
 		)
 	}
 
-	_, redErr := redisClient.LPush(context.Background(), redisKeyRecords, recordBytes).Result()
+	go func() {
+		_, redErr := redisClient.LPush(context.Background(), redisKeyRecords, recordBytes).Result()
+		if redErr != nil {
+			blockErr := errorInternalDependencyFailed
+			blockErr.debug = redErr.Error()
 
-	if redErr != nil {
-		blockErr := errorInternalDependencyFailed
-		blockErr.debug = redErr.Error()
+			conf.getLogger().
+				Error().
+				Str("part", "finalize").
+				Str("on", blockErr.msg).
+				Str("error", blockErr.debug).
+				Str("ip", ip.String()).
+				Str("method", c.Method()).
+				Str("path", c.Path()).
+				Str("qs", string(c.Request().URI().QueryString())).
+				Str("body", string(c.Request().Body())).
+				Strs("headers", rawHeaderLog(c.Request().Header.RawHeaders())).
+				Send()
 
-		conf.getLogger().
-			Error().
-			Str("part", "finalize").
-			Str("on", blockErr.msg).
-			Str("error", blockErr.debug).
-			Str("ip", ip.String()).
-			Str("method", c.Method()).
-			Str("path", c.Path()).
-			Str("qs", string(c.Request().URI().QueryString())).
-			Str("body", string(c.Request().Body())).
-			Strs("headers", rawHeaderLog(c.Request().Header.RawHeaders())).
-			Send()
-
-		return httpErrorResponse(
-			c,
-			blockErr,
-		)
-	}
+		}
+	}()
 
 	if record.isImage() {
 		return responseImage(c)
