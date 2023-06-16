@@ -116,9 +116,16 @@ func main() {
 				&cli.IntFlag{
 					Name:     "clickhouse-max-block-size",
 					Usage:    "Clickhouse max block size",
-					Value:    10,
+					Value:    131072,
 					Required: false,
 					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_MAX_BLOCK_SIZE"},
+				},
+				&cli.IntFlag{
+					Name:     "clickhouse-max-insert-block-size",
+					Usage:    "Clickhouse max insert block size",
+					Value:    33554432,
+					Required: false,
+					EnvVars:  []string{"ASM_ANALYTICS_COLLECTOR_CLICKHOUSE_MAX_INSERT_BLOCK_SIZE"},
 				},
 				&cli.BoolFlag{
 					Name:     "clickhouse-compression-lz4",

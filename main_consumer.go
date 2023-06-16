@@ -14,21 +14,22 @@ func mainStore(c *cli.Context) error {
 	)
 
 	clickhouseConfig := clickhouseConfig{
-		servers:          c.String("clickhouse-servers"),
-		database:         c.String("clickhouse-database"),
-		username:         c.String("clickhouse-username"),
-		password:         c.String("clickhouse-password"),
-		maxExecutionTime: c.Int("clickhouse-max-execution-time"),
-		dialTimeout:      c.Int("clickhouse-dial-timeout"),
-		debug:            c.Bool("test-mode"),
-		compressionLZ4:   c.Bool("clickhouse-compression-lz4"),
-		maxIdleConns:     c.Int("clickhouse-max-idle-conns"),
-		maxOpenConns:     c.Int("clickhouse-max-open-conns"),
-		connMaxLifetime:  c.Int("clickhouse-conn-max-lifetime"),
-		maxBlockSize:     c.Int("clickhouse-max-block-size"),
-		rootCAPath:       c.String("clickhouse-root-ca"),
-		clientCertPath:   c.String("clickhouse-client-cert"),
-		clientKeyPath:    c.String("clickhouse-client-key"),
+		servers:            c.String("clickhouse-servers"),
+		database:           c.String("clickhouse-database"),
+		username:           c.String("clickhouse-username"),
+		password:           c.String("clickhouse-password"),
+		maxExecutionTime:   c.Int("clickhouse-max-execution-time"),
+		dialTimeout:        c.Int("clickhouse-dial-timeout"),
+		debug:              c.Bool("test-mode"),
+		compressionLZ4:     c.Bool("clickhouse-compression-lz4"),
+		maxIdleConns:       c.Int("clickhouse-max-idle-conns"),
+		maxOpenConns:       c.Int("clickhouse-max-open-conns"),
+		connMaxLifetime:    c.Int("clickhouse-conn-max-lifetime"),
+		maxBlockSize:       c.Int("clickhouse-max-block-size"),
+		maxInsertBlockSize: c.Int("clickhouse-max-insert-block-size"),
+		rootCAPath:         c.String("clickhouse-root-ca"),
+		clientCertPath:     c.String("clickhouse-client-cert"),
+		clientKeyPath:      c.String("clickhouse-client-key"),
 	}
 
 	checkInterval := time.Duration(c.Int("check-interval")) * time.Second

@@ -21,21 +21,22 @@ var clickhouseSQLInsertRecords string
 var clickhouseSQLInsertClientErrors string
 
 type clickhouseConfig struct {
-	servers          string
-	database         string
-	username         string
-	password         string
-	rootCAPath       string
-	clientCertPath   string
-	clientKeyPath    string
-	maxExecutionTime int
-	dialTimeout      int
-	debug            bool
-	compressionLZ4   bool
-	maxIdleConns     int
-	maxOpenConns     int
-	connMaxLifetime  int
-	maxBlockSize     int
+	servers            string
+	database           string
+	username           string
+	password           string
+	rootCAPath         string
+	clientCertPath     string
+	clientKeyPath      string
+	maxExecutionTime   int
+	maxInsertBlockSize int
+	dialTimeout        int
+	debug              bool
+	compressionLZ4     bool
+	maxIdleConns       int
+	maxOpenConns       int
+	connMaxLifetime    int
+	maxBlockSize       int
 
 	progress func(p *clickhouse.Progress)
 	profile  func(p *clickhouse.ProfileInfo)
@@ -51,7 +52,9 @@ func clickhouseGetConnection(c *clickhouseConfig) (driver.Conn, context.Context,
 			Password: c.password,
 		},
 		Settings: clickhouse.Settings{
-			"max_execution_time": c.maxExecutionTime,
+			"max_execution_time":    c.maxExecutionTime,
+			"max_block_size":        c.maxBlockSize,
+			"max_insert_block_size": c.maxInsertBlockSize,
 		},
 		DialTimeout:     time.Duration(c.dialTimeout) * time.Second,
 		Debug:           c.debug,

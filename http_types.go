@@ -19,10 +19,6 @@ const (
 )
 
 const (
-	metricsPath = "/metrics"
-)
-
-const (
 	recordQueryMode             = "m"
 	recordQueryPublicInstanceID = "i"
 
