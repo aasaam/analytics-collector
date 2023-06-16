@@ -2,8 +2,10 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	"net"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -71,10 +73,17 @@ func newHTTPServer(
 	redisClient *redis.Client,
 ) *fiber.App {
 
+	preforkS := os.Getenv("ENABLE_PREFORK")
+	prefork := false
+	if preforkS == "1" {
+		prefork = true
+	}
+
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		StrictRouting:         true,
-		Prefork:               false,
+		BodyLimit:             2 * 1024 * 1024,
+		Prefork:               prefork,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
 			if e, ok := err.(*fiber.Error); ok {
@@ -86,6 +95,7 @@ func newHTTPServer(
 			defer conf.getLogger().
 				Error().
 				Str("error", err.Error()).
+				Str("ef", fmt.Sprintf("%+v", err)).
 				Str("ip", ip.String()).
 				Str("method", c.Method()).
 				Str("path", c.Path()).
