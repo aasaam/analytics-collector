@@ -6,7 +6,6 @@ func workerProjects(
 ) error {
 	projects, projectsErr := projectsLoad(managementProjectsEndpoint)
 	if projectsErr != nil {
-		promMetricProjectsFetchErrors.Inc()
 		return projectsErr
 	}
 

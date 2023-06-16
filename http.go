@@ -4,15 +4,18 @@ import (
 	_ "embed"
 	"net"
 	"net/url"
-	"strconv"
 	"strings"
 
-	"github.com/go-redis/redis/v9"
-	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/redis/go-redis/v9"
 )
+
+func rawHeaderLog(b []byte) []string {
+	s := string(b)
+	s = strings.ReplaceAll(s, "\r", "")
+	return strings.Split(s, "\n")
+}
 
 func replaceCollectorURL(in []byte, collectorURL *url.URL) []byte {
 	str := string(in)
@@ -21,7 +24,6 @@ func replaceCollectorURL(in []byte, collectorURL *url.URL) []byte {
 }
 
 func httpErrorResponse(c *fiber.Ctx, errMsg errorMessage) error {
-	defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(errMsg.code)).Inc()
 	c.Status(errMsg.code)
 	return c.JSON(errMsg.msg)
 }
@@ -69,8 +71,6 @@ func newHTTPServer(
 	redisClient *redis.Client,
 ) *fiber.App {
 
-	promRegistry := getPrometheusRegistry()
-
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		StrictRouting:         true,
@@ -83,14 +83,15 @@ func newHTTPServer(
 
 			ip := getClientIP(c)
 
-			defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(code)).Inc()
-
 			defer conf.getLogger().
 				Error().
 				Str("error", err.Error()).
 				Str("ip", ip.String()).
 				Str("method", c.Method()).
 				Str("path", c.Path()).
+				Str("qs", string(c.Request().URI().QueryString())).
+				Str("body", string(c.Request().Body())).
+				Strs("headers", rawHeaderLog(c.Request().Header.RawHeaders())).
 				Int("status_code", code).
 				Send()
 
@@ -104,8 +105,6 @@ func newHTTPServer(
 	// init middleware
 	app.Use(func(c *fiber.Ctx) error {
 		ip := getClientIP(c)
-
-		defer promMetricHTTPTotalRequests.Inc()
 
 		defer conf.getLogger().
 			Trace().
@@ -134,13 +133,9 @@ func newHTTPServer(
 
 	httpAppAssets(app, conf)
 
-	handler := promhttp.HandlerFor(promRegistry, promhttp.HandlerOpts{})
-	app.Get(metricsPath, adaptor.HTTPHandler(handler))
-
 	// 404
 	app.Use(func(c *fiber.Ctx) error {
 		code := fiber.StatusNotFound
-		defer promMetricHTTPErrors.WithLabelValues(strconv.Itoa(code)).Inc()
 		defer conf.getLogger().
 			Trace().
 			Str("ip", getClientIP(c).String()).

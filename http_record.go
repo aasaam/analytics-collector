@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/go-redis/redis/v9"
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
 )
 
 func responseImage(c *fiber.Ctx) error {
@@ -34,8 +34,6 @@ func httpRecord(
 		blockErr := errorInvalidModeOrProjectPublicID
 		blockErr.debug = recordErr.Error()
 
-		promMetricInvalidRequestData.WithLabelValues(blockErr.msg).Inc()
-
 		conf.getLogger().
 			Warn().
 			Str("part", "init").
@@ -44,6 +42,9 @@ func httpRecord(
 			Str("ip", ip.String()).
 			Str("method", c.Method()).
 			Str("path", c.Path()).
+			Str("qs", string(c.Request().URI().QueryString())).
+			Str("body", string(c.Request().Body())).
+			Strs("headers", rawHeaderLog(c.Request().Header.RawHeaders())).
 			Send()
 
 		return httpErrorResponse(
@@ -79,8 +80,6 @@ func httpRecord(
 		if postDataErr := json.Unmarshal(c.Body(), &postData); postDataErr != nil {
 			blockErr := errorBadPOSTBody
 
-			promMetricInvalidRequestData.WithLabelValues(blockErr.msg).Inc()
-
 			conf.getLogger().
 				Info().
 				Str("part", "parse_body").
@@ -89,6 +88,9 @@ func httpRecord(
 				Str("ip", ip.String()).
 				Str("method", c.Method()).
 				Str("path", c.Path()).
+				Str("qs", string(c.Request().URI().QueryString())).
+				Str("body", string(c.Request().Body())).
+				Strs("headers", rawHeaderLog(c.Request().Header.RawHeaders())).
 				Send()
 
 			return httpErrorResponse(
@@ -139,8 +141,6 @@ func httpRecord(
 		apiErr := record.setAPI(projectsManager, userAgentParser, geoParser, &postData)
 		if apiErr != nil {
 
-			promMetricInvalidRequestData.WithLabelValues(apiErr.msg).Inc()
-
 			conf.getLogger().
 				Warn().
 				Str("part", "api").
@@ -149,6 +149,9 @@ func httpRecord(
 				Str("ip", ip.String()).
 				Str("method", c.Method()).
 				Str("path", c.Path()).
+				Str("qs", string(c.Request().URI().QueryString())).
+				Str("body", string(c.Request().Body())).
+				Strs("headers", rawHeaderLog(c.Request().Header.RawHeaders())).
 				Send()
 
 			return httpErrorResponse(
@@ -162,8 +165,6 @@ func httpRecord(
 		verifyErr := record.verify(projectsManager, "")
 		if verifyErr != nil {
 
-			promMetricInvalidRequestData.WithLabelValues(verifyErr.msg).Inc()
-
 			conf.getLogger().
 				Warn().
 				Str("part", "verify").
@@ -172,6 +173,9 @@ func httpRecord(
 				Str("ip", ip.String()).
 				Str("method", c.Method()).
 				Str("path", c.Path()).
+				Str("qs", string(c.Request().URI().QueryString())).
+				Str("body", string(c.Request().Body())).
+				Strs("headers", rawHeaderLog(c.Request().Header.RawHeaders())).
 				Send()
 
 			return httpErrorResponse(
@@ -185,8 +189,6 @@ func httpRecord(
 
 	if recordBytesErr != nil {
 
-		promMetricInvalidRequestData.WithLabelValues(recordBytesErr.msg).Inc()
-
 		conf.getLogger().
 			Error().
 			Str("part", "finalize").
@@ -195,6 +197,9 @@ func httpRecord(
 			Str("ip", ip.String()).
 			Str("method", c.Method()).
 			Str("path", c.Path()).
+			Str("qs", string(c.Request().URI().QueryString())).
+			Str("body", string(c.Request().Body())).
+			Strs("headers", rawHeaderLog(c.Request().Header.RawHeaders())).
 			Send()
 
 		return httpErrorResponse(
@@ -209,8 +214,6 @@ func httpRecord(
 		blockErr := errorInternalDependencyFailed
 		blockErr.debug = redErr.Error()
 
-		promMetricInvalidRequestData.WithLabelValues(blockErr.msg).Inc()
-
 		conf.getLogger().
 			Error().
 			Str("part", "finalize").
@@ -219,6 +222,9 @@ func httpRecord(
 			Str("ip", ip.String()).
 			Str("method", c.Method()).
 			Str("path", c.Path()).
+			Str("qs", string(c.Request().URI().QueryString())).
+			Str("body", string(c.Request().Body())).
+			Strs("headers", rawHeaderLog(c.Request().Header.RawHeaders())).
 			Send()
 
 		return httpErrorResponse(
@@ -226,12 +232,6 @@ func httpRecord(
 			blockErr,
 		)
 	}
-
-	if record.isClientError() {
-		defer promMetricClientErrors.Inc()
-	}
-
-	defer promMetricValidRequestData.WithLabelValues(record.modeString).Inc()
 
 	if record.isImage() {
 		return responseImage(c)

@@ -69,7 +69,6 @@ redisStep:
 
 				e := workerProjects(c.String("management-projects-endpoint"), projectsManager)
 				if e != nil {
-					promMetricProjectsFetchErrors.Inc()
 					conf.getLogger().
 						Error().
 						Str("type", "projects_load").
@@ -86,7 +85,6 @@ redisStep:
 					Bool("success", true).
 					Send()
 
-				promMetricProjectsFetchSuccess.Inc()
 			}
 		}()
 	}

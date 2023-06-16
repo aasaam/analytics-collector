@@ -34,6 +34,8 @@ func workerRun(
 		return &r
 	}
 
+	defer redisClient.Close()
+
 	recordSize := redisClient.LLen(context.Background(), redisKeyRecords).Val()
 
 	if recordSize == 0 {
@@ -48,6 +50,8 @@ func workerRun(
 		return &r
 	}
 
+	defer clickhouseConn.Close()
+
 	var insertRecords int64 = 0
 	var insertClientErrors int64 = 0
 
@@ -55,15 +59,15 @@ func workerRun(
 		clickhouseCtx, clickhouseSQLInsertRecords,
 	)
 
-	clientErrorsBatch, clientErrorsBatchErr := clickhouseConn.PrepareBatch(
-		clickhouseCtx, clickhouseSQLInsertClientErrors,
-	)
-
 	if recordsBatchErr != nil {
 		r.e = recordsBatchErr
 		r.errorState = "recordsBatchErr"
 		return &r
 	}
+
+	clientErrorsBatch, clientErrorsBatchErr := clickhouseConn.PrepareBatch(
+		clickhouseCtx, clickhouseSQLInsertClientErrors,
+	)
 
 	if clientErrorsBatchErr != nil {
 		r.e = clientErrorsBatchErr
@@ -112,7 +116,7 @@ func workerRun(
 					if insertRecordErr != nil {
 						redisClient.RPush(context.Background(), redisKeyRecords, item)
 						r.e = insertRecordErr
-						r.errorState = "insertRecordErr"
+						r.errorState = "insertRecordErrEvent"
 						return &r
 					}
 					insertRecords += 1
@@ -141,6 +145,8 @@ func workerRun(
 			r.e = recordsBatchSendErr
 			r.errorState = "recordsBatchSendErr"
 		}
+	} else {
+		recordsBatch.Abort()
 	}
 	if insertClientErrors > 0 {
 		clientErrorsBatchSendErr := clientErrorsBatch.Send()
@@ -148,6 +154,8 @@ func workerRun(
 			r.e = clientErrorsBatchSendErr
 			r.errorState = "insertClientErr"
 		}
+	} else {
+		clientErrorsBatch.Abort()
 	}
 
 	r.clientErrors = insertClientErrors
