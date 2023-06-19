@@ -14,7 +14,7 @@ require (
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/rs/zerolog v1.29.1
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
-	github.com/urfave/cli/v2 v2.25.6
+	github.com/urfave/cli/v2 v2.25.7
 	golang.org/x/net v0.11.0
 	golang.org/x/text v0.10.0
 	gopkg.in/yaml.v2 v2.4.0
