@@ -10,7 +10,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.24
 	github.com/mileusna/useragent v1.3.3
 	github.com/oschwald/geoip2-golang v1.8.0
-	github.com/paulmach/orb v0.9.2
+	github.com/paulmach/orb v0.10.0
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/rs/zerolog v1.29.1
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
