@@ -16,7 +16,7 @@ require (
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
 	github.com/urfave/cli/v2 v2.25.6
 	golang.org/x/net v0.11.0
-	golang.org/x/text v0.10.0
+	golang.org/x/text v0.12.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
