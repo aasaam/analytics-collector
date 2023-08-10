@@ -3,14 +3,14 @@ module github.com/aasaam/analytics-collector
 go 1.19
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.10.1
+	github.com/ClickHouse/clickhouse-go/v2 v2.13.0
 	github.com/brianvoe/gofakeit/v6 v6.22.0
 	github.com/gofiber/fiber/v2 v2.46.0
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/microcosm-cc/bluemonday v1.0.24
 	github.com/mileusna/useragent v1.3.3
 	github.com/oschwald/geoip2-golang v1.8.0
-	github.com/paulmach/orb v0.9.2
+	github.com/paulmach/orb v0.10.0
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/rs/zerolog v1.29.1
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
@@ -57,8 +57,8 @@ require (
 	github.com/valyala/fasthttp v1.47.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	go.opentelemetry.io/otel v1.13.0 // indirect
-	go.opentelemetry.io/otel/trace v1.13.0 // indirect
+	go.opentelemetry.io/otel v1.16.0 // indirect
+	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
