@@ -15,8 +15,8 @@ require (
 	github.com/rs/zerolog v1.29.1
 	github.com/ua-parser/uap-go v0.0.0-20211112212520-00c877edfe0f
 	github.com/urfave/cli/v2 v2.25.6
-	golang.org/x/net v0.11.0
-	golang.org/x/text v0.10.0
+	golang.org/x/net v0.15.0
+	golang.org/x/text v0.13.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -59,7 +59,7 @@ require (
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opentelemetry.io/otel v1.13.0 // indirect
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect
-	golang.org/x/crypto v0.10.0 // indirect
-	golang.org/x/sys v0.9.0 // indirect
+	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
