@@ -40,6 +40,6 @@ docker exec -it analytics-clickhouse bash -c 'clickhouse-client --vertical --dat
   <p align="center">
     <img alt="aasaam software development group" width="64" src="https://raw.githubusercontent.com/aasaam/information/master/logo/aasaam.svg">
     <br />
-    aasaam software development group
+    asam software development group
   </p>
 </div>
