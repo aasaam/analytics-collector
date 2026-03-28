@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.10.1
-	github.com/brianvoe/gofakeit/v6 v6.22.0
+	github.com/brianvoe/gofakeit/v6 v6.23.2
 	github.com/gofiber/fiber/v2 v2.46.0
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/microcosm-cc/bluemonday v1.0.24
